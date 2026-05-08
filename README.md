@@ -25,7 +25,7 @@
 - Vite 7
 - Tailwind CSS 3.4
 - shadcn/ui
-- React Router DOM（后续路由扩展）
+- react-router v7（后续路由扩展）
 
 ## 项目结构
 
@@ -66,4 +66,5 @@ npm run preview    # 预览构建
 - 已完成：React + TypeScript + Vite 工程搭建
 - 已完成：目录结构初始化
 - 已完成：移动端样式基线定义
-- 进行中：业务页面开发（后续阶段）
+- 下一阶段：工单处理中心移动端壳子原型
+- 本阶段不开发具体业务页面

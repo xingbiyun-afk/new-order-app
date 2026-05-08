@@ -68,9 +68,11 @@
 
 #### 1. 样式文件复用
 
-移动端样式文件 `src/styles/mobile.css` 中定义的组件类名（如 `.card`、`.work-order-card`、`.status-tabs` 等），在 Web 端直接复用。
+Web 端按与 App 端相同的类名体系和视觉规范进行复制/迁移，保持样式定义一致。
 
-Web 端仅需要覆盖少量差异：
+后续如有公共组件包再考虑代码级复用。当前阶段各自维护。
+
+Web 端需要覆盖的布局差异：
 - 移除 `.page-container` 的最大宽度限制
 - 替换 `.app-header` 为 Web 端的面包屑或页面标题
 - 替换 `.bottom-tab` 为 Web 端的侧边导航
@@ -81,7 +83,7 @@ Feature 模块中的组件按"纯展示组件"和"容器组件"分层：
 
 | 层级 | 职责 | 复用方式 |
 |------|------|----------|
-| 展示组件（Presentational） | 纯 UI 渲染，接收 props | App 和 Web 两端完全复用 |
+| 展示组件（Presentational） | 纯 UI 渲染，接收 props | 结构和 Props 设计保持平台无关，便于 Web 端迁移或复刻 |
 | 容器组件（Container） | 数据获取、状态管理、导航 | 各自独立实现或环境判断 |
 
 #### 3. 布局适配
