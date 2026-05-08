@@ -1,5 +1,8 @@
 # 路由设计
 
+> 路由规划需考虑 App 和 Web 两端。App 端移动样式将作为 Web 端非查询类工单页面的复用参考。
+> 详见 `cross-end-work-order-ui-strategy.md`。
+
 ## 当前阶段
 
 本阶段只定义路由结构，不开发具体业务页面。
