@@ -1,0 +1,168 @@
+/* 移动端基础样式 */
+
+/* 页面容器 */
+.page-container {
+  min-height: 100vh;
+  background-color: var(--bg-page, #F5F5F5);
+  max-width: 430px;
+  margin: 0 auto;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* 顶部 Header */
+.app-header {
+  height: var(--header-height, 48px);
+  background-color: var(--header-bg, #22BDB8);
+  color: var(--header-text-color, #FFFFFF);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-lg, 18px);
+  font-weight: 500;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding-top: var(--safe-area-top, 0px);
+}
+
+/* 底部 Tab 栏 */
+.bottom-tab {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 430px;
+  height: calc(var(--tab-height, 56px) + var(--safe-area-bottom, 0px));
+  background-color: var(--bg-card, #FFFFFF);
+  border-top: 1px solid var(--border-color, #E5E5E5);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  z-index: 100;
+  padding-bottom: var(--safe-area-bottom, 0px);
+}
+
+.tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: var(--font-size-xs, 12px);
+  color: var(--tab-inactive-color, #999999);
+  cursor: pointer;
+}
+
+.tab-item.active {
+  color: var(--tab-active-color, #22BDB8);
+}
+
+/* 页面内容区 */
+.page-content {
+  padding: var(--spacing-md, 12px);
+  padding-bottom: calc(var(--tab-height, 56px) + var(--spacing-lg, 16px));
+}
+
+/* 卡片样式 */
+.card {
+  background-color: var(--bg-card, #FFFFFF);
+  border-radius: var(--border-radius-lg, 12px);
+  padding: var(--spacing-lg, 16px);
+  box-shadow: var(--shadow-card, 0 2px 8px rgba(0, 0, 0, 0.06));
+}
+
+/* 入口卡片 */
+.entry-card {
+  background-color: var(--bg-card, #FFFFFF);
+  border-radius: var(--border-radius-lg, 12px);
+  padding: var(--spacing-lg, 16px);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md, 12px);
+  cursor: pointer;
+}
+
+.entry-card:active {
+  opacity: 0.8;
+}
+
+/* 搜索框 */
+.search-box {
+  background-color: var(--bg-input, #F0F0F0);
+  border-radius: var(--border-radius-xl, 16px);
+  padding: var(--spacing-sm, 8px) var(--spacing-md, 12px);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm, 8px);
+  font-size: var(--font-size-sm, 14px);
+  color: var(--text-tertiary, #999999);
+}
+
+/* 状态 Tab */
+.status-tabs {
+  display: flex;
+  gap: var(--spacing-lg, 16px);
+  padding: var(--spacing-md, 12px) 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.status-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.status-tab-item {
+  font-size: var(--font-size-md, 16px);
+  color: var(--text-tertiary, #999999);
+  white-space: nowrap;
+  padding-bottom: var(--spacing-xs, 4px);
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+
+.status-tab-item.active {
+  color: var(--text-primary, #333333);
+  border-bottom-color: var(--primary-color, #22BDB8);
+  font-weight: 500;
+}
+
+/* 筛选栏 */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm, 8px) 0;
+  font-size: var(--font-size-sm, 14px);
+  color: var(--text-secondary, #666666);
+}
+
+/* 工单卡片 */
+.work-order-card {
+  background-color: var(--bg-card, #FFFFFF);
+  border-radius: var(--border-radius-lg, 12px);
+  padding: var(--spacing-md, 12px) var(--spacing-lg, 16px);
+  margin-bottom: var(--spacing-md, 12px);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md, 12px);
+}
+
+.work-order-card::before {
+  content: '';
+  width: 4px;
+  height: 40px;
+  background-color: var(--primary-color, #22BDB8);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: var(--font-size-xs, 12px);
+  background-color: var(--primary-color-light, #E6F8F8);
+  color: var(--primary-color, #22BDB8);
+}
