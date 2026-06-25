@@ -1,5 +1,10 @@
 # 模块结构说明
 
+> 当前说明：
+> 本文档记录的是 new-order-app 早期 React/Vite 原型目录结构。
+> 根据最新项目口径，正式 App 开发按 Vue 框架体系推进。
+> 因此本文档仅作为移动端模块拆分和职责边界参考，不作为正式 Vue 工程目录强约束。
+
 ## 目录结构
 
 ```
@@ -19,7 +24,7 @@ src/
 │   │   ├── mocks/
 │   │   ├── types/
 │   │   └── utils/
-│   ├── work-order-budget/    # 预算申请工单（本期新增）
+│   ├── work-order-budget # 历史命名目录，现行对应产品申请工单 / 产品申请预算核销
 │   │   ├── README.md
 │   │   ├── pages/
 │   │   ├── components/
@@ -58,6 +63,18 @@ src/
     ├── reset.css
     └── mobile.css
 ```
+
+## 正式 Vue 工程建议模块映射
+
+Web 端 Vue2 工程可根据既有工程规范映射为 views / components / api / store / utils。
+App 端 Vue 工程以正式 App 工程目录规范为准。
+
+| 当前原型目录 | 正式 Vue 工程建议模块 |
+|---|---|
+| work-order-center | 工单处理中心基础页面 |
+| work-order-budget | 产品申请工单 / 产品申请预算核销 |
+| budget-shared | 预算核销共享能力 |
+| approval-shared | 审批流共享能力 |
 
 ## 模块说明
 
