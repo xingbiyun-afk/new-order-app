@@ -24,7 +24,7 @@ src/
 │   │   ├── mocks/
 │   │   ├── types/
 │   │   └── utils/
-│   ├── work-order-budget # 历史命名目录，现行对应产品申请工单 / 产品申请预算核销
+│   ├── work-order-budget/    # 历史命名目录，现行对应产品申请工单 / 产品申请预算核销
 │   │   ├── README.md
 │   │   ├── pages/
 │   │   ├── components/
