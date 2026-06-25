@@ -13,7 +13,7 @@
 
 ### 3. 开发实施
 - 按 feature 目录组织代码。
-- 使用 shadcn/ui 组件库。
+- 当前 React 原型可参考 shadcn/ui；正式 Vue 工程以对应工程组件选型为准。
 - 遵循 `CLAUDE.md` 中的状态字段和样式约定。
 - 保持移动端优先的设计理念。
 
@@ -23,7 +23,7 @@
 
 ### 5. 提交规范
 - 提交信息格式：`{type}: {description}`。
-- 示例：`feat: add budget work order entry page`。
+- 示例：`feat: add product application entry page`。
 
 ## 当前阶段任务
 
@@ -45,7 +45,7 @@
 - 文档编写
 
 ### 不包含
-- 预算申请业务页面开发
+- 基于旧“预算申请工单”口径的业务页面开发
 - 审批页面开发
 - 复杂 Mock 数据
 - 正式状态枚举定义
