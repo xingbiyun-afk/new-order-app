@@ -13,15 +13,16 @@
 
 ## 项目上下文
 
-本仓库为工单 App 前端，基于 React + TypeScript + Vite 构建的移动端 H5 原型。
+本仓库早期以 React + TypeScript + Vite 初始化，用于沉淀工单移动端样式、交互结构和产品申请预算核销需求参考。正式 App 开发按 Vue 框架体系推进，当前 React/Vite 内容不作为生产实现基线。
 
 ## AI 协作约定
 
-### 代码生成
-- 使用 TypeScript，严格类型定义。
-- 使用函数组件和 React Hooks。
-- 使用路径别名 `@/` 引用项目文件。
-- 优先使用 shadcn/ui 组件。
+### 当前 React 原型参考约定
+
+- 如维护当前 React/Vite 原型，可使用 TypeScript、函数组件和 React Hooks。
+- 如维护当前 React/Vite 原型，可使用路径别名 `@/`。
+- shadcn/ui 仅作为当前 React 原型参考，不代表正式 Vue 工程组件选型。
+- 正式 App / Web 开发应遵循对应 Vue 工程规范。
 
 ### 状态处理
 - 不定义正式状态枚举。
@@ -41,7 +42,7 @@
 
 ### 禁止事项
 - 不基于旧“预算申请工单”口径开发页面（本阶段）。
-- 不开发审批页面（本阶段）。
+- 不在当前 React 仓中开发正式审批页面。
 - 不写复杂 Mock。
 - 不接 API。
 - 不直接推 main 分支。
