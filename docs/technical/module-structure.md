@@ -65,7 +65,8 @@ src/
 已有功能模块，包含发起工单页、我的页等。
 
 ### work-order-budget（预算申请工单）
-本期新增模块，包含预算申请表单、详情等页面。
+work-order-budget 为历史命名目录，承接早期预算申请工单原型。
+最新口径建议新增 product-application-budget-writeoff 模块或在文档中明确映射。
 
 ### budget-shared（预算业务共享）
 预算相关的共享组件和逻辑，如预算金额输入、预算科目选择等。
