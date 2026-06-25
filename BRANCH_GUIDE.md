@@ -7,7 +7,7 @@
 | 前缀 | 用途 | 示例 |
 |------|------|------|
 | `init/` | 工程初始化、目录结构 | `init/CR-20260508-app-structure` |
-| `feature/` | 新功能开发 | `feature/CR-20260508-budget-form` |
+| `feature/` | 新功能开发 | `feature/CR-202605xx-product-application-writeoff` |
 | `fix/` | Bug 修复 | `fix/CR-20260508-status-display` |
 | `docs/` | 文档更新 | `docs/CR-20260508-api-spec` |
 
