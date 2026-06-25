@@ -45,3 +45,15 @@
 - 不写复杂 Mock。
 - 不接 API。
 - 不直接推 main 分支。
+
+## 必读文档
+
+| 文档 | 说明 |
+|---|---|
+| `docs/ai/项目协作基线.md` | App 仓库项目级协作基线，所有 AI 工具执行任务前必须阅读 |
+| `CLAUDE.md` | AI 快速入口 |
+| `docs/technical/mobile-ui-baseline.md` | 移动端样式基线 |
+| `docs/technical/cross-end-work-order-ui-strategy.md` | 跨端工单 UI 复用策略 |
+| `docs/product/work-order-budget/README.md` | 产品申请工单 / 预算核销产品文档入口 |
+
+如 README、CLAUDE、历史文档与《项目协作基线》冲突，以《项目协作基线》为准。
