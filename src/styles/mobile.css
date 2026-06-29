@@ -61,8 +61,10 @@
 
 /* 页面内容区 */
 .page-content {
-  padding: var(--spacing-md, 12px);
+  padding: 0;
   padding-bottom: calc(var(--tab-height, 56px) + var(--spacing-lg, 16px));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* 卡片样式 */
