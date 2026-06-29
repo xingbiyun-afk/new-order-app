@@ -8,21 +8,23 @@
 
 ```
 docs/
-├── README.md              # 本文档
-├── ai/                    # AI 协作指南
+├── README.md                      # 本文档
+├── ai/                            # AI 协作指南
 │   └── README.md
-├── branch/                # 分支管理规范
+├── branch/                        # 分支管理规范
 │   └── README.md
-├── workflow/              # 工作流程指南
+├── development-summary/           # 开发总结
+│   └── CR-20260629-001-开发总结.md   # 产品申请工单P0+P1开发总结
+├── workflow/                      # 工作流程指南
 │   └── README.md
-├── product/               # 产品文档
+├── product/                       # 产品文档
 │   └── work-order-budget/
-│       └── README.md      # 预算申请工单产品说明
-└── technical/             # 技术文档
-    ├── mobile-ui-baseline.md   # 移动端 UI 基线
-    ├── module-structure.md     # 模块结构说明
-    ├── route-design.md         # 路由设计
-    └── mock-strategy.md        # Mock 策略
+│       └── README.md              # 产品申请工单 / 预算核销产品说明
+└── technical/                     # 技术文档
+    ├── mobile-ui-baseline.md      # 移动端 UI 基线
+    ├── module-structure.md        # 模块结构说明
+    ├── route-design.md            # 路由设计
+    └── mock-strategy.md           # Mock 策略
 ```
 
 ## 使用说明

@@ -49,22 +49,32 @@
 ## 项目结构
 
 ```
-├── docs/                    # 项目文档
-│   ├── ai/                  # AI 协作基线与多 AI 协作指南
-│   ├── product/             # 产品申请工单 / 预算核销产品文档
-│   └── technical/           # 移动端样式、跨端复用、模块结构等技术文档
+├── docs/                          # 项目文档
+│   ├── ai/                        # AI 协作基线与多 AI 协作指南
+│   ├── development-summary/       # 开发总结（CR-20260629-001）
+│   ├── product/                   # 产品申请工单 / 预算核销产品文档
+│   └── technical/                 # 移动端样式、跨端复用、模块结构等技术文档
 ├── src/
-│   ├── app/                 # 应用层
-│   │   ├── router/          # 路由配置
-│   │   └── layout/          # 布局组件
-│   ├── features/            # 功能模块
-│   │   ├── work-order-center/   # 工单中心（已有）
-│   │   ├── work-order-budget/      # 历史命名目录，现行口径对应“产品申请工单 / 产品申请预算核销”
-│   │   ├── budget-shared/       # 预算业务共享模块
-│   │   └── approval-shared/     # 审批共享模块
-│   ├── shared/              # 共享资源
-│   ├── assets/              # 静态资源
-│   └── styles/              # 样式文件
+│   ├── app/                       # 应用层
+│   │   ├── router/                # 路由配置
+│   │   └── layout/                # 布局组件
+│   ├── features/                  # 功能模块
+│   │   ├── work-order-center/     # 工单中心（已有）
+│   │   ├── work-order-budget/     # 产品申请工单参考实现（P0+P1）
+│   │   │   ├── pages/             # 页面组件
+│   │   │   │   ├── create.tsx           # 发起页
+│   │   │   │   ├── budget-select.tsx    # 预算选择页
+│   │   │   │   ├── store-select.tsx     # 专卖店搜索选择页
+│   │   │   │   ├── product-select.tsx   # 产品搜索选择页（P1-01）
+│   │   │   │   └── detail.tsx           # 详情页
+│   │   │   ├── types/             # 类型定义
+│   │   │   ├── mocks/             # Mock数据
+│   │   │   └── hooks/             # Hooks
+│   │   ├── budget-shared/         # 预算业务共享模块
+│   │   └── approval-shared/       # 审批共享模块
+│   ├── shared/                    # 共享资源
+│   ├── assets/                    # 静态资源
+│   └── styles/                    # 样式文件
 └── index.html
 ```
 
@@ -81,4 +91,8 @@ npm run preview    # 预览构建
 - 已完成：React + Vite 早期结构初始化
 - 已完成：移动端 UI 基线与跨端复用策略沉淀
 - 已完成：产品申请工单 / 预算核销基础规则文档沉淀
+- **已完成（2026-06-29）：产品申请工单移动端页面参考实现（P0+P1）**
+  - P0：发起页、预算选择页、专卖店搜索页、产品搜索选择页、详情页、我的列表页
+  - P1：搜索选择页、跨分组SKU校验、动态数量提示、分组折叠/展开、搜索过滤、附件交互、订单卡片、失败原因展示
+  - 开发总结：`docs/development-summary/CR-20260629-001-开发总结.md`
 - 后续：正式开发进入 Vue / Vue2 工程，不在当前 React 仓直接推进生产实现

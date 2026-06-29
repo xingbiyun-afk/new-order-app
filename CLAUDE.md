@@ -49,7 +49,20 @@
 - 当前 React 原型中可使用 shadcn/ui 作为参考；正式 Vue 实现应以正式 Vue 工程选型为准，不直接照搬 React 组件库。
 - 业务组件放在各自 feature 的 `components/` 下。
 - 共享组件放在 `src/shared/components/` 下。
-- 不开发正式业务页面，只保留目录结构和占位说明。
+- 参考实现页面保留在 React 仓中，仅作为移动端样式、交互和结构参考，不作为正式 App 生产基线。
+
+### 页面路由（参考实现）
+| 路由 | 页面 | 说明 |
+|------|------|------|
+| `/product-apply/create` | 发起页 | 预算信息/申请信息/专卖店分组/产品明细/附件/提交 |
+| `/product-apply/budget-select` | 预算选择页 | 搜索过滤+预算卡片+异常提示 |
+| `/product-apply/store-select` | 专卖店搜索选择页 | 搜索+列表+回填 |
+| `/product-apply/product-select` | 产品搜索选择页 | 搜索+卡片+回填（P1-01） |
+| `/product-apply/detail/:id` | 详情页 | 基础信息/发起信息/审批流/订单结果/审批操作 |
+| `/create` | 发起工单入口页 | 物流/客服/产品申请三个入口 |
+| `/my` | 我的列表页 | 待办/已办/抄送我的/已发起+键值对卡片 |
+
+> 以上路由为 React 仓参考实现路由，正式 Vue 工程需按实际路由规范重新配置。
 
 ### Mock 约定
 - 不写复杂 Mock。
@@ -70,13 +83,27 @@ src/
 │   ├── router/         # 路由定义，配置页面级路由
 │   └── layout/         # 布局组件（含底部 Tab 等）
 ├── features/
-│   ├── work-order-center/   # 工单处理中心（已有功能）
-│   ├── work-order-budget/   # 历史命名目录，现行对应产品申请工单 / 产品申请预算核销
-│   ├── budget-shared/       # 预算业务共享模块
-│   └── approval-shared/     # 审批共享模块
+│   ├── work-order-center/       # 工单处理中心（已有功能）
+│   ├── work-order-budget/       # 产品申请工单参考实现（P0+P1）
+│   │   ├── pages/               # 页面组件
+│   │   │   ├── create.tsx       # 发起页
+│   │   │   ├── budget-select.tsx    # 预算选择页
+│   │   │   ├── store-select.tsx     # 专卖店搜索选择页
+│   │   │   ├── product-select.tsx   # 产品搜索选择页（P1-01）
+│   │   │   └── detail.tsx           # 详情页
+│   │   ├── types/               # 类型定义
+│   │   │   └── index.ts         # Budget/Store/StoreGroup/ProductItem/ApprovalNode/GroupResult
+│   │   ├── mocks/               # Mock数据
+│   │   │   └── index.ts         # 预算/专卖店/产品/审批流/订单结果
+│   │   └── hooks/               # Hooks
+│   │       └── useWorkOrderForm.tsx    # 表单Context Hook（历史，P1后改用URL params）
+│   ├── budget-shared/           # 预算业务共享模块
+│   └── approval-shared/       # 审批共享模块
 ├── shared/             # 跨模块共享的组件、hooks、工具
 ├── assets/             # 图片、图标等静态资源
 └── styles/             # 全局样式文件
+    ├── mobile.css      # 移动端适配基础（含.page-content滚动）
+    └── variables.css   # CSS变量定义
 ```
 
 ## 当前最新业务口径
@@ -136,9 +163,23 @@ src/
 
 详细流程规则参考：`docs/product/work-order-budget/process-and-status-rules.md`
 
+## 跨页面状态传递方案（参考实现）
+
+发起页 → 选择页 → 发起页的跳转中，使用以下方案：
+
+1. **URL Search Params**：传递 `budgetId`、`storeCode`、`storeName`、`groupId`、`productCode`
+   - 发起页通过 `useSearchParams` 读取参数并回填
+   - 选择完成后通过 `navigate('/product-apply/create?budgetId=xxx')` 返回
+2. **sessionStorage**：持久化 `storeGroups` 状态
+   - 解决页面重新挂载时 `groupId` 不一致的问题
+   - 使用 `useState(() => { sessionStorage.getItem(...) })` 初始化
+
+> 以上方案仅适用于 React 参考实现。正式 Vue 工程应根据实际状态管理选型（Pinia/Vuex）重新设计。
+
 ## 注意事项
 
 - "组内"入口当前未开通，不纳入本期功能范围，只保留视觉说明。
 - 产品申请工单除表单内容、预算核销信息、审批/流转规则不同外，展示风格和流程沿用现有工单样式。
 - 当前仓库主要用于沉淀移动端样式、交互结构和产品申请预算核销需求文档，不在当前 React 仓中推进正式业务页面开发。
 - 样式设计需考虑 Web 端复用，参考 `docs/technical/cross-end-work-order-ui-strategy.md`。
+- 页面滚动需确保 `.page-content` 设置 `overflow-y: auto` 和 `-webkit-overflow-scrolling: touch`。
