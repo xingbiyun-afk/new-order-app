@@ -112,6 +112,7 @@ function goBudgetSelect() {
   if (hasGroupOrProduct()) {
     openConfirm('切换预算后，当前已填写的专卖店申请分组和商品明细将被清空，是否继续？', () => {
       store.storeGroups = [createDefaultGroup()]
+      store.clearCollapsed()  // CR-20260630-004 3.4
       router.push('/product-apply/budget-select')
     })
   } else {
@@ -172,9 +173,10 @@ function clearStore(groupId: string) {
       <div v-else>
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5;">
           <span style="font-size: 14px; color: #666;">订单归属专卖店<span style="color: #F44336;"> *</span></span>
-          <div style="display: flex; align-items: center; gap: 8px;" @click="!group.storeCode ? router.push(`/product-apply/store-select?groupId=${group.id}`) : undefined">
-            <span style="font-size: 14px; cursor: pointer;" :style="{ color: group.storeCode ? '#333' : '#bbb' }">{{ group.storeCode ? `${group.storeCode} ${group.storeName}` : '请输入专卖店编号' }}</span>
-            <span v-if="!group.storeCode" style="color: #999; font-size: 16px; cursor: pointer;">&#8250;</span>
+          <!-- CR-20260630-004 3.1: 已选专卖店也可点击进入搜索页改选；3.3: 占位文案改为请选择 -->
+          <div style="display: flex; align-items: center; gap: 8px;" @click="router.push(`/product-apply/store-select?groupId=${group.id}`)">
+            <span style="font-size: 14px; cursor: pointer;" :style="{ color: group.storeCode ? '#333' : '#bbb' }">{{ group.storeCode ? `${group.storeCode} ${group.storeName}` : '请选择订单归属专卖店' }}</span>
+            <span style="color: #999; font-size: 16px; cursor: pointer;">&#8250;</span>
             <button v-if="group.storeCode" @click.stop="clearStore(group.id)" style="background: none; border: none; color: #F44336; font-size: 12px; cursor: pointer;">清空</button>
           </div>
         </div>
