@@ -2,7 +2,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useWorkOrderStore } from '../../stores/workOrder'
-import { mockProductOptions, calculateAmount } from '../../mocks'
+import { mockProductOptions, calculateAmount, createDefaultGroup } from '../../mocks'
 import type { ProductItem } from '../../types'
 
 const router = useRouter()
@@ -13,6 +13,30 @@ const currentUser = { name: '张三', org: '南大 / 福建' }
 const toast = ref('')
 function showToast(msg: string) { toast.value = msg; setTimeout(() => toast.value = '', 2500) }
 const attachments = ref<{ id: string; name: string }[]>([])
+
+// 确认弹窗状态（CR-20260630-002 3.6）
+const showConfirm = ref(false)
+const confirmMsg = ref('')
+const onConfirm = ref<(() => void) | null>(null)
+
+function openConfirm(msg: string, cb: () => void) {
+  confirmMsg.value = msg
+  onConfirm.value = cb
+  showConfirm.value = true
+}
+function closeConfirm() {
+  showConfirm.value = false
+  onConfirm.value = null
+}
+function execConfirm() {
+  onConfirm.value?.()
+  closeConfirm()
+}
+
+// 金额格式化
+function fmtMoney(v: number): string {
+  return v.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
 
 onMounted(() => {
   store.initStoreGroups()
@@ -60,6 +84,11 @@ function delAtt(id: string) { attachments.value = attachments.value.filter(a => 
 function addAtt() { attachments.value.push({ id: `att_${Date.now()}`, name: `附件_${attachments.value.length + 1}.pdf` }); showToast('附件已添加（模拟）') }
 function submit() {
   if (!store.selectedBudget) { showToast('请选择预算号'); return }
+  // 预算可用金额校验（CR-20260630-002 3.5）
+  if (store.totalAmount > store.selectedBudget.availableAmount) {
+    showToast(`整单金额 ¥${fmtMoney(store.totalAmount)} 超过预算可用金额 ¥${fmtMoney(store.selectedBudget.availableAmount)}`)
+    return
+  }
   for (const g of store.storeGroups) {
     if (!g.storeCode) { showToast('请选择订单归属专卖店'); return }
     for (const p of g.products) { if (!p.productCode) { showToast('请选择产品编号'); return } }
@@ -72,6 +101,35 @@ function submit() {
   showToast('提交成功！'); setTimeout(() => router.push('/my'), 1500)
 }
 function isCol(gid: string) { return store.collapsedGroups.has(gid) }
+
+// 检查是否已填写分组或商品
+function hasGroupOrProduct(): boolean {
+  return store.storeGroups.some(g => g.storeCode || g.products.some(p => p.productCode))
+}
+
+// 切换预算：带确认提示，确认后清空分组（CR-20260630-002 3.6）
+function goBudgetSelect() {
+  if (hasGroupOrProduct()) {
+    openConfirm('切换预算后，当前已填写的专卖店申请分组和商品明细将被清空，是否继续？', () => {
+      store.storeGroups = [createDefaultGroup()]
+      router.push('/product-apply/budget-select')
+    })
+  } else {
+    router.push('/product-apply/budget-select')
+  }
+}
+
+// 清空专卖店 + 同步清空商品（CR-20260630-002 3.7）
+function clearStore(groupId: string) {
+  openConfirm('清空专卖店后，该分组下的商品明细也将被清空，是否继续？', () => {
+    const g = store.storeGroups.find(x => x.id === groupId)
+    if (g) {
+      g.storeCode = ''
+      g.storeName = ''
+      g.products = [{ id: `prod_${Date.now()}`, productCode: '', productName: '', jdePrice: 0, isDiscount: false, discount: 0.5, maxQuantity: 0, quantity: 1, amount: 0 }]
+    }
+  })
+}
 </script>
 <template>
   <div style="padding-bottom: 80px;">
@@ -82,7 +140,7 @@ function isCol(gid: string) { return store.collapsedGroups.has(gid) }
     <!-- Budget -->
     <div class="card" style="margin: 12px 16px; padding: 14px 16px;">
       <div style="font-size: 15px; font-weight: 600; color: #333; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0;">预算信息</div>
-      <div @click="router.push('/product-apply/budget-select')" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5; cursor: pointer;">
+      <div @click="goBudgetSelect" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5; cursor: pointer;">
         <span style="font-size: 14px; color: #666;">预算号<span style="color: #F44336;"> *</span></span>
         <span style="font-size: 14px;" :style="{ color: store.selectedBudget ? '#333' : '#bbb' }">{{ store.selectedBudget?.budgetNo || '选择预算' }}</span>
         <span style="color: #999; margin-left: 4px; font-size: 16px;">&#8250;</span>
@@ -94,7 +152,7 @@ function isCol(gid: string) { return store.collapsedGroups.has(gid) }
       <div style="font-size: 15px; font-weight: 600; color: #333; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0;">申请信息</div>
       <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">申请人</span><span style="font-size: 14px; color: #333;">{{ currentUser.name }}</span></div>
       <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">申请类型</span><span style="font-size: 14px; color: #333;">{{ store.selectedBudget?.applyType || '-' }}</span></div>
-      <div style="display: flex; align-items: flex-start; justify-content: space-between; padding: 10px 0;"><span style="font-size: 14px; color: #666;">申请理由</span><span style="font-size: 14px; color: #333; text-align: right; line-height: 1.5; word-break: break-all;">{{ store.selectedBudget?.applyReason || '-' }}</span></div>
+      <div style="display: flex; align-items: flex-start; gap: 8px; padding: 10px 0;"><span style="font-size: 14px; color: #666; white-space: nowrap;">申请理由</span><span style="font-size: 14px; color: #333; line-height: 1.5; word-break: break-all; flex: 1;">{{ store.selectedBudget?.applyReason || '-' }}</span></div>
     </div>
     <!-- Store Groups -->
     <div v-for="(group, gi) in store.storeGroups" :key="group.id" class="card" style="margin: 12px 16px; padding: 14px 16px;">
@@ -112,10 +170,13 @@ function isCol(gid: string) { return store.collapsedGroups.has(gid) }
       </div>
       <!-- Expanded -->
       <div v-else>
-        <div @click="router.push(`/product-apply/store-select?groupId=${group.id}`)" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5; cursor: pointer;">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5;">
           <span style="font-size: 14px; color: #666;">订单归属专卖店<span style="color: #F44336;"> *</span></span>
-          <span style="font-size: 14px;" :style="{ color: group.storeCode ? '#333' : '#bbb' }">{{ group.storeCode ? `${group.storeCode} ${group.storeName}` : '请输入专卖店编号' }}</span>
-          <span style="color: #999; margin-left: 4px; font-size: 16px;">&#8250;</span>
+          <div style="display: flex; align-items: center; gap: 8px;" @click="!group.storeCode ? router.push(`/product-apply/store-select?groupId=${group.id}`) : undefined">
+            <span style="font-size: 14px; cursor: pointer;" :style="{ color: group.storeCode ? '#333' : '#bbb' }">{{ group.storeCode ? `${group.storeCode} ${group.storeName}` : '请输入专卖店编号' }}</span>
+            <span v-if="!group.storeCode" style="color: #999; font-size: 16px; cursor: pointer;">&#8250;</span>
+            <button v-if="group.storeCode" @click.stop="clearStore(group.id)" style="background: none; border: none; color: #F44336; font-size: 12px; cursor: pointer;">清空</button>
+          </div>
         </div>
         <div v-for="(prod, pi) in group.products" :key="prod.id" :style="{ marginTop: pi > 0 ? '16px' : '12px', paddingTop: pi > 0 ? '16px' : '0', borderTop: pi > 0 ? '1px dashed #e0e0e0' : 'none' }">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -131,7 +192,6 @@ function isCol(gid: string) { return store.collapsedGroups.has(gid) }
             <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">产品名称</span><span style="font-size: 14px; color: #333;">{{ prod.productName }}</span></div>
             <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">JDE价格</span><span style="font-size: 14px; color: #333;">¥{{ prod.jdePrice.toFixed(2) }}</span></div>
             <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">是否打折产品</span><span style="font-size: 14px; color: #333;">{{ prod.isDiscount ? '是' : '否' }}</span></div>
-            <div v-if="prod.isDiscount" style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">折扣</span><span style="font-size: 14px; color: #333;">{{ (prod.discount * 10).toFixed(1) }}折</span></div>
             <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">可申请数量</span><span style="font-size: 14px; color: #333;">{{ prod.maxQuantity }}</span></div>
             <div style="margin-top: 8px;">
               <label style="font-size: 14px; color: #666; display: block; margin-bottom: 4px;">数量 <span style="color: #F44336;">*</span></label>
@@ -185,6 +245,16 @@ function isCol(gid: string) { return store.collapsedGroups.has(gid) }
     <!-- Submit -->
     <div style="position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; padding: 12px 16px; background-color: #fff; box-shadow: 0 -2px 8px rgba(0,0,0,0.06); z-index: 100;">
       <button @click="submit" style="width: 100%; padding: 14px; border-radius: 24px; border: none; background-color: #22BDB8; color: #fff; font-size: 16px; font-weight: 500; cursor: pointer;">提交</button>
+    </div>
+    <!-- Confirm Dialog (CR-20260630-002 3.6) -->
+    <div v-if="showConfirm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5); z-index: 2000; display: flex; align-items: center; justify-content: center;">
+      <div style="background-color: #fff; border-radius: 12px; padding: 20px; margin: 0 32px; max-width: 320px; width: 100%;">
+        <div style="font-size: 15px; color: #333; margin-bottom: 16px; line-height: 1.5;">{{ confirmMsg }}</div>
+        <div style="display: flex; gap: 12px;">
+          <button @click="closeConfirm" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #e0e0e0; background-color: #fff; color: #666; font-size: 14px; cursor: pointer;">取消</button>
+          <button @click="execConfirm" style="flex: 1; padding: 10px; border-radius: 8px; border: none; background-color: #22BDB8; color: #fff; font-size: 14px; cursor: pointer;">确定</button>
+        </div>
+      </div>
     </div>
     <!-- Toast -->
     <div v-if="toast" style="position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(0,0,0,0.75); color: #fff; padding: 12px 24px; border-radius: 8px; font-size: 14px; z-index: 1000; white-space: nowrap;">{{ toast }}</div>

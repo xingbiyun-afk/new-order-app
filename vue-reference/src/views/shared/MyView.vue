@@ -30,7 +30,7 @@ const cards = [
         <span style="display: flex; align-items: center; gap: 4px;">最新到达优先 <span style="font-size: 10px;">▼</span></span>
       </div>
     </div>
-    <div style="padding: 8px 16px 16px;">
+    <div style="padding: 8px 16px 100px;">
       <div v-for="card in cards" :key="card.id" class="card" style="padding: 14px 16px; margin-bottom: 12px; cursor: pointer;" @click="router.push(`/product-apply/detail/${card.id}`)">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0;">
           <span style="font-size: 16px; font-weight: 500; color: #333;">{{ card.type }}</span>
