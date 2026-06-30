@@ -152,7 +152,7 @@ function clearStore(groupId: string) {
       <div style="font-size: 15px; font-weight: 600; color: #333; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0;">申请信息</div>
       <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">申请人</span><span style="font-size: 14px; color: #333;">{{ currentUser.name }}</span></div>
       <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">申请类型</span><span style="font-size: 14px; color: #333;">{{ store.selectedBudget?.applyType || '-' }}</span></div>
-      <div style="display: flex; align-items: flex-start; justify-content: space-between; padding: 10px 0;"><span style="font-size: 14px; color: #666;">申请理由</span><span style="font-size: 14px; color: #333; text-align: right; line-height: 1.5; word-break: break-all;">{{ store.selectedBudget?.applyReason || '-' }}</span></div>
+      <div style="display: flex; align-items: flex-start; gap: 8px; padding: 10px 0;"><span style="font-size: 14px; color: #666; white-space: nowrap;">申请理由</span><span style="font-size: 14px; color: #333; line-height: 1.5; word-break: break-all; flex: 1;">{{ store.selectedBudget?.applyReason || '-' }}</span></div>
     </div>
     <!-- Store Groups -->
     <div v-for="(group, gi) in store.storeGroups" :key="group.id" class="card" style="margin: 12px 16px; padding: 14px 16px;">
