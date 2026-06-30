@@ -20,17 +20,19 @@ onMounted(() => {
 })
 watch(() => store.storeGroups, () => store.persistStoreGroups(), { deep: true })
 
-// URL backfill - store
-const storeCode = computed(() => route.query.storeCode as string)
-const storeName = computed(() => route.query.storeName as string)
-const groupIdFromUrl = computed(() => route.query.groupId as string)
-watch([storeCode, storeName, groupIdFromUrl], ([c, n, g]) => {
-  if (c && n && g) { store.updateStoreGroup(g, c, n); router.replace({ query: {} }) }
-})
-// URL backfill - product
-const productIdFromUrl = computed(() => route.query.productId as string)
-const productCodeFromUrl = computed(() => route.query.productCode as string)
-watch([productIdFromUrl, productCodeFromUrl, groupIdFromUrl], ([pid, pcode, gid]) => {
+// URL backfill - watch route.query directly
+watch(() => route.query, (q) => {
+  const sid = q.storeCode as string
+  const sname = q.storeName as string
+  const gid = q.groupId as string
+  const pid = q.productId as string
+  const pcode = q.productCode as string
+
+  // Backfill store selection
+  if (sid && sname && gid) {
+    store.updateStoreGroup(gid, sid, sname)
+  }
+  // Backfill product selection
   if (pid && pcode && gid) {
     const opt = mockProductOptions.find(p => p.code === pcode)
     if (opt) {
@@ -41,9 +43,12 @@ watch([productIdFromUrl, productCodeFromUrl, groupIdFromUrl], ([pid, pcode, gid]
         p.amount = calculateAmount(p as ProductItem)
       }
     }
+  }
+  // Clear URL params after backfill
+  if (sid || pcode) {
     router.replace({ query: {} })
   }
-})
+}, { immediate: true, deep: true })
 
 function qtyChange(gid: string, pid: string, v: number) {
   const q = Math.max(1, v)
