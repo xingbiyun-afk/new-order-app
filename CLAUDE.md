@@ -165,6 +165,8 @@ src/
 
 ## 跨页面状态传递方案（参考实现）
 
+### React 参考实现（src/）
+
 发起页 → 选择页 → 发起页的跳转中，使用以下方案：
 
 1. **URL Search Params**：传递 `budgetId`、`storeCode`、`storeName`、`groupId`、`productCode`
@@ -174,7 +176,18 @@ src/
    - 解决页面重新挂载时 `groupId` 不一致的问题
    - 使用 `useState(() => { sessionStorage.getItem(...) })` 初始化
 
-> 以上方案仅适用于 React 参考实现。正式 Vue 工程应根据实际状态管理选型（Pinia/Vuex）重新设计。
+### Vue 参考实现（vue-reference/）
+
+1. **URL Search Params**：传递 `budgetId`、`storeCode`、`storeName`、`groupId`、`productCode`
+   - 发起页通过 `watch(() => route.query, ...)` 监听参数变化并回填
+   - 必须设置 `immediate: true` 确保组件挂载时立即检查 URL 参数
+   - 回填完成后 `router.replace({ query: {} })` 清除参数
+2. **Pinia Store + sessionStorage**：
+   - `storeGroups` 存于 Pinia Store，变更时同步到 sessionStorage
+   - 组件挂载时从 sessionStorage 恢复分组状态
+   - `selectedBudget`、`collapsedGroups` 等状态统一管理于 Pinia Store
+
+> 以上方案为参考实现中的具体做法。正式 Vue 工程应根据实际状态管理选型重新设计。
 
 ## 注意事项
 
