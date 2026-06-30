@@ -34,6 +34,9 @@ export const useWorkOrderStore = defineStore('workOrder', () => {
     storeGroups.value = storeGroups.value.filter(g => g.id !== gid)
     const n = new Set(collapsedGroups.value); n.delete(gid); collapsedGroups.value = n
   }
+  function clearCollapsed() {
+    collapsedGroups.value = new Set()
+  }
   function updateStoreGroup(gid: string, code: string, name: string) {
     const g = storeGroups.value.find(x => x.id === gid)
     if (g) { g.storeCode = code; g.storeName = name }
@@ -62,5 +65,6 @@ export const useWorkOrderStore = defineStore('workOrder', () => {
 
   return { selectedBudget, storeGroups, collapsedGroups, totalAmount, skuTotalMap,
     selectBudget, toggleGroupCollapse, addGroup, deleteGroup, updateStoreGroup,
-    updateProduct, addProduct, deleteProduct, initStoreGroups, persistStoreGroups }
+    updateProduct, addProduct, deleteProduct, initStoreGroups, persistStoreGroups,
+    clearCollapsed }
 })
