@@ -1,0 +1,41 @@
+/* 样式变量 - 移动端 UI 基线 */
+:root {
+  --primary-color: #22BDB8;
+  --primary-color-dark: #1DA8A3;
+  --primary-color-light: #E6F8F8;
+  --bg-page: #F5F5F5;
+  --bg-card: #FFFFFF;
+  --bg-input: #F0F0F0;
+  --bg-disabled: #E5E5E5;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-tertiary: #999999;
+  --text-white: #FFFFFF;
+  --text-link: #22BDB8;
+  --border-color: #E5E5E5;
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --border-radius-xl: 16px;
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-float: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+  --spacing-xxl: 24px;
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --header-height: 48px;
+  --header-bg: #22BDB8;
+  --header-text-color: #FFFFFF;
+  --tab-height: 56px;
+  --tab-active-color: #22BDB8;
+  --tab-inactive-color: #999999;
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+}
