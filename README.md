@@ -51,27 +51,32 @@
 ```
 ├── docs/                          # 项目文档
 │   ├── ai/                        # AI 协作基线与多 AI 协作指南
-│   ├── development-summary/       # 开发总结（CR-20260629-001）
+│   ├── development-summary/       # 开发总结
+│   ├── daily-reports/             # 项目日报
 │   ├── product/                   # 产品申请工单 / 预算核销产品文档
 │   └── technical/                 # 移动端样式、跨端复用、模块结构等技术文档
-├── src/
+├── change-logs/                   # 正式变更清单
+├── vue-reference/                 # Vue3 参考实现（独立工程）
+│   ├── src/
+│   │   ├── views/                 # 页面组件（8 个页面）
+│   │   ├── stores/                # Pinia Store
+│   │   ├── router/                # Vue Router 配置
+│   │   ├── types/                 # TypeScript 类型定义
+│   │   ├── mocks/                 # Mock 数据
+│   │   └── styles/                # 全局样式
+│   ├── vite.config.ts
+│   └── package.json
+├── src/                           # React 参考实现
 │   ├── app/                       # 应用层
 │   │   ├── router/                # 路由配置
 │   │   └── layout/                # 布局组件
 │   ├── features/                  # 功能模块
 │   │   ├── work-order-center/     # 工单中心（已有）
-│   │   ├── work-order-budget/     # 产品申请工单参考实现（P0+P1）
-│   │   │   ├── pages/             # 页面组件
-│   │   │   │   ├── create.tsx           # 发起页
-│   │   │   │   ├── budget-select.tsx    # 预算选择页
-│   │   │   │   ├── store-select.tsx     # 专卖店搜索选择页
-│   │   │   │   ├── product-select.tsx   # 产品搜索选择页（P1-01）
-│   │   │   │   └── detail.tsx           # 详情页
-│   │   │   ├── types/             # 类型定义
-│   │   │   ├── mocks/             # Mock数据
-│   │   │   └── hooks/             # Hooks
-│   │   ├── budget-shared/         # 预算业务共享模块
-│   │   └── approval-shared/       # 审批共享模块
+│   │   └── work-order-budget/     # 产品申请工单参考实现（P0+P1）
+│   │       ├── pages/             # 页面组件
+│   │       ├── types/             # 类型定义
+│   │       ├── mocks/             # Mock数据
+│   │       └── hooks/             # Hooks
 │   ├── shared/                    # 共享资源
 │   ├── assets/                    # 静态资源
 │   └── styles/                    # 样式文件
@@ -91,8 +96,14 @@ npm run preview    # 预览构建
 - 已完成：React + Vite 早期结构初始化
 - 已完成：移动端 UI 基线与跨端复用策略沉淀
 - 已完成：产品申请工单 / 预算核销基础规则文档沉淀
-- **已完成（2026-06-29）：产品申请工单移动端页面参考实现（P0+P1）**
+- **已完成（2026-06-29）：产品申请工单 React 参考实现（P0+P1）**
   - P0：发起页、预算选择页、专卖店搜索页、产品搜索选择页、详情页、我的列表页
   - P1：搜索选择页、跨分组SKU校验、动态数量提示、分组折叠/展开、搜索过滤、附件交互、订单卡片、失败原因展示
   - 开发总结：`docs/development-summary/CR-20260629-001-开发总结.md`
+- **已完成（2026-06-30）：产品申请工单 Vue3 参考实现（React → Vue 全页面迁移）**
+  - 技术栈：Vue 3.5 + TypeScript + Vite 8 + Vue Router 4 + Pinia + Tailwind CSS 4
+  - 完整迁移 8 个页面，1:1 复刻 React 版本页面结构与交互
+  - 修复 CDN 部署 chunk 加载问题和选择回填问题
+  - 变更清单：`change-logs/CR-20260630-001 正式变更清单.md`
+  - 开发总结：`docs/development-summary/CR-20260630-001-开发总结.md`
 - 后续：正式开发进入 Vue / Vue2 工程，不在当前 React 仓直接推进生产实现

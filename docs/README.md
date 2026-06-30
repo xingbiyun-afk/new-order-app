@@ -10,16 +10,19 @@
 docs/
 ├── README.md                      # 本文档
 ├── ai/                            # AI 协作指南
-│   └── README.md
-├── branch/                        # 分支管理规范
-│   └── README.md
+│   └── 项目协作基线.md
 ├── development-summary/           # 开发总结
-│   └── CR-20260629-001-开发总结.md   # 产品申请工单P0+P1开发总结
-├── workflow/                      # 工作流程指南
-│   └── README.md
+│   ├── CR-20260629-001-开发总结.md   # React 参考实现 P0+P1
+│   └── CR-20260630-001-开发总结.md   # Vue3 参考实现迁移
+├── daily-reports/                 # 项目日报
+│   ├── 项目日报-v2026.06.29.md
+│   └── 项目日报-v2026.06.30.md
 ├── product/                       # 产品文档
 │   └── work-order-budget/
-│       └── README.md              # 产品申请工单 / 预算核销产品说明
+│       ├── README.md
+│       ├── 产品申请工单AI开发任务说明.md
+│       ├── 产品申请工单和产品申请预算核销PRD.md
+│       └── 产品申请工单字段清单初稿.md
 └── technical/                     # 技术文档
     ├── mobile-ui-baseline.md      # 移动端 UI 基线
     ├── module-structure.md        # 模块结构说明
