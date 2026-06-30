@@ -2,12 +2,19 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { mockBudgets } from '../../mocks'
+
+// 金额格式化：千分位 + 两位小数（CR-20260630-002 3.4）
+function fmtMoney(v: number): string {
+  return v.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
 const router = useRouter()
 const q = ref('')
+// 仅支持预算号搜索（CR-20260630-002 3.3）
 const list = computed(() => {
   if (!q.value) return mockBudgets
   const s = q.value.toLowerCase()
-  return mockBudgets.filter(b => b.budgetNo.toLowerCase().includes(s) || b.productCode.toLowerCase().includes(s))
+  return mockBudgets.filter(b => b.budgetNo.toLowerCase().includes(s))
 })
 function select(b: typeof mockBudgets[0]) {
   if (!b.applicationAvailable) return
@@ -35,9 +42,9 @@ function select(b: typeof mockBudgets[0]) {
           <span style="font-size: 12px; padding: 2px 8px; border-radius: 4px;" :style="{ backgroundColor: b.status==='已生效'?'#E8F5E9':'#F5F5F5', color: b.status==='已生效'?'#4CAF50':'#999' }">{{ b.status }}</span>
         </div>
         <div style="font-size: 13px; color: #666; line-height: 1.8;">
-          <div>可用金额：<span style="color: #22BDB8; font-weight: 500;">¥{{ b.availableAmount.toLocaleString() }}</span></div>
-          <div>已用金额：¥{{ b.usedAmount.toLocaleString() }}</div>
-          <div>申请中金额：¥{{ b.applyingAmount.toLocaleString() }}</div>
+          <div>可用金额：<span style="color: #22BDB8; font-weight: 500;">¥{{ fmtMoney(b.availableAmount) }}</span></div>
+          <div>已用金额：¥{{ fmtMoney(b.usedAmount) }}</div>
+          <div>申请中金额：¥{{ fmtMoney(b.applyingAmount) }}</div>
         </div>
         <div v-if="b.isAbnormal" style="margin-top: 8px; background-color: #FFF8E1; color: #FF8F00; font-size: 12px; padding: 6px 10px; border-radius: 6px;">&#9888; {{ b.abnormalMessage }}</div>
         <div v-if="!b.applicationAvailable" style="margin-top: 8px; background-color: #FFEBEE; color: #F44336; font-size: 12px; padding: 6px 10px; border-radius: 6px;">该预算暂不可申请</div>
