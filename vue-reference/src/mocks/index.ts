@@ -27,11 +27,40 @@ export const mockStores = [
   { code: '37235', name: '游秋燕' }, { code: '34998', name: '福州晋安第五小学专卖店 林志高' },
 ];
 
+// ============================================================
+// "我的"页 Mock 数据（CR-20260630-003）
+// ============================================================
+
+// 通用卡片数据（旧接口兼容）
 export const mockWorkOrderCards: WorkOrderCard[] = [
   { id: '1', workOrderType: '产品申请', displayStatus: '处理中', applicantName: '张三', applyType: '新品申请', applyReason: '季度新品推广活动，针对核心专卖店进行首批铺货支持', createTime: '06-26 10:17' },
   { id: '2', workOrderType: '产品申请', displayStatus: '已结束', applicantName: '李四', applyType: '活动申请', applyReason: '618促销活动产品支持', createTime: '06-25 14:30' },
   { id: '3', workOrderType: '产品申请', displayStatus: '已驳回', applicantName: '王五', applyType: '补货申请', applyReason: '常规季度补货', createTime: '06-24 09:15' },
   { id: '4', workOrderType: '产品申请', displayStatus: '处理中', applicantName: '赵六', applyType: '新品申请', applyReason: '新品区域推广支持', createTime: '06-23 16:45' },
+];
+
+// 待办：4条，全部为"处理中"，覆盖短/中/长理由 + 同天/跨天时间
+export const mockTodoCards: WorkOrderCard[] = [
+  { id: 't1', workOrderType: '产品申请', displayStatus: '处理中', applicantName: '张三', applyType: '新品申请', applyReason: '新品推广', createTime: '06-30 09:00' },
+  { id: 't2', workOrderType: '产品申请', displayStatus: '处理中', applicantName: '李四', applyType: '活动申请', applyReason: '618促销活动产品支持，针对核心门店进行首批铺货', createTime: '06-30 14:30' },
+  { id: 't3', workOrderType: '产品申请', displayStatus: '处理中', applicantName: '王五', applyType: '补货申请', applyReason: '季度常规补货，应对暑期销售高峰，确保核心专卖店库存充足，避免因缺货导致销售机会流失', createTime: '06-29 11:20' },
+  { id: 't4', workOrderType: '产品申请', displayStatus: '处理中', applicantName: '赵六', applyType: '新品申请', applyReason: '国庆黄金周促销活动铺货准备，提前备货确保假期销售', createTime: '06-28 16:45' },
+];
+
+// 已办：4条，已结束+已驳回，覆盖短/中/长理由 + 跨天时间
+export const mockDoneCards: WorkOrderCard[] = [
+  { id: 'd1', workOrderType: '产品申请', displayStatus: '已结束', applicantName: '孙七', applyType: '补货申请', applyReason: '暑期旺季补货', createTime: '06-27 10:00' },
+  { id: 'd2', workOrderType: '产品申请', displayStatus: '已驳回', applicantName: '周八', applyType: '活动申请', applyReason: '双十一预售活动产品备货，需提前一个月准备库存', createTime: '06-26 15:30' },
+  { id: 'd3', workOrderType: '产品申请', displayStatus: '已结束', applicantName: '吴九', applyType: '新品申请', applyReason: '春季新品上市推广活动，针对华南区域核心专卖店进行首批铺货支持，确保新品上市首月销量达标', createTime: '06-25 08:45' },
+  { id: 'd4', workOrderType: '产品申请', displayStatus: '已驳回', applicantName: '郑十', applyType: '补货申请', applyReason: '年末库存补充', createTime: '06-24 13:10' },
+];
+
+// 已发起：4条，三种状态混合，覆盖短/中/长理由
+export const mockInitiatedCards: WorkOrderCard[] = [
+  { id: 'i1', workOrderType: '产品申请', displayStatus: '处理中', applicantName: '钱十一', applyType: '新品申请', applyReason: '智能系列新品推广', createTime: '06-30 10:30' },
+  { id: 'i2', workOrderType: '产品申请', displayStatus: '已结束', applicantName: '陈十二', applyType: '活动申请', applyReason: '五一劳动节促销活动产品支持，针对全国核心门店', createTime: '06-29 09:15' },
+  { id: 'i3', workOrderType: '产品申请', displayStatus: '已驳回', applicantName: '刘十三', applyType: '补货申请', applyReason: '梅雨季节防潮产品专项补货，确保南方区域专卖店库存充足，应对季节性销售增长需求', createTime: '06-28 14:00' },
+  { id: 'i4', workOrderType: '产品申请', displayStatus: '处理中', applicantName: '黄十四', applyType: '新品申请', applyReason: '冬季暖品系列上市铺货', createTime: '06-27 11:30' },
 ];
 
 const mockApprovalNodes: ApprovalNode[] = [
