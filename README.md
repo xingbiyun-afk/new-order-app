@@ -150,4 +150,9 @@ npm run build:react-legacy  # 构建历史 React 项目
   - 根目录 `npm run dev` / `npm run build` 默认指向 Vue
   - 5 份协作文档同步更新
   - 开发总结：`docs/development-summary/2026-07-01/CR-20260701-003-开发总结.md`
+- **已完成（2026-07-01）：文档目录归档规则补丁（CR-20260701-004）**
+  - 变更单与开发总结日期子目录归档规则正式写入 3 份协作文档
+  - 三处表述统一：`docs/change-logs/YYYY-MM-DD/`、`docs/development-summary/YYYY-MM-DD/`
+  - 历史平铺路径保留，不强制迁移
+  - 开发总结：`docs/development-summary/2026-07-01/CR-20260701-004-开发总结.md`
 - 后续：正式开发进入 Vue / Vue2 工程，不在当前仓库直接推进生产实现
