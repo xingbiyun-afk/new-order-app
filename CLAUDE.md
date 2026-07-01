@@ -1,5 +1,12 @@
 # CLAUDE.md — AI 协作指南
 
+> ⚠️ **IMPORTANT / 当前主工程强提示**  
+> 1. **当前正式开发方向是 Vue / Vue3，主实现目录为 `vue-reference/`。**  
+> 2. **不得仅依据根目录 `package.json`（React）、`vite.config.ts`（@vitejs/plugin-react）、`src/main.tsx`、`tsconfig.app.json`（jsx: "react-jsx"）或 `src/` 下的 `.tsx` 文件判定当前主技术栈为 React。**  
+> 3. 根目录 React + TypeScript + Vite 内容**仅为早期初始化历史参考**，不是当前开发基线。  
+> 4. 当前所有功能开发应在 `vue-reference/` 中进行。  
+> 5. 详见 [`CURRENT_TECH_STACK.md`](./CURRENT_TECH_STACK.md)。
+
 > 必读：所有 AI 工具在执行需求前，必须先阅读 `docs/ai/项目协作基线.md`。  
 > 如本文档与 `docs/ai/项目协作基线.md` 冲突，以项目协作基线为准。
 

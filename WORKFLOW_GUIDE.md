@@ -15,12 +15,13 @@
 
 开始协作前，必须优先阅读以下文档：
 
-1. `docs/ai/项目协作基线.md`
-2. `WORKFLOW_GUIDE.md`
-3. `docs/product/work-order-budget/产品申请工单和产品申请预算核销PRD.md`
-4. `docs/product/work-order-budget/产品申请工单字段清单初稿.md`
-5. `docs/product/work-order-budget/产品申请工单页面结构草图说明.md`
-6. `docs/product/work-order-budget/产品申请工单AI开发任务说明.md`
+1. `CURRENT_TECH_STACK.md`
+2. `docs/ai/项目协作基线.md`
+3. `WORKFLOW_GUIDE.md`
+4. `docs/product/work-order-budget/产品申请工单和产品申请预算核销PRD.md`
+5. `docs/product/work-order-budget/产品申请工单字段清单初稿.md`
+6. `docs/product/work-order-budget/产品申请工单页面结构草图说明.md`
+7. `docs/product/work-order-budget/产品申请工单AI开发任务说明.md`
 
 如文档之间与历史对话、旧代码、旧口径冲突，以最新协作基线和产品文档为准。
 

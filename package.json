@@ -3,8 +3,11 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "description": "Current primary implementation direction is Vue. Root React + TypeScript + Vite files are legacy reference only. Use vue-reference/ for current development.",
   "scripts": {
     "dev": "vite",
+    "dev:vue": "cd vue-reference && npm run dev",
+    "build:vue": "cd vue-reference && npm run build",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"

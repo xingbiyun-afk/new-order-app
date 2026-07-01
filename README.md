@@ -1,5 +1,10 @@
 # new-order-app
 
+> ⚠️ **当前主工程说明**：本仓库当前正式承接方向为 **Vue / Vue3**，主实现目录为 **`vue-reference/`**。  
+> 根目录 `src/` 与 `package.json` 中的 React + TypeScript + Vite 内容**仅为早期初始化历史参考**，不作为当前开发基线。  
+> 当前运行方式：`cd vue-reference && npm run dev`。  
+> 详细说明见 [`CURRENT_TECH_STACK.md`](./CURRENT_TECH_STACK.md)。
+
 工单 App 移动端样式与产品申请预算核销需求参考仓
 
 ## 项目定位
