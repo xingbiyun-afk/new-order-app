@@ -1,8 +1,8 @@
 # docs — 项目文档目录
 
 本文档目录包含工单 App 前端项目的所有说明文档。
-> 历史说明：本目录早期命名为 work-order-budget，用于承接“预算申请工单”原型规划。
-> 根据最新业务口径，后续统一按“产品申请工单 / 产品申请预算核销”理解。
+> 历史说明：本目录早期命名为 work-order-budget，用于承接"预算申请工单"原型规划。
+> 根据最新业务口径，后续统一按"产品申请工单 / 产品申请预算核销"理解。
 
 ## 目录结构
 
@@ -10,21 +10,39 @@
 docs/
 ├── README.md                      # 本文档
 ├── ai/                            # AI 协作指南
+│   ├── README.md
 │   └── 项目协作基线.md
-├── development-summary/           # 开发总结
-│   ├── CR-20260629-001-开发总结.md   # React 参考实现 P0+P1
-│   └── CR-20260630-001-开发总结.md   # Vue3 参考实现迁移
+├── change-logs/                   # 正式变更清单
+│   ├── CR-20260630-001 正式变更清单.md
+│   ├── CR-20260630-002 变更清单.md
+│   ├── CR-20260630-003 变更清单.md
+│   ├── CR-20260630-004 变更清单.md
+│   └── CR-20260701-001 变更清单.md
 ├── daily-reports/                 # 项目日报
 │   ├── 项目日报-v2026.06.29.md
 │   └── 项目日报-v2026.06.30.md
+├── development-summary/           # 开发总结
+│   ├── CR-20260629-001-开发总结.md   # React 参考实现 P0+P1
+│   ├── CR-20260630-001-开发总结.md   # Vue3 参考实现迁移
+│   ├── CR-20260630-002-开发总结.md   # 一致性修正
+│   ├── CR-20260630-003-开发总结.md   # 我的页 Mock 补强
+│   ├── CR-20260630-004-开发总结.md   # 发起页收尾修正
+│   └── CR-20260701-001-开发总结.md   # 命名口径统一与发起页优化
 ├── product/                       # 产品文档
 │   └── work-order-budget/
 │       ├── README.md
 │       ├── 产品申请工单AI开发任务说明.md
 │       ├── 产品申请工单和产品申请预算核销PRD.md
-│       └── 产品申请工单字段清单初稿.md
+│       ├── 产品申请工单字段清单初稿.md
+│       ├── 产品申请工单页面结构草图说明.md
+│       ├── 产品申请工单"我的"页规则明细说明.md
+│       ├── budget-management-integration.md
+│       ├── open-questions.md
+│       ├── process-and-status-rules.md
+│       └── product-application-budget-writeoff-rules.md
 └── technical/                     # 技术文档
     ├── mobile-ui-baseline.md      # 移动端 UI 基线
+    ├── cross-end-work-order-ui-strategy.md  # 跨端复用策略
     ├── module-structure.md        # 模块结构说明
     ├── route-design.md            # 路由设计
     └── mock-strategy.md           # Mock 策略
@@ -32,8 +50,9 @@ docs/
 
 ## 使用说明
 
-- `ai/README.md`：AI 助手协作时的上下文参考。
-- `branch/README.md`：分支命名和管理的规范。
-- `workflow/README.md`：开发工作流程和阶段任务。
-- `product/work-order-budget/README.md`：预算申请工单的产品需求说明。
-- `technical/`：技术方案、UI 基线、模块设计等技术文档。
+- `ai/`：AI 协作基线指南，所有 AI 工具介入开发时的约束与规则。
+- `change-logs/`：历次正式变更清单，每份对应一个 CR 编号。
+- `daily-reports/`：项目日报，按日记录工作进展与产出。
+- `development-summary/`：开发总结，每份 CR 对应一份，记录变更背景、逐项修改、验证结果。
+- `product/work-order-budget/`：产品申请工单 / 预算核销的产品需求、字段清单、页面结构、规则说明。
+- `technical/`：技术方案、UI 基线、模块设计、路由设计、Mock 策略等技术文档。
