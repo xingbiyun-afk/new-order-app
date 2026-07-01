@@ -63,7 +63,8 @@
 用于记录首轮任务书基础上的新增需求、修订、补充和调整。
 
 目录建议：
-- `docs/change-logs/`
+- `docs/change-logs/YYYY-MM-DD/`（日期子目录）
+- 历史平铺路径保留，不强制迁移
 
 命名建议：
 - `CR-YYYYMMDD-NNN 变更清单.md`
@@ -78,7 +79,10 @@
 - 后续建议
 
 目录建议：
-- `docs/development-summary/`
+- `docs/development-summary/YYYY-MM-DD/`（日期子目录）
+- 历史平铺路径保留，不强制迁移
+
+> AI 后续生成新文件时，默认使用日期子目录，不再优先旧平铺路径。
 
 ### 4. 项目日报
 当天结束后补充项目日报，记录：
@@ -247,3 +251,17 @@
 - 提交前必须完成构建验证
 
 ---
+
+## 更新日志
+
+### 2026-07-01 · CR-20260701-004
+- **变更类型**：文档规范补充
+- **变更摘要**：
+  - 变更单默认归档路径改为 `docs/change-logs/YYYY-MM-DD/`
+  - 开发总结默认归档路径改为 `docs/development-summary/YYYY-MM-DD/`
+  - 明确历史平铺路径保留、不强制迁移
+  - AI 后续生成文件默认使用日期子目录，不再优先旧平铺路径
+- **参考文档**：
+  - `docs/change-logs/2026-07-01/CR-20260701-004 变更清单.md`
+  - `docs/ai/项目协作基线.md`
+  - `docs/product/work-order-budget/产品申请工单AI开发任务说明.md`
