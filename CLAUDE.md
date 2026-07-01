@@ -2,10 +2,11 @@
 
 > ⚠️ **IMPORTANT / 当前主工程强提示**  
 > 1. **当前正式开发方向是 Vue / Vue3，主实现目录为 `vue-reference/`。**  
-> 2. **不得仅依据根目录 `package.json`（React）、`vite.config.ts`（@vitejs/plugin-react）、`src/main.tsx`、`tsconfig.app.json`（jsx: "react-jsx"）或 `src/` 下的 `.tsx` 文件判定当前主技术栈为 React。**  
-> 3. 根目录 React + TypeScript + Vite 内容**仅为早期初始化历史参考**，不是当前开发基线。  
+> 2. **不得仅依据 `legacy/react-reference/` 下的 React 工程文件判定当前主技术栈为 React。**  
+> 3. 根目录历史 React + TypeScript + Vite 工程**已归档至 `legacy/react-reference/`**，不是当前开发基线。  
 > 4. 当前所有功能开发应在 `vue-reference/` 中进行。  
-> 5. 详见 [`CURRENT_TECH_STACK.md`](./CURRENT_TECH_STACK.md)。
+> 5. 根目录默认脚本 `npm run dev` / `npm run build` 已指向 Vue。  
+> 6. 详见 [`CURRENT_TECH_STACK.md`](./CURRENT_TECH_STACK.md)。
 
 > 必读：所有 AI 工具在执行需求前，必须先阅读 `docs/ai/项目协作基线.md`。  
 > 如本文档与 `docs/ai/项目协作基线.md` 冲突，以项目协作基线为准。
@@ -27,7 +28,7 @@
 
 ## 项目上下文
 
-本仓库为工单 App 前端，基于 React + TypeScript + Vite 构建的移动端 H5 原型，该 React/Vite 工程仅作为早期移动端样式、交互和结构参考，不作为正式 App 生产实现基线。
+本仓库为工单 App 前端原型与文档沉淀仓。根目录历史 React + TypeScript + Vite 工程已归档至 `legacy/react-reference/`，仅作为早期移动端样式、交互和结构参考，不作为正式 App 生产实现基线。当前默认开发入口为 Vue（`vue-reference/`）。
 
 ### 跨端复用背景
 
@@ -53,10 +54,9 @@
 - 移动端适配基础在 `src/styles/mobile.css`。
 
 ### 组件约定
-- 当前 React 原型中可使用 shadcn/ui 作为参考；正式 Vue 实现应以正式 Vue 工程选型为准，不直接照搬 React 组件库。
+- 当前 Vue 参考实现（`vue-reference/`）使用自建组件体系。历史 React 原型中使用的 shadcn/ui 仅作为参考，正式 Vue 实现应以正式 Vue 工程选型为准，不直接照搬 React 组件库。
 - 业务组件放在各自 feature 的 `components/` 下。
-- 共享组件放在 `src/shared/components/` 下。
-- 参考实现页面保留在 React 仓中，仅作为移动端样式、交互和结构参考，不作为正式 App 生产基线。
+- 共享组件放在 `vue-reference/src/components/` 下。
 
 ### 页面路由（参考实现）
 | 路由 | 页面 | 说明 |
@@ -85,32 +85,34 @@
 ## 文件组织
 
 ```
-src/
-├── app/
-│   ├── router/         # 路由定义，配置页面级路由
-│   └── layout/         # 布局组件（含底部 Tab 等）
-├── features/
-│   ├── work-order-center/       # 工单处理中心（已有功能）
-│   ├── work-order-budget/       # 产品申请工单参考实现（P0+P1）
-│   │   ├── pages/               # 页面组件
-│   │   │   ├── create.tsx       # 发起页
-│   │   │   ├── budget-select.tsx    # 预算选择页
-│   │   │   ├── store-select.tsx     # 专卖店搜索选择页
-│   │   │   ├── product-select.tsx   # 产品搜索选择页（P1-01）
-│   │   │   └── detail.tsx           # 详情页
-│   │   ├── types/               # 类型定义
-│   │   │   └── index.ts         # Budget/Store/StoreGroup/ProductItem/ApprovalNode/GroupResult
-│   │   ├── mocks/               # Mock数据
-│   │   │   └── index.ts         # 预算/专卖店/产品/审批流/订单结果
-│   │   └── hooks/               # Hooks
-│   │       └── useWorkOrderForm.tsx    # 表单Context Hook（历史，P1后改用URL params）
-│   ├── budget-shared/           # 预算业务共享模块
-│   └── approval-shared/       # 审批共享模块
-├── shared/             # 跨模块共享的组件、hooks、工具
-├── assets/             # 图片、图标等静态资源
-└── styles/             # 全局样式文件
-    ├── mobile.css      # 移动端适配基础（含.page-content滚动）
-    └── variables.css   # CSS变量定义
+vue-reference/                 # 当前主实现目录（Vue3）
+├── src/
+│   ├── views/                 # 页面组件
+│   ├── stores/                # Pinia Store
+│   ├── router/                # Vue Router
+│   ├── types/                 # TypeScript 类型
+│   ├── mocks/                 # Mock 数据
+│   └── components/            # 共享组件
+├── vite.config.ts
+└── package.json
+
+legacy/react-reference/        # 历史 React 参考（归档，非当前主工程）
+├── src/
+│   ├── app/
+│   │   ├── router/
+│   │   └── layout/
+│   ├── features/
+│   │   ├── work-order-center/
+│   │   └── work-order-budget/
+│   │       ├── pages/
+│   │       ├── types/
+│   │       ├── mocks/
+│   │       └── hooks/
+│   ├── shared/
+│   └── styles/
+├── index.html
+├── vite.config.ts
+└── package.json
 ```
 
 ## 当前最新业务口径

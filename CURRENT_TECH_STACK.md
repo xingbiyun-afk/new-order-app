@@ -29,45 +29,51 @@
 ### 当前运行命令
 
 ```bash
-# 开发
-cd vue-reference && npm run dev
+# 默认命令 → Vue（根目录直连）
+npm run dev
+npm run build
+npm run preview
 
-# 构建
-cd vue-reference && npm run build
-```
-
-或使用根目录快捷脚本：
-
-```bash
+# 显式 Vue 命令（等效）
 npm run dev:vue
 npm run build:vue
+npm run preview:vue
+
+# 历史 React 参考（如需回溯）
+npm run dev:react-legacy
+npm run build:react-legacy
+npm run preview:react-legacy
 ```
 
 ---
 
-## 根目录 React 内容：仅历史参考
+## 根目录 React 内容：已归档
 
-根目录 `package.json`、`src/`、`vite.config.ts`、`tsconfig*.json`、`index.html` 中涉及 React + TypeScript + Vite 的内容，**仅为早期初始化阶段的历史参考实现**。
+根目录历史 React + TypeScript + Vite 工程**已归档至 `legacy/react-reference/`**，不再占据根目录主入口。
 
-| 目录/文件 | 定位 |
-|-----------|------|
-| 根 `src/` | React 19 + shadcn/ui 早期原型（**不用于当前开发**） |
-| 根 `package.json` | React 历史依赖（**不反映当前主技术栈**） |
-| 根 `vite.config.ts` | React Vite 插件配置（**不反映当前主构建配置**） |
-| 根 `index.html` | React 入口（**不反映当前主工程入口**） |
+| 目录/文件 | 当前位置 | 定位 |
+|-----------|----------|------|
+| React src/ | `legacy/react-reference/src/` | 历史原型（**不用于当前开发**） |
+| React package.json | `legacy/react-reference/package.json` | 历史依赖（**不反映当前主技术栈**） |
+| React vite.config.ts | `legacy/react-reference/vite.config.ts` | 历史构建配置 |
+| React index.html | `legacy/react-reference/index.html` | 历史入口 |
+| React tsconfig*.json | `legacy/react-reference/` | 历史 TS 配置 |
 
-**AI 任何时候都不应基于上述 React 内容假设当前项目技术栈为 React。**
+**根目录不再保留 React 主工程文件。AI 任何时候都不应基于历史 React 归档内容假设当前项目技术栈为 React。**
+
+当前根目录默认脚本 `npm run dev` / `npm run build` / `npm run preview` 已全部指向 Vue。
 
 ---
 
 ## AI 技术栈识别约束
 
-1. **不得**仅依据根目录 `package.json` 中的 `react`/`react-dom` 依赖判定为 React 项目
-2. **不得**仅依据 `src/` 下的 `.tsx` 文件判定为 React 项目
-3. **不得**仅依据 `vite.config.ts` 中的 `@vitejs/plugin-react` 判定为 React 项目
-4. **不得**仅依据 `tsconfig.app.json` 中的 `"jsx": "react-jsx"` 判定为 React 项目
+1. **不得**仅依据 `legacy/react-reference/` 下的 `package.json` 中的 `react`/`react-dom` 依赖判定为 React 项目
+2. **不得**仅依据 `legacy/react-reference/src/` 下的 `.tsx` 文件判定为 React 项目
+3. **不得**仅依据 `legacy/react-reference/vite.config.ts` 中的 `@vitejs/plugin-react` 判定为 React 项目
+4. **不得**仅依据 `legacy/react-reference/tsconfig.app.json` 中的 `"jsx": "react-jsx"` 判定为 React 项目
 5. **必须**优先识别 `vue-reference/` 为当前主实现目录
 6. **必须**扫描本文件（`CURRENT_TECH_STACK.md`）作为技术栈判定第一参考源
+7. **注意**根目录 `package.json` 已无 React 依赖，`npm run dev` 默认指向 Vue
 
 ---
 

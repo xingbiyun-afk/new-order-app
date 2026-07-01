@@ -9,6 +9,8 @@
 
 当前阶段允许直接在本仓库中开展 Vue 参考实现，用于需求验证、交互确认、页面走查和后续正式开发承接。
 
+> **2026-07-01 工程结构更新**：根目录默认运行与构建入口已切换为 Vue（`npm run dev` → `vue-reference/`）；历史 React 工程已归档至 `legacy/react-reference/`，需显式使用 `npm run dev:react-legacy` 运行。
+
 ---
 
 ## 必读文档顺序

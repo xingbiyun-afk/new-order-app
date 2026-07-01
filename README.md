@@ -1,8 +1,8 @@
 # new-order-app
 
 > ⚠️ **当前主工程说明**：本仓库当前正式承接方向为 **Vue / Vue3**，主实现目录为 **`vue-reference/`**。  
-> 根目录 `src/` 与 `package.json` 中的 React + TypeScript + Vite 内容**仅为早期初始化历史参考**，不作为当前开发基线。  
-> 当前运行方式：`cd vue-reference && npm run dev`。  
+> 根目录历史 React 工程已归档至 **`legacy/react-reference/`**，不作为当前开发基线。  
+> 当前默认运行命令 `npm run dev` 指向 Vue。  
 > 详细说明见 [`CURRENT_TECH_STACK.md`](./CURRENT_TECH_STACK.md)。
 
 工单 App 移动端样式与产品申请预算核销需求参考仓
@@ -61,7 +61,7 @@
 │   ├── development-summary/       # 开发总结
 │   ├── product/                   # 产品申请工单 / 预算核销产品文档
 │   └── technical/                 # 移动端样式、跨端复用、模块结构等技术文档
-├── vue-reference/                 # Vue3 参考实现（独立工程）
+├── vue-reference/                 # Vue3 参考实现（当前主实现目录）
 │   ├── src/
 │   │   ├── views/                 # 页面组件（8 个页面）
 │   │   ├── stores/                # Pinia Store
@@ -71,37 +71,39 @@
 │   │   └── styles/                # 全局样式
 │   ├── vite.config.ts
 │   └── package.json
-├── src/                           # React 参考实现
-│   ├── app/                       # 应用层
-│   │   ├── router/                # 路由配置
-│   │   └── layout/                # 布局组件
-│   ├── features/                  # 功能模块
-│   │   ├── work-order-center/     # 工单中心（已有）
-│   │   └── work-order-budget/     # 产品申请工单参考实现（P0+P1）
-│   │       ├── pages/             # 页面组件
-│   │       ├── types/             # 类型定义
-│   │       ├── mocks/             # Mock数据
-│   │       └── hooks/             # Hooks
-│   ├── shared/                    # 共享资源
-│   ├── assets/                    # 静态资源
-│   └── styles/                    # 样式文件
-└── index.html
+├── legacy/                        # 历史参考工程归档目录
+│   └── react-reference/           # React 参考实现（历史，非当前主工程）
+│       ├── src/
+│       ├── index.html
+│       ├── vite.config.ts
+│       └── package.json
+├── README.md
+├── CLAUDE.md
+├── CURRENT_TECH_STACK.md
+├── WORKFLOW_GUIDE.md
+├── BRANCH_GUIDE.md
+└── package.json                   # Vue-first 调度型 package（npm run dev → Vue）
 ```
 
 ## 开发命令
 
 ```bash
-npm run dev        # 开发服务器
-npm run build      # 生产构建
-npm run preview    # 预览构建
+# 默认 → Vue（当前主方向）
+npm run dev           # 启动 Vue 开发服务器
+npm run build         # 构建 Vue 项目
+npm run preview       # 预览 Vue 构建
+
+# 历史 React 参考（如需要）
+npm run dev:react-legacy    # 启动历史 React 开发服务器
+npm run build:react-legacy  # 构建历史 React 项目
 ```
 
 ## 当前阶段
 
-- 已完成：React + Vite 早期结构初始化
+- 已完成：React + Vite 早期结构初始化（已归档至 `legacy/react-reference/`）
 - 已完成：移动端 UI 基线与跨端复用策略沉淀
 - 已完成：产品申请工单 / 预算核销基础规则文档沉淀
-- **已完成（2026-06-29）：产品申请工单 React 参考实现（P0+P1）**
+- **已完成（2026-06-29）：产品申请工单 React 参考实现（P0+P1）（已归档至 `legacy/react-reference/`）**
   - P0：发起页、预算选择页、专卖店搜索页、产品搜索选择页、详情页、我的列表页
   - P1：搜索选择页、跨分组SKU校验、动态数量提示、分组折叠/展开、搜索过滤、附件交互、订单卡片、失败原因展示
   - 开发总结：`docs/development-summary/CR-20260629-001-开发总结.md`
@@ -142,4 +144,10 @@ npm run preview    # 预览构建
   - 覆盖确认：已有数据时弹窗确认后清空再导入
   - 4 份必改文档同步回写（AI 开发任务说明、字段清单、页面结构、PRD）
   - 开发总结：`docs/development-summary/CR-20260701-002-开发总结.md`
-- 后续：正式开发进入 Vue / Vue2 工程，不在当前 React 仓直接推进生产实现
+- **已完成（2026-07-01）：仓库主工程去歧义与历史 React 工程归档（CR-20260701-003）**
+  - 历史 React 工程迁入 `legacy/react-reference/`
+  - 根目录 `package.json` 切换为 Vue-first 调度型
+  - 根目录 `npm run dev` / `npm run build` 默认指向 Vue
+  - 5 份协作文档同步更新
+  - 开发总结：`docs/development-summary/CR-20260701-003-开发总结.md`
+- 后续：正式开发进入 Vue / Vue2 工程，不在当前仓库直接推进生产实现
