@@ -493,7 +493,7 @@ AI 需基于现有 PRD、字段清单和页面结构说明，完成：
   - 附件上传区样式与体验升级，补充 PDF 合并上传提示
   - 补充同店编最终订单归并规则
 - **参考文档**：
-  - `docs/change-logs/CR-20260701-001 变更清单.md`
+  - `docs/change-logs/2026-07-01/CR-20260701-001 变更清单.md`
   - `docs/product/work-order-budget/产品申请工单和产品申请预算核销PRD.md`
   - `docs/product/work-order-budget/产品申请工单字段清单初稿.md`
   - `docs/product/work-order-budget/产品申请工单页面结构草图说明.md`
@@ -508,8 +508,8 @@ AI 需基于现有 PRD、字段清单和页面结构说明，完成：
   - 现有数据 → 覆盖导入（确认提示）
   - 提供 CSV 模板下载
 - **参考文档**：
-  - `docs/change-logs/CR-20260701-002 变更清单.md`
-  - `docs/development-summary/CR-20260701-002-开发总结.md`
+  - `docs/change-logs/2026-07-01/CR-20260701-002 变更清单.md`
+  - `docs/development-summary/2026-07-01/CR-20260701-002-开发总结.md`
   - `docs/product/work-order-budget/产品申请工单和产品申请预算核销PRD.md`
   - `docs/product/work-order-budget/产品申请工单字段清单初稿.md`
   - `docs/product/work-order-budget/产品申请工单页面结构草图说明.md`
