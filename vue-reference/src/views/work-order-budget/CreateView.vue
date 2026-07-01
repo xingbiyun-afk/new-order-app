@@ -2,8 +2,8 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useWorkOrderStore } from '../../stores/workOrder'
-import { mockProductOptions, calculateAmount, createDefaultGroup } from '../../mocks'
-import type { ProductItem } from '../../types'
+import { mockProductOptions, mockStores, calculateAmount, createDefaultGroup, parseImportText, validateImportRows, parseFileImport, downloadImportTemplate } from '../../mocks'
+import type { ProductItem, ImportError } from '../../types'
 
 const router = useRouter()
 const route = useRoute()
@@ -131,6 +131,110 @@ function clearStore(groupId: string) {
     }
   })
 }
+
+// CR-20260701-002: 批量导入对话框状态
+const showImport = ref(false)
+const importText = ref('')
+const importErrors = ref<ImportError[]>([])
+const importWarnings = ref<ImportError[]>([])
+const importParsedRows = ref<{ line: number; sku: string; quantity: number; storeCode: string; storeName: string }[]>([])
+const importChecked = ref(false)
+const importFileName = ref('')
+const fileInputRef = ref<HTMLInputElement | null>(null)
+
+// 文件导入处理
+async function handleFileImport(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  importFileName.value = file.name
+  importChecked.value = false
+
+  const { rows, error } = await parseFileImport(file)
+  if (error) {
+    importErrors.value = [{ line: 0, field: '文件', message: error }]
+    importText.value = ''
+    return
+  }
+
+  importErrors.value = []
+  importWarnings.value = []
+  importText.value = rows.join('\n')
+}
+
+function openImport() {
+  if (hasGroupOrProduct()) {
+    openConfirm('批量导入后，将覆盖当前已填写的产品申请订单明细和产品信息，是否继续？', () => {
+      showImport.value = true
+      importText.value = ''
+      importErrors.value = []
+      importWarnings.value = []
+      importParsedRows.value = []
+      importChecked.value = false
+    })
+  } else {
+    showImport.value = true
+    importText.value = ''
+    importErrors.value = []
+    importWarnings.value = []
+    importParsedRows.value = []
+    importChecked.value = false
+  }
+}
+
+function closeImport() {
+  showImport.value = false
+}
+
+function doParseCheck() {
+  importErrors.value = []
+  importWarnings.value = []
+  importParsedRows.value = []
+  importChecked.value = false
+
+  const { rows, errors: parseErrors } = parseImportText(importText.value)
+  const rowErrors: ImportError[] = [...parseErrors]
+  const rowWarnings: ImportError[] = []
+
+  if (rows.length > 0) {
+    const { errors, warnings } = validateImportRows(rows)
+    rowErrors.push(...errors)
+    rowWarnings.push(...warnings)
+  }
+
+  importErrors.value = rowErrors
+  importWarnings.value = rowWarnings
+
+  if (rowErrors.length > 0) return
+
+  // 构建带专卖店名称的行数据
+  importParsedRows.value = rows.map(r => ({
+    ...r,
+    storeName: mockStores.find(s => s.code === r.storeCode)?.name || '',
+  }))
+  importChecked.value = true
+}
+
+function doConfirmImport() {
+  if (!importChecked.value) return
+  const groups = new Map<string, { line: number; sku: string; quantity: number; storeCode: string; storeName: string }[]>()
+  for (const r of importParsedRows.value) {
+    if (!groups.has(r.storeCode)) groups.set(r.storeCode, [])
+    groups.get(r.storeCode)!.push(r)
+  }
+  store.importWorkOrderData(importParsedRows.value.map(r => ({ line: r.line, sku: r.sku, quantity: r.quantity, storeCode: r.storeCode })))
+  closeImport()
+  showToast(`导入成功！按 ${groups.size} 个专卖店拆分为 ${groups.size} 个产品申请订单明细`)
+}
+
+function hasImportHardErrors() {
+  return importErrors.value.length > 0
+}
+
+function hasImportWarnings() {
+  return importWarnings.value.length > 0
+}
 </script>
 <template>
   <div style="padding-bottom: 80px;">
@@ -231,9 +335,13 @@ function clearStore(groupId: string) {
         </div>
       </div>
     </div>
-    <!-- Add Group -->
+    <!-- Add Group + Import -->
     <div style="padding: 0 16px; margin-bottom: 12px;">
       <button @click="store.addGroup" style="width: 100%; padding: 12px; border-radius: 12px; border: 1px dashed #22BDB8; background-color: #fff; color: #22BDB8; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;"><span style="font-size: 20px;">+</span> 添加产品申请订单</button>
+      <div style="margin-top: 10px;">
+        <button @click="openImport" style="width: 100%; padding: 12px; border-radius: 12px; border: 1px dashed #FF9800; background-color: #FFF8E1; color: #E65100; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;"><span style="font-size: 20px;">📋</span> 批量导入产品</button>
+        <div style="font-size: 12px; color: #999; margin-top: 6px; text-align: center; line-height: 1.5;">导入数据需包含产品编号、数量、专卖店编号，系统将按专卖店编号自动拆分</div>
+      </div>
     </div>
     <!-- Total -->
     <div v-if="store.totalAmount > 0" style="padding: 14px 16px; background-color: #fff; margin: 0 16px 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
@@ -285,5 +393,50 @@ function clearStore(groupId: string) {
     </div>
     <!-- Toast -->
     <div v-if="toast" style="position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(0,0,0,0.75); color: #fff; padding: 12px 24px; border-radius: 8px; font-size: 14px; z-index: 1000; white-space: nowrap;">{{ toast }}</div>
+    <!-- Import Dialog (CR-20260701-002) -->
+    <div v-if="showImport" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5); z-index: 2000; display: flex; align-items: center; justify-content: center;">
+      <div style="background-color: #fff; border-radius: 12px; padding: 20px; margin: 0 16px; width: 100%; max-width: 380px; max-height: 80vh; overflow-y: auto;">
+        <div style="font-size: 16px; font-weight: 600; color: #333; margin-bottom: 12px;">批量导入产品</div>
+        <!-- Format hint -->
+        <div style="font-size: 12px; color: #555; margin-bottom: 12px; padding: 10px 12px; background-color: #FFF8E1; border: 1px solid #FFE082; border-radius: 8px; line-height: 1.8;">
+          <div style="font-weight: 600; color: #FF8F00; margin-bottom: 6px;">字段顺序：产品编号，数量，专卖店编号</div>
+          <div style="color: #666;">支持逗号、空格、Tab 分隔</div>
+          <div style="color: #666;">示例：<code style="background:#fff; padding:2px 6px; border-radius:4px; font-size:11px; color:#333;">SKU001,10,31692</code></div>
+        </div>
+        <!-- Textarea -->
+        <textarea v-model="importText" placeholder="粘贴数据到此处..." rows="8" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #e0e0e0; font-size: 13px; resize: vertical; font-family: monospace; box-sizing: border-box; line-height: 1.6;" @input="importChecked = false"></textarea>
+        <!-- File import -->
+        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0f0f0;">
+          <div style="font-size: 12px; color: #888; margin-bottom: 6px;">📁 或上传文件导入（.xlsx / .xls / .csv）— 第1行为表头，第2行起为数据</div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <input ref="fileInputRef" type="file" accept=".xlsx,.xls,.csv" @change="handleFileImport" style="display: none;" />
+            <button @click="fileInputRef?.click()" style="padding: 6px 14px; border-radius: 6px; border: 1px solid #22BDB8; background-color: #F0FDFD; color: #22BDB8; font-size: 13px; cursor: pointer;">选择文件</button>
+            <span style="font-size: 12px; color: #999; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ importFileName || '未选择文件' }}</span>
+            <button type="button" @click="downloadImportTemplate($event)" style="font-size: 12px; color: #22BDB8; text-decoration: underline; background: none; border: none; padding: 0; cursor: pointer; margin-left: auto; white-space: nowrap;">下载模板</button>
+          </div>
+        </div>
+        <!-- Action buttons -->
+        <div style="display: flex; gap: 10px; margin-top: 12px;">
+          <button @click="closeImport" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #e0e0e0; background-color: #fff; color: #666; font-size: 14px; cursor: pointer;">取消</button>
+          <button @click="doParseCheck" style="flex: 1; padding: 10px; border-radius: 8px; border: none; background-color: #FF9800; color: #fff; font-size: 14px; cursor: pointer;">识别检查</button>
+        </div>
+        <button v-if="importChecked" @click="doConfirmImport" style="width: 100%; margin-top: 10px; padding: 10px; border-radius: 8px; border: none; background-color: #22BDB8; color: #fff; font-size: 14px; font-weight: 500; cursor: pointer;">确认导入（{{ importParsedRows.length }} 条数据）</button>
+        <!-- Errors -->
+        <div v-if="hasImportHardErrors()" style="margin-top: 12px; padding: 10px 12px; background-color: #FFF0F0; border-radius: 8px; border: 1px solid #FFCDD2;">
+          <div style="font-size: 13px; font-weight: 600; color: #D32F2F; margin-bottom: 8px;">存在 {{ importErrors.length }} 条硬拦截错误，请修正数据后重新检查：</div>
+          <div v-for="(e, ei) in importErrors" :key="ei" style="font-size: 12px; color: #C62828; padding: 4px 0; border-bottom: 1px solid #FFCDD2;" :style="{ borderBottom: ei === importErrors.length - 1 ? 'none' : '1px solid #FFCDD2' }">第 {{ e.line }} 行 · {{ e.field }}：{{ e.message }}</div>
+        </div>
+        <!-- Warnings (over-limit) -->
+        <div v-if="hasImportWarnings()" style="margin-top: 12px; padding: 10px 12px; background-color: #FFF8E1; border-radius: 8px; border: 1px solid #FFE082;">
+          <div style="font-size: 13px; font-weight: 600; color: #FF8F00; margin-bottom: 8px;">⚠ 存在 {{ importWarnings.length }} 条超量警告（超量产品可导入但提交时将无法通过）：</div>
+          <div v-for="(w, wi) in importWarnings" :key="wi" style="font-size: 12px; color: #E65100; padding: 4px 0; border-bottom: 1px solid #FFE082;" :style="{ borderBottom: wi === importWarnings.length - 1 ? 'none' : '1px solid #FFE082' }">第 {{ w.line }} 行 · {{ w.field }}：{{ w.message }}</div>
+        </div>
+        <!-- Success summary -->
+        <div v-if="importChecked && !hasImportHardErrors()" style="margin-top: 12px; padding: 10px 12px; background-color: #E8F5E9; border-radius: 8px; border: 1px solid #C8E6C9;">
+          <div style="font-size: 13px; color: #2E7D32;">✅ 数据识别成功</div>
+          <div style="font-size: 12px; color: #388E3C; margin-top: 4px; line-height: 1.5;">共 {{ importParsedRows.length }} 条数据，将按专卖店编号拆分为 {{ new Set(importParsedRows.map(r => r.storeCode)).size }} 个产品申请订单明细</div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
