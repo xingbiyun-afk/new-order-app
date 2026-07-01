@@ -1,4 +1,5 @@
-import type { Budget, ProductWorkOrder, WorkOrderCard, StoreGroup, ProductItem, ApprovalNode, GroupResult } from '../types';
+import * as XLSX from 'xlsx'
+import type { Budget, ProductWorkOrder, WorkOrderCard, StoreGroup, ProductItem, ApprovalNode, GroupResult, ImportRow, ImportError } from '../types';
 
 export const mockBudgets: Budget[] = [
   { id: '1', budgetNo: 'B2024Q3001', productCode: 'P001', status: '已生效', applicationAvailable: true, isAbnormal: false, applyType: '新品申请', applyReason: '季度新品推广活动，针对核心专卖店进行首批铺货支持', availableAmount: 50000, usedAmount: 12000, applyingAmount: 8000 },
@@ -95,4 +96,159 @@ export const mockWorkOrderDetail: ProductWorkOrder = {
 export function calculateAmount(product: ProductItem): number {
   if (product.isDiscount) return Number((product.jdePrice * product.quantity * product.discount).toFixed(2));
   return Number((product.jdePrice * product.quantity).toFixed(2));
+}
+
+// ============================================================
+// CR-20260701-002: 批量导入校验与解析
+// ============================================================
+
+/** 校验产品编号是否在允许申请核销范围内 */
+export function validateProduct(sku: string): { valid: boolean; product?: typeof mockProductOptions[0] } {
+  const p = mockProductOptions.find(x => x.code === sku)
+  return p ? { valid: true, product: p } : { valid: false }
+}
+
+/** 校验数量：必填、正整数 */
+export function validateQuantity(v: string): { valid: boolean; value: number; error?: string } {
+  if (!v || v.trim() === '') return { valid: false, value: 0, error: '数量不能为空' }
+  const n = Number(v)
+  if (!Number.isInteger(n) || n <= 0) return { valid: false, value: 0, error: '数量不是正整数' }
+  return { valid: true, value: n }
+}
+
+/** 校验专卖店编号是否在当前用户可选范围内 */
+export function validateStore(code: string): { valid: boolean; store?: typeof mockStores[0]; error?: string } {
+  if (!code || code.trim() === '') return { valid: false, error: '专卖店编号不能为空' }
+  const s = mockStores.find(x => x.code === code)
+  if (!s) return { valid: false, error: '专卖店编号不存在或无效' }
+  // 注：层级5 / 不允许下单校验 Mock 阶段暂不实现，保留扩展点
+  return { valid: true, store: s }
+}
+
+/** 解析导入文本，支持逗号、空格、制表符分隔，字段顺序：产品编号,数量,专卖店编号 */
+export function parseImportText(text: string): { rows: ImportRow[]; errors: ImportError[] } {
+  const rows: ImportRow[] = []
+  const errors: ImportError[] = []
+  const lines = text.split('\n')
+
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i].trim()
+    if (!raw) continue // 跳过空行
+
+    const lineNum = i + 1
+    // 按逗号、空格、Tab 分割
+    const parts = raw.split(/[, \t]+/).filter(x => x !== '')
+    if (parts.length < 3) {
+      errors.push({ line: lineNum, field: '格式', message: `数据格式不正确（需要 产品编号,数量,专卖店编号）` })
+      continue
+    }
+
+    const sku = parts[0]
+    const qtyResult = validateQuantity(parts[1])
+    const storeCode = parts[2]
+
+    if (!qtyResult.valid) {
+      errors.push({ line: lineNum, field: '数量', message: qtyResult.error! })
+      continue
+    }
+    if (!sku) {
+      errors.push({ line: lineNum, field: '产品编号', message: '产品编号 不能为空' })
+      continue
+    }
+    if (!storeCode) {
+      errors.push({ line: lineNum, field: '专卖店编号', message: '专卖店编号不能为空' })
+      continue
+    }
+
+    rows.push({ line: lineNum, sku, quantity: qtyResult.value, storeCode })
+  }
+
+  return { rows, errors }
+}
+
+/** 全量校验已解析的行数据（产品存在性 + 专卖店有效性） */
+export function validateImportRows(rows: ImportRow[]): { errors: ImportError[]; warnings: ImportError[] } {
+  const errors: ImportError[] = []
+  const warnings: ImportError[] = []
+
+  for (const row of rows) {
+    // 产品校验（硬拦截）
+    const prodResult = validateProduct(row.sku)
+    if (!prodResult.valid) {
+      errors.push({ line: row.line, field: '产品编号', message: `产品 ${row.sku} 不在允许申请核销范围内` })
+    } else if (row.quantity > prodResult.product!.maxQuantity) {
+      // 数量超出可申请数量（软警告）
+      warnings.push({ line: row.line, field: '数量', message: `产品 ${row.sku} 超出可申请数量（申请 ${row.quantity}，可申请 ${prodResult.product!.maxQuantity}）` })
+    }
+
+    // 专卖店校验（硬拦截）
+    const storeResult = validateStore(row.storeCode)
+    if (!storeResult.valid) {
+      errors.push({ line: row.line, field: '专卖店编号', message: storeResult.error! })
+    }
+  }
+
+  return { errors, warnings }
+}
+
+// ============================================================
+// CR-20260701-002: 文件导入解析（Excel / CSV）
+// ============================================================
+
+/** 解析上传的 Excel 或 CSV 文件，跳过表头行，返回文本行数组（与粘贴导入格式一致） */
+export async function parseFileImport(file: File): Promise<{ rows: string[]; error: string | null }> {
+  const name = file.name.toLowerCase()
+
+  if (name.endsWith('.csv')) {
+    try {
+      const text = await file.text()
+      const lines = text.split('\n').map(l => l.trim()).filter(l => l)
+      if (lines.length <= 1) return { rows: [], error: '文件仅包含表头，无有效数据行' }
+      return { rows: lines.slice(1), error: null }
+    } catch {
+      return { rows: [], error: 'CSV 文件读取失败，请检查文件编码' }
+    }
+  }
+
+  if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
+    try {
+      const buf = await file.arrayBuffer()
+      const wb = XLSX.read(buf, { type: 'array' })
+      if (wb.SheetNames.length === 0) return { rows: [], error: 'Excel 文件不包含任何工作表' }
+      const sheet = wb.Sheets[wb.SheetNames[0]]
+      const data: unknown[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 })
+      if (data.length <= 1) return { rows: [], error: '文件仅包含表头，无有效数据行' }
+      const rows = data.slice(1)
+        .filter((row: unknown[]) => row.some(c => c != null && String(c).trim() !== ''))
+        .map((row: unknown[]) => row.slice(0, 3).map(c => String(c ?? '').trim()).join(','))
+      if (rows.length === 0) return { rows: [], error: '文件仅包含表头，无有效数据行' }
+      return { rows, error: null }
+    } catch {
+      return { rows: [], error: 'Excel 文件解析失败，请检查文件是否损坏' }
+    }
+  }
+
+  return { rows: [], error: '不支持的文件格式，请上传 .xlsx、.xls 或 .csv 文件' }
+}
+
+/** 下载导入模板（UTF-8 CSV 格式，含表头 + 2 行示例数据） */
+export function downloadImportTemplate(event?: Event) {
+  event?.preventDefault()
+  event?.stopPropagation()
+
+  // CSV with UTF-8 BOM for proper Chinese character display in Excel/WPS
+  const BOM = '\uFEFF'
+  const csv = BOM
+    + '产品编号,数量,专卖店编号\n'
+    + 'SKU001,5,31692\n'
+    + 'SKU002,3,31441\n'
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = '批量导入模板.csv'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
 }

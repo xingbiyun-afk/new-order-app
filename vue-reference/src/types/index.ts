@@ -45,3 +45,17 @@ export interface WorkOrderCard {
   applicantName: string; applyType: string; applyReason: string;
   createTime: string;
 }
+
+// CR-20260701-002: 批量导入相关类型
+export interface ImportRow {
+  line: number; sku: string; quantity: number; storeCode: string;
+}
+export interface ImportError {
+  line: number; field: string; message: string;
+}
+export interface ImportResult {
+  success: boolean;
+  errors: ImportError[]; warnings: ImportError[];
+  rows: ImportRow[];
+  groupMap: Map<string, ImportRow[]>;
+}

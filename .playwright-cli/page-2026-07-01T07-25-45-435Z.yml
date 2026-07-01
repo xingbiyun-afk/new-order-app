@@ -1,0 +1,58 @@
+- main [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - button "‹" [ref=e7] [cursor=pointer]
+      - generic [ref=e8]: 选择产品
+    - generic [ref=e10]:
+      - img [ref=e11]
+      - textbox "输入产品编号或名称搜索" [ref=e13]
+    - generic [ref=e14]:
+      - generic [ref=e16] [cursor=pointer]:
+        - generic [ref=e17]:
+          - generic [ref=e18]:
+            - generic [ref=e19]: 智能马桶盖A款
+            - generic [ref=e20]: 打折
+          - generic [ref=e21]:
+            - generic [ref=e22]: 编号：SKU001
+            - generic [ref=e23]: JDE价格：¥1299.00
+            - generic [ref=e24]: 可申请数量：20
+            - generic [ref=e25]: 折扣：5.0折
+        - generic [ref=e26]: ›
+      - generic [ref=e28] [cursor=pointer]:
+        - generic [ref=e29]:
+          - generic [ref=e31]: 恒温花洒B款
+          - generic [ref=e32]:
+            - generic [ref=e33]: 编号：SKU002
+            - generic [ref=e34]: JDE价格：¥899.00
+            - generic [ref=e35]: 可申请数量：15
+        - generic [ref=e36]: ›
+      - generic [ref=e38] [cursor=pointer]:
+        - generic [ref=e39]:
+          - generic [ref=e40]:
+            - generic [ref=e41]: 浴室柜C款
+            - generic [ref=e42]: 打折
+          - generic [ref=e43]:
+            - generic [ref=e44]: 编号：SKU003
+            - generic [ref=e45]: JDE价格：¥2599.00
+            - generic [ref=e46]: 可申请数量：10
+            - generic [ref=e47]: 折扣：5.0折
+        - generic [ref=e48]: ›
+      - generic [ref=e50] [cursor=pointer]:
+        - generic [ref=e51]:
+          - generic [ref=e53]: 智能龙头D款
+          - generic [ref=e54]:
+            - generic [ref=e55]: 编号：SKU004
+            - generic [ref=e56]: JDE价格：¥699.00
+            - generic [ref=e57]: 可申请数量：30
+        - generic [ref=e58]: ›
+      - generic [ref=e60] [cursor=pointer]:
+        - generic [ref=e61]:
+          - generic [ref=e62]:
+            - generic [ref=e63]: 淋浴房E款
+            - generic [ref=e64]: 打折
+          - generic [ref=e65]:
+            - generic [ref=e66]: 编号：SKU005
+            - generic [ref=e67]: JDE价格：¥3299.00
+            - generic [ref=e68]: 可申请数量：8
+            - generic [ref=e69]: 折扣：5.0折
+        - generic [ref=e70]: ›

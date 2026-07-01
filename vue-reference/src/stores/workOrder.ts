@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { Budget, StoreGroup } from '../types'
-import { mockBudgets, createDefaultGroup } from '../mocks'
+import type { Budget, StoreGroup, ImportRow } from '../types'
+import { mockBudgets, createDefaultGroup, mockProductOptions, mockStores, calculateAmount } from '../mocks'
 
 export const useWorkOrderStore = defineStore('workOrder', () => {
   const selectedBudget = ref<Budget | null>(null)
@@ -37,6 +37,57 @@ export const useWorkOrderStore = defineStore('workOrder', () => {
   function clearCollapsed() {
     collapsedGroups.value = new Set()
   }
+
+  // CR-20260701-002: 清空所有分组
+  function clearAllGroups() {
+    storeGroups.value = [createDefaultGroup()]
+    clearCollapsed()
+  }
+
+  // CR-20260701-002: 批量导入数据
+  function importWorkOrderData(rows: ImportRow[]) {
+    // 按专卖店编号分组
+    const groupMap = new Map<string, ImportRow[]>()
+    for (const row of rows) {
+      if (!groupMap.has(row.storeCode)) groupMap.set(row.storeCode, [])
+      groupMap.get(row.storeCode)!.push(row)
+    }
+
+    const newGroups: StoreGroup[] = []
+
+    for (const [storeCode, rowList] of groupMap.entries()) {
+      // 查找专卖店名称
+      const storeInfo = mockStores.find(s => s.code === storeCode)
+      const storeName = storeInfo?.name || ''
+      const products = rowList.map(row => {
+        const opt = mockProductOptions.find(p => p.code === row.sku)
+        const p = {
+          id: `prod_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+          productCode: row.sku,
+          productName: opt?.name || '',
+          jdePrice: opt?.jdePrice || 0,
+          isDiscount: opt?.isDiscount || false,
+          discount: opt?.discount || 0.5,
+          maxQuantity: opt?.maxQuantity || 0,
+          quantity: row.quantity,
+          amount: 0,
+        }
+        p.amount = calculateAmount(p)
+        return p
+      })
+
+      newGroups.push({
+        id: `group_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        storeCode,
+        storeName,
+        products,
+        groupAmount: products.reduce((s, p) => s + p.amount, 0),
+      })
+    }
+
+    storeGroups.value = newGroups
+    clearCollapsed()
+  }
   function updateStoreGroup(gid: string, code: string, name: string) {
     const g = storeGroups.value.find(x => x.id === gid)
     if (g) { g.storeCode = code; g.storeName = name }
@@ -66,5 +117,5 @@ export const useWorkOrderStore = defineStore('workOrder', () => {
   return { selectedBudget, storeGroups, collapsedGroups, totalAmount, skuTotalMap,
     selectBudget, toggleGroupCollapse, addGroup, deleteGroup, updateStoreGroup,
     updateProduct, addProduct, deleteProduct, initStoreGroups, persistStoreGroups,
-    clearCollapsed }
+    clearCollapsed, clearAllGroups, importWorkOrderData }
 })
