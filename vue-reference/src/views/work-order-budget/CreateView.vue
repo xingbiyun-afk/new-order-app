@@ -110,7 +110,7 @@ function hasGroupOrProduct(): boolean {
 // 切换预算：带确认提示，确认后清空分组（CR-20260630-002 3.6）
 function goBudgetSelect() {
   if (hasGroupOrProduct()) {
-    openConfirm('切换预算后，当前已填写的专卖店申请分组和商品明细将被清空，是否继续？', () => {
+    openConfirm('切换预算后，当前已填写的产品申请订单明细将被清空，是否继续？', () => {
       store.storeGroups = [createDefaultGroup()]
       store.clearCollapsed()  // CR-20260630-004 3.4
       router.push('/product-apply/budget-select')
@@ -122,7 +122,7 @@ function goBudgetSelect() {
 
 // 清空专卖店 + 同步清空商品（CR-20260630-002 3.7）
 function clearStore(groupId: string) {
-  openConfirm('清空专卖店后，该分组下的商品明细也将被清空，是否继续？', () => {
+  openConfirm('清空专卖店后，该明细下的产品也将被清空，是否继续？', () => {
     const g = store.storeGroups.find(x => x.id === groupId)
     if (g) {
       g.storeCode = ''
@@ -148,17 +148,30 @@ function clearStore(groupId: string) {
       </div>
       <div v-if="store.selectedBudget?.isAbnormal" style="background-color: #FFF8E1; color: #FF8F00; font-size: 13px; padding: 8px 12px; border-radius: 8px; margin-top: 8px;">&#9888; {{ store.selectedBudget.abnormalMessage }}</div>
     </div>
-    <!-- Apply Info -->
+    <!-- Apply Info (CR-20260701-001 3.1: compress before budget selected) -->
     <div class="card" style="margin: 12px 16px; padding: 14px 16px;">
-      <div style="font-size: 15px; font-weight: 600; color: #333; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0;">申请信息</div>
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+        <span style="font-size: 15px; font-weight: 600; color: #333;">申请信息</span>
+        <span v-if="!store.selectedBudget" style="font-size: 12px; color: #999;">选择预算后展开</span>
+      </div>
       <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">申请人</span><span style="font-size: 14px; color: #333;">{{ currentUser.name }}</span></div>
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">申请类型</span><span style="font-size: 14px; color: #333;">{{ store.selectedBudget?.applyType || '-' }}</span></div>
-      <div style="display: flex; align-items: flex-start; gap: 8px; padding: 10px 0;"><span style="font-size: 14px; color: #666; white-space: nowrap;">申请理由</span><span style="font-size: 14px; color: #333; line-height: 1.5; word-break: break-all; flex: 1;">{{ store.selectedBudget?.applyReason || '-' }}</span></div>
+      <template v-if="store.selectedBudget">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">申请类型</span><span style="font-size: 14px; color: #333;">{{ store.selectedBudget.applyType }}</span></div>
+        <div style="display: flex; align-items: flex-start; gap: 8px; padding: 10px 0;"><span style="font-size: 14px; color: #666; white-space: nowrap;">申请理由</span><span style="font-size: 14px; color: #333; line-height: 1.5; word-break: break-all; flex: 1;">{{ store.selectedBudget.applyReason }}</span></div>
+      </template>
+    </div>
+    <!-- Store Groups Header (CR-20260701-001 3.3) -->
+    <div style="padding: 0 16px; margin: 18px 0 2px;">
+      <div style="font-size: 13px; color: #888;">此处开始填写需要预算核销的产品和订单归属专卖店</div>
     </div>
     <!-- Store Groups -->
     <div v-for="(group, gi) in store.storeGroups" :key="group.id" class="card" style="margin: 12px 16px; padding: 14px 16px;">
       <div @click="store.toggleGroupCollapse(group.id)" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; cursor: pointer;">
-        <span style="font-size: 15px; font-weight: 600; color: #333;">专卖店申请分组 {{ gi + 1 }}{{ group.storeCode ? ` · ${group.storeCode}` : '' }}</span>
+        <div>
+          <span style="font-size: 15px; font-weight: 600; color: #333;">产品申请订单明细{{ gi + 1 }}{{ group.storeCode ? ` · ${group.storeCode}` : '' }}</span>
+          <!-- Group Description (CR-20260701-001 3.3): 标题下方、分隔线上方 -->
+          <div v-if="!isCol(group.id)" style="font-size: 12px; color: #aaa; margin-top: 4px; line-height: 1.5;">同一个店编的预算核销产品填写在一个明细</div>
+        </div>
         <div style="display: flex; align-items: center; gap: 12px;">
           <button v-if="store.storeGroups.length > 1" @click.stop="store.deleteGroup(group.id)" style="background: none; border: none; color: #F44336; font-size: 13px; cursor: pointer;">删除</button>
           <span style="color: #999; font-size: 18px; transition: transform 0.2s;" :style="{ transform: isCol(group.id) ? 'rotate(-90deg)' : 'rotate(0deg)' }">&#9662;</span>
@@ -167,7 +180,7 @@ function clearStore(groupId: string) {
       <!-- Collapsed -->
       <div v-if="isCol(group.id)" style="padding: 8px 0; color: #999; font-size: 14px; display: flex; justify-content: space-between; align-items: center;">
         <span>订单归属专卖店：{{ group.storeCode ? `${group.storeCode} ${group.storeName}` : '未选择' }}</span>
-        <span style="color: #22BDB8; font-weight: 500;">{{ group.products.length }} 件商品</span>
+        <span style="color: #22BDB8; font-weight: 500;">{{ group.products.length }} 件产品</span>
       </div>
       <!-- Expanded -->
       <div v-else>
@@ -182,7 +195,7 @@ function clearStore(groupId: string) {
         </div>
         <div v-for="(prod, pi) in group.products" :key="prod.id" :style="{ marginTop: pi > 0 ? '16px' : '12px', paddingTop: pi > 0 ? '16px' : '0', borderTop: pi > 0 ? '1px dashed #e0e0e0' : 'none' }">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <span style="font-size: 14px; font-weight: 500; color: #22BDB8;">商品 {{ pi + 1 }}</span>
+            <span style="font-size: 14px; font-weight: 500; color: #22BDB8;">产品 {{ pi + 1 }}</span>
             <button v-if="group.products.length > 1" @click="store.deleteProduct(group.id, prod.id)" style="background: none; border: none; color: #F44336; font-size: 12px; cursor: pointer;">删除</button>
           </div>
           <div @click="router.push(`/product-apply/product-select?groupId=${group.id}&productId=${prod.id}`)" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5; cursor: pointer; margin-bottom: 10px;">
@@ -212,7 +225,7 @@ function clearStore(groupId: string) {
             <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0;"><span style="font-size: 14px; color: #666;">金额（净额）</span><span style="font-size: 14px; color: #22BDB8; font-weight: 600;">¥{{ prod.amount.toFixed(2) }}</span></div>
           </div>
         </div>
-        <button @click="store.addProduct(group.id)" style="width: 100%; margin-top: 12px; padding: 10px; border-radius: 8px; border: 1px dashed #22BDB8; background-color: #F0FDFD; color: #22BDB8; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;"><span style="font-size: 18px;">+</span> 添加商品</button>
+        <button @click="store.addProduct(group.id)" style="width: 100%; margin-top: 12px; padding: 10px; border-radius: 8px; border: 1px dashed #22BDB8; background-color: #F0FDFD; color: #22BDB8; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;"><span style="font-size: 18px;">+</span> 添加产品</button>
         <div v-if="group.products.some(p => p.amount > 0)" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #f0f0f0; text-align: right; font-size: 14px; color: #666;">
           分组小计：<span style="color: #22BDB8; font-weight: 600; font-size: 16px;">¥{{ group.products.reduce((s, p) => s + p.amount, 0).toFixed(2) }}</span>
         </div>
@@ -220,29 +233,41 @@ function clearStore(groupId: string) {
     </div>
     <!-- Add Group -->
     <div style="padding: 0 16px; margin-bottom: 12px;">
-      <button @click="store.addGroup" style="width: 100%; padding: 12px; border-radius: 12px; border: 1px dashed #22BDB8; background-color: #fff; color: #22BDB8; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;"><span style="font-size: 20px;">+</span> 添加专卖店分组</button>
+      <button @click="store.addGroup" style="width: 100%; padding: 12px; border-radius: 12px; border: 1px dashed #22BDB8; background-color: #fff; color: #22BDB8; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;"><span style="font-size: 20px;">+</span> 添加产品申请订单</button>
     </div>
     <!-- Total -->
     <div v-if="store.totalAmount > 0" style="padding: 14px 16px; background-color: #fff; margin: 0 16px 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
       <span style="font-size: 15px; font-weight: 500; color: #333;">金额合计</span>
       <span style="font-size: 20px; font-weight: 600; color: #22BDB8;">¥{{ store.totalAmount.toFixed(2) }}</span>
     </div>
-    <!-- Attachments -->
+    <!-- Attachments (CR-20260701-001 3.5/3.6: upgraded layout + PDF tip) -->
     <div class="card" style="margin: 12px 16px; padding: 14px 16px;">
-      <div style="font-size: 15px; font-weight: 600; color: #333; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0;">附件上传</div>
-      <div style="margin-top: 8px;">
-        <div v-for="a in attachments" :key="a.id" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f5f5f5;">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="#22BDB8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="#fff" stroke-width="2" fill="none" /></svg>
-            <span style="font-size: 14px; color: #333;">{{ a.name }}</span>
-          </div>
-          <button @click="delAtt(a.id)" style="background: none; border: none; color: #F44336; font-size: 12px; cursor: pointer;">删除</button>
-        </div>
-        <button @click="addAtt" style="width: 80px; height: 80px; border-radius: 8px; border: 1px dashed #ccc; background-color: #fafafa; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer; margin-top: 8px;">
-          <span style="font-size: 24px; color: #999;">+</span><span style="font-size: 12px; color: #999;">上传附件</span>
-        </button>
-        <div style="font-size: 12px; color: #999; margin-top: 8px;">支持 JPG、PNG、PDF、Excel 等格式，单个文件不超过 20MB，最多 10 个</div>
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0;">
+        <span style="font-size: 15px; font-weight: 600; color: #333;">附件上传</span>
+        <span v-if="attachments.length > 0 || true" style="font-size: 13px; color: #999;">({{ attachments.length }}/10)</span>
       </div>
+      <!-- PDF merge tip (CR-20260701-001 3.6) -->
+      <div style="font-size: 12px; color: #888; margin-bottom: 12px; padding: 8px 10px; background-color: #FFF8E1; border-radius: 6px; line-height: 1.5;">💡 建议将照片和扫描件合并为一份 PDF 上传</div>
+      <!-- Upload area -->
+      <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+        <!-- Uploaded files -->
+        <div v-for="a in attachments" :key="a.id" style="position: relative; width: 80px; height: 80px; border-radius: 8px; border: 1px solid #e8e8e8; background-color: #fafafa; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; overflow: hidden;">
+          <!-- Image icon for image files -->
+          <svg v-if="a.name.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i)" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#22BDB8" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          <!-- Document icon for other files -->
+          <svg v-else width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF9800" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8"/></svg>
+          <span style="font-size: 10px; color: #666; max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ a.name }}</span>
+          <!-- Delete button -->
+          <button @click="delAtt(a.id)" style="position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 50%; border: none; background-color: rgba(244,67,54,0.9); color: #fff; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1;">✕</button>
+          <!-- Preview placeholder -->
+          <div style="position: absolute; bottom: 2px; left: 2px; right: 2px; text-align: center; font-size: 9px; color: #bbb;">点击预览</div>
+        </div>
+        <!-- Add button -->
+        <button @click="addAtt" style="width: 80px; height: 80px; border-radius: 8px; border: 1px dashed #22BDB8; background-color: #F0FDFD; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer;">
+          <span style="font-size: 24px; color: #22BDB8;">+</span><span style="font-size: 11px; color: #22BDB8;">上传附件</span>
+        </button>
+      </div>
+      <div style="font-size: 11px; color: #bbb; margin-top: 10px;">支持 JPG、PNG、PDF、Excel 等格式，单个文件不超过 20MB，最多 10 个</div>
     </div>
     <!-- Submit -->
     <div style="position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; padding: 12px 16px; background-color: #fff; box-shadow: 0 -2px 8px rgba(0,0,0,0.06); z-index: 100;">
