@@ -23,9 +23,15 @@ export const mockProductOptions = [
 ];
 
 export const mockStores = [
-  { code: '31692', name: '赵晋安 宋晓华' }, { code: '31441', name: '赵晋杰' },
-  { code: '31375', name: '大连瑞轩商贸有限公司' }, { code: '31371', name: '沈阳迎续商贸有限公司' },
-  { code: '37235', name: '游秋燕' }, { code: '34998', name: '福州晋安第五小学专卖店 林志高' },
+  { code: '31692', name: '赵晋安 宋晓华', level: 4, orderAllowed: true },
+  { code: '31441', name: '赵晋杰', level: 4, orderAllowed: true },
+  { code: '31375', name: '大连瑞轩商贸有限公司', level: 3, orderAllowed: true },
+  { code: '31371', name: '沈阳迎续商贸有限公司', level: 3, orderAllowed: true },
+  { code: '37235', name: '游秋燕', level: 4, orderAllowed: true },
+  { code: '34998', name: '福州晋安第五小学专卖店 林志高', level: 2, orderAllowed: true },
+  // 边界测试数据
+  { code: '50001', name: '层级5测试专卖店', level: 5, orderAllowed: true },
+  { code: '50002', name: '禁止下单测试专卖店', level: 4, orderAllowed: false },
 ];
 
 // ============================================================
@@ -121,7 +127,8 @@ export function validateStore(code: string): { valid: boolean; store?: typeof mo
   if (!code || code.trim() === '') return { valid: false, error: '专卖店编号不能为空' }
   const s = mockStores.find(x => x.code === code)
   if (!s) return { valid: false, error: '专卖店编号不存在或无效' }
-  // 注：层级5 / 不允许下单校验 Mock 阶段暂不实现，保留扩展点
+  if (s.level === 5) return { valid: false, error: '专卖店编号对应客户层级为 5，不允许下单' }
+  if (s.orderAllowed === false) return { valid: false, error: '专卖店编号已被设置为不允许下单' }
   return { valid: true, store: s }
 }
 
