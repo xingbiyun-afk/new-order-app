@@ -1,0 +1,170 @@
+- main [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - button "‹" [ref=e7] [cursor=pointer]
+      - generic [ref=e8]: 产品申请工单
+    - generic [ref=e9]:
+      - generic [ref=e10]: 预算信息
+      - generic [ref=e11] [cursor=pointer]:
+        - generic [ref=e12]: 预算号 *
+        - generic [ref=e13]: 选择预算
+        - generic [ref=e14]: ›
+    - generic [ref=e15]:
+      - generic [ref=e16]:
+        - generic [ref=e17]: 申请信息
+        - generic [ref=e18]: 选择预算后展开
+      - generic [ref=e19]:
+        - generic [ref=e20]: 申请人
+        - generic [ref=e21]: 张三
+    - generic [ref=e23]: 此处开始填写需要预算核销的产品和订单归属专卖店
+    - generic [ref=e24]:
+      - generic [ref=e25] [cursor=pointer]:
+        - generic [ref=e26]:
+          - text: 产品申请订单明细1 · 31692
+          - generic [ref=e27]: 同一个店编的预算核销产品填写在一个明细
+        - generic [ref=e28]:
+          - button "删除" [ref=e29]
+          - generic [ref=e30]: ▾
+      - generic [ref=e31]:
+        - generic [ref=e32]:
+          - generic [ref=e33]: 订单归属专卖店 *
+          - generic [ref=e34]:
+            - generic [ref=e35] [cursor=pointer]: 31692 赵晋安 宋晓华
+            - generic [ref=e36] [cursor=pointer]: ›
+            - button "清空" [ref=e37] [cursor=pointer]
+        - generic [ref=e38]:
+          - generic [ref=e39]:
+            - generic [ref=e40]: 产品 1
+            - button "删除" [ref=e41] [cursor=pointer]
+          - generic [ref=e42] [cursor=pointer]:
+            - generic [ref=e43]: 产品编号 *
+            - generic [ref=e44]: SKU001
+            - generic [ref=e45]: ›
+          - generic [ref=e46]:
+            - generic [ref=e47]:
+              - generic [ref=e48]: 产品名称
+              - generic [ref=e49]: 智能马桶盖A款
+            - generic [ref=e50]:
+              - generic [ref=e51]: JDE价格
+              - generic [ref=e52]: ¥1299.00
+            - generic [ref=e53]:
+              - generic [ref=e54]: 是否打折产品
+              - generic [ref=e55]: 是
+            - generic [ref=e56]:
+              - generic [ref=e57]: 可申请数量
+              - generic [ref=e58]: "20"
+            - generic [ref=e59]:
+              - generic [ref=e60]: 数量 *
+              - generic [ref=e61]:
+                - button "-" [ref=e62] [cursor=pointer]
+                - spinbutton [ref=e63]: "5"
+                - button "+" [ref=e64] [cursor=pointer]
+              - generic [ref=e65]: 本组已申请 5，全单已申请 5 / 20 还可申请 15
+            - generic [ref=e66]:
+              - generic [ref=e67]: 金额（净额）
+              - generic [ref=e68]: ¥3247.50
+        - generic [ref=e69]:
+          - generic [ref=e70]:
+            - generic [ref=e71]: 产品 2
+            - button "删除" [ref=e72] [cursor=pointer]
+          - generic [ref=e73] [cursor=pointer]:
+            - generic [ref=e74]: 产品编号 *
+            - generic [ref=e75]: SKU002
+            - generic [ref=e76]: ›
+          - generic [ref=e77]:
+            - generic [ref=e78]:
+              - generic [ref=e79]: 产品名称
+              - generic [ref=e80]: 恒温花洒B款
+            - generic [ref=e81]:
+              - generic [ref=e82]: JDE价格
+              - generic [ref=e83]: ¥899.00
+            - generic [ref=e84]:
+              - generic [ref=e85]: 是否打折产品
+              - generic [ref=e86]: 否
+            - generic [ref=e87]:
+              - generic [ref=e88]: 可申请数量
+              - generic [ref=e89]: "15"
+            - generic [ref=e90]:
+              - generic [ref=e91]: 数量 *
+              - generic [ref=e92]:
+                - button "-" [ref=e93] [cursor=pointer]
+                - spinbutton [ref=e94]: "3"
+                - button "+" [ref=e95] [cursor=pointer]
+              - generic [ref=e96]: 本组已申请 3，全单已申请 3 / 15 还可申请 12
+            - generic [ref=e97]:
+              - generic [ref=e98]: 金额（净额）
+              - generic [ref=e99]: ¥2697.00
+        - button "+ 添加产品" [ref=e100] [cursor=pointer]:
+          - generic [ref=e101]: +
+          - text: 添加产品
+        - generic [ref=e102]: 分组小计：¥5944.50
+    - generic [ref=e103]:
+      - generic [ref=e104] [cursor=pointer]:
+        - generic [ref=e105]:
+          - text: 产品申请订单明细2 · 31441
+          - generic [ref=e106]: 同一个店编的预算核销产品填写在一个明细
+        - generic [ref=e107]:
+          - button "删除" [ref=e108]
+          - generic [ref=e109]: ▾
+      - generic [ref=e110]:
+        - generic [ref=e111]:
+          - generic [ref=e112]: 订单归属专卖店 *
+          - generic [ref=e113]:
+            - generic [ref=e114] [cursor=pointer]: 31441 赵晋杰
+            - generic [ref=e115] [cursor=pointer]: ›
+            - button "清空" [ref=e116] [cursor=pointer]
+        - generic [ref=e117]:
+          - generic [ref=e119]: 产品 1
+          - generic [ref=e120] [cursor=pointer]:
+            - generic [ref=e121]: 产品编号 *
+            - generic [ref=e122]: SKU003
+            - generic [ref=e123]: ›
+          - generic [ref=e124]:
+            - generic [ref=e125]:
+              - generic [ref=e126]: 产品名称
+              - generic [ref=e127]: 浴室柜C款
+            - generic [ref=e128]:
+              - generic [ref=e129]: JDE价格
+              - generic [ref=e130]: ¥2599.00
+            - generic [ref=e131]:
+              - generic [ref=e132]: 是否打折产品
+              - generic [ref=e133]: 是
+            - generic [ref=e134]:
+              - generic [ref=e135]: 可申请数量
+              - generic [ref=e136]: "10"
+            - generic [ref=e137]:
+              - generic [ref=e138]: 数量 *
+              - generic [ref=e139]:
+                - button "-" [ref=e140] [cursor=pointer]
+                - spinbutton [ref=e141]: "2"
+                - button "+" [ref=e142] [cursor=pointer]
+              - generic [ref=e143]: 本组已申请 2，全单已申请 2 / 10 还可申请 8
+            - generic [ref=e144]:
+              - generic [ref=e145]: 金额（净额）
+              - generic [ref=e146]: ¥2599.00
+        - button "+ 添加产品" [ref=e147] [cursor=pointer]:
+          - generic [ref=e148]: +
+          - text: 添加产品
+        - generic [ref=e149]: 分组小计：¥2599.00
+    - generic [ref=e150]:
+      - button "+ 添加产品申请订单" [ref=e151] [cursor=pointer]:
+        - generic [ref=e152]: +
+        - text: 添加产品申请订单
+      - generic [ref=e153]:
+        - button "📋 批量导入产品" [ref=e154] [cursor=pointer]:
+          - generic [ref=e155]: 📋
+          - text: 批量导入产品
+        - generic [ref=e156]: 导入数据需包含产品SKU、数量、专卖店编号，系统将按专卖店编号自动拆分
+    - generic [ref=e157]:
+      - generic [ref=e158]: 金额合计
+      - generic [ref=e159]: ¥8543.50
+    - generic [ref=e160]:
+      - generic [ref=e161]:
+        - generic [ref=e162]: 附件上传
+        - generic [ref=e163]: (0/10)
+      - generic [ref=e164]: 💡 建议将照片和扫描件合并为一份 PDF 上传
+      - button "+ 上传附件" [ref=e166] [cursor=pointer]:
+        - generic [ref=e167]: +
+        - generic [ref=e168]: 上传附件
+      - generic [ref=e169]: 支持 JPG、PNG、PDF、Excel 等格式，单个文件不超过 20MB，最多 10 个
+    - button "提交" [ref=e171] [cursor=pointer]

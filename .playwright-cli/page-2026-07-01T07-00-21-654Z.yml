@@ -1,0 +1,478 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]: B
+        - generic [ref=e7]: 预算管理系统
+      - navigation [ref=e8]:
+        - button "销售报表 占位" [ref=e10] [cursor=pointer]:
+          - img [ref=e12]
+          - generic [ref=e17]:
+            - generic [ref=e18]: 销售报表
+            - generic [ref=e19]: 占位
+          - img [ref=e20]
+        - generic [ref=e22]:
+          - button "预算管理" [ref=e23] [cursor=pointer]:
+            - img [ref=e25]
+            - generic [ref=e29]: 预算管理
+            - img [ref=e30]
+          - generic [ref=e32]:
+            - link "季度预算维护" [ref=e33] [cursor=pointer]:
+              - /url: "#/budget/maintenance"
+              - generic [ref=e36]: 季度预算维护
+            - link "产品申请审批流程管理" [ref=e37] [cursor=pointer]:
+              - /url: "#/budget/owner/approval-flow"
+              - generic [ref=e40]: 产品申请审批流程管理
+            - link "审批人员异常监控" [ref=e41] [cursor=pointer]:
+              - /url: "#/budget/monitoring/owner"
+              - generic [ref=e44]: 审批人员异常监控
+            - link "组织变更管理" [ref=e45] [cursor=pointer]:
+              - /url: "#/budget/org-change"
+              - generic [ref=e48]: 组织变更管理
+            - link "日志查询" [ref=e49] [cursor=pointer]:
+              - /url: "#/budget/audit"
+              - generic [ref=e52]: 日志查询
+        - button "微管理 占位" [ref=e54] [cursor=pointer]:
+          - img [ref=e56]
+          - generic [ref=e61]:
+            - generic [ref=e62]: 微管理
+            - generic [ref=e63]: 占位
+          - img [ref=e64]
+        - button "PSM管理 占位" [ref=e67] [cursor=pointer]:
+          - img [ref=e69]
+          - generic [ref=e73]:
+            - generic [ref=e74]: PSM管理
+            - generic [ref=e75]: 占位
+          - img [ref=e76]
+        - button "生意仪表盘 占位" [ref=e79] [cursor=pointer]:
+          - img [ref=e81]
+          - generic [ref=e84]:
+            - generic [ref=e85]: 生意仪表盘
+            - generic [ref=e86]: 占位
+          - img [ref=e87]
+        - button "跟单管理 占位" [ref=e90] [cursor=pointer]:
+          - img [ref=e92]
+          - generic [ref=e95]:
+            - generic [ref=e96]: 跟单管理
+            - generic [ref=e97]: 占位
+          - img [ref=e98]
+        - button "报表基础数据维护 占位" [ref=e101] [cursor=pointer]:
+          - img [ref=e103]
+          - generic [ref=e107]:
+            - generic [ref=e108]: 报表基础数据维护
+            - generic [ref=e109]: 占位
+          - img [ref=e110]
+        - button "系统设置 占位" [ref=e113] [cursor=pointer]:
+          - img [ref=e115]
+          - generic [ref=e118]:
+            - generic [ref=e119]: 系统设置
+            - generic [ref=e120]: 占位
+          - img [ref=e121]
+      - generic [ref=e124]: 预算管理系统 v1.0
+    - generic [ref=e125]:
+      - generic [ref=e126]:
+        - img [ref=e127]
+        - link "首页" [ref=e130] [cursor=pointer]:
+          - /url: "#/budget/maintenance"
+        - generic [ref=e131]:
+          - img [ref=e132]
+          - link "预算管理" [ref=e481] [cursor=pointer]:
+            - /url: "#/budget/maintenance"
+        - generic [ref=e482]:
+          - img [ref=e483]
+          - generic [ref=e485]: 季度预算维护
+      - main [ref=e139]:
+        - generic [ref=e486]:
+          - generic [ref=e487]:
+            - heading "预算查询" [level=2] [ref=e488]:
+              - img [ref=e489]
+              - text: 预算查询
+            - generic [ref=e492]:
+              - generic [ref=e493]:
+                - generic [ref=e494]: 区域
+                - textbox "区域/省办" [ref=e495]
+              - generic [ref=e496]:
+                - generic [ref=e497]: 年度
+                - textbox "请输入年度" [ref=e498]
+              - generic [ref=e499]:
+                - generic [ref=e500]: 预算状态
+                - combobox [ref=e501] [cursor=pointer]:
+                  - generic: 请选择状态
+                  - img
+              - generic [ref=e502]:
+                - generic [ref=e503]: 省办
+                - textbox "区域/省办" [ref=e504]
+              - generic [ref=e505]:
+                - generic [ref=e506]: 季度
+                - combobox [ref=e507] [cursor=pointer]:
+                  - generic: 请选择季度
+                  - img
+              - generic [ref=e508]:
+                - generic [ref=e509]: 预算号
+                - textbox "预算号" [ref=e510]
+              - generic [ref=e511]:
+                - generic [ref=e512]: 费用类型
+                - combobox [ref=e513] [cursor=pointer]:
+                  - generic: 全部
+                  - img
+              - generic [ref=e514]:
+                - generic [ref=e515]: 操作人
+                - textbox "请输入创建人" [ref=e516]
+              - generic [ref=e517]:
+                - generic [ref=e518]: 操作时间
+                - generic [ref=e519]:
+                  - textbox [ref=e520]
+                  - generic [ref=e521]: 至
+                  - textbox [ref=e522]
+            - generic [ref=e523]:
+              - button "查询" [ref=e524] [cursor=pointer]:
+                - img
+                - text: 查询
+              - button "重置" [ref=e525] [cursor=pointer]:
+                - img
+                - text: 重置
+              - button "导出" [ref=e526] [cursor=pointer]:
+                - img
+                - text: 导出
+              - button "新增" [ref=e528] [cursor=pointer]:
+                - img
+                - text: 新增
+              - button "批量作废" [ref=e529] [cursor=pointer]:
+                - img
+                - text: 批量作废
+              - button "导入" [ref=e530] [cursor=pointer]:
+                - img
+                - text: 导入
+          - generic [ref=e531]:
+            - table [ref=e533]:
+              - rowgroup [ref=e534]:
+                - row "预算号 年度 季度 预算科目 费用类型 归属组织 适用范围 预算金额（净额） 预算状态 预算到期日 申请可用标识 是否异常 操作人 操作时间 操作" [ref=e535]:
+                  - columnheader [ref=e536]:
+                    - checkbox [ref=e537]
+                  - columnheader "预算号" [ref=e538]
+                  - columnheader "年度" [ref=e539]
+                  - columnheader "季度" [ref=e540]
+                  - columnheader "预算科目" [ref=e541]
+                  - columnheader "费用类型" [ref=e542]
+                  - columnheader "归属组织" [ref=e543]
+                  - columnheader "适用范围" [ref=e544]
+                  - columnheader "预算金额（净额）" [ref=e545]
+                  - columnheader "预算状态" [ref=e546]
+                  - columnheader "预算到期日" [ref=e547]:
+                    - button "预算到期日" [ref=e548]:
+                      - text: 预算到期日
+                      - img [ref=e549]
+                  - columnheader "申请可用标识" [ref=e552]
+                  - columnheader "是否异常" [ref=e553]
+                  - columnheader "操作人" [ref=e554]
+                  - columnheader "操作时间" [ref=e555]
+                  - columnheader "操作" [ref=e556]
+              - rowgroup [ref=e557]:
+                - row "BG202601001 2026 Q1 订单预算 拓展 华东区 / 江苏省办 江苏省办 ¥ 500,000.00 已生效 2026-05-30 可申请 否 admin 2026-01-20 14:20:00" [ref=e558]:
+                  - cell [ref=e559]:
+                    - checkbox [ref=e560]
+                  - cell "BG202601001" [ref=e561]
+                  - cell "2026" [ref=e562]
+                  - cell "Q1" [ref=e563]
+                  - cell "订单预算" [ref=e564]
+                  - cell "拓展" [ref=e565]
+                  - cell "华东区 / 江苏省办" [ref=e566]
+                  - cell "江苏省办" [ref=e567]
+                  - cell "¥ 500,000.00" [ref=e568]
+                  - cell "已生效" [ref=e569]:
+                    - generic [ref=e570]: 已生效
+                  - cell "2026-05-30" [ref=e571]
+                  - cell "可申请" [ref=e572]:
+                    - generic "该预算允许在工单系统中被选择并发起申请" [ref=e573]: 可申请
+                  - cell "否" [ref=e574]:
+                    - generic [ref=e575]: 否
+                  - cell "admin" [ref=e576]
+                  - cell "2026-01-20 14:20:00" [ref=e577]
+                  - cell [ref=e578]:
+                    - generic [ref=e579]:
+                      - button "查看" [ref=e580] [cursor=pointer]:
+                        - img
+                      - button "编辑" [ref=e581] [cursor=pointer]:
+                        - img
+                      - button "作废" [ref=e582] [cursor=pointer]:
+                        - img
+                      - button "复制" [ref=e583] [cursor=pointer]:
+                        - img
+                - row "BG202601002 2026 Q1 订单预算 例会 华东区 / 浙江省办 浙江省办 ¥ 450,000.00 草稿 2026-05-30 可申请 否 admin 2026-01-16 09:15:00" [ref=e584]:
+                  - cell [ref=e585]:
+                    - checkbox [ref=e586]
+                  - cell "BG202601002" [ref=e587]
+                  - cell "2026" [ref=e588]
+                  - cell "Q1" [ref=e589]
+                  - cell "订单预算" [ref=e590]
+                  - cell "例会" [ref=e591]
+                  - cell "华东区 / 浙江省办" [ref=e592]
+                  - cell "浙江省办" [ref=e593]
+                  - cell "¥ 450,000.00" [ref=e594]
+                  - cell "草稿" [ref=e595]:
+                    - generic [ref=e596]: 草稿
+                  - cell "2026-05-30" [ref=e597]
+                  - cell "可申请" [ref=e598]:
+                    - generic "该预算允许在工单系统中被选择并发起申请" [ref=e599]: 可申请
+                  - cell "否" [ref=e600]:
+                    - generic [ref=e601]: 否
+                  - cell "admin" [ref=e602]
+                  - cell "2026-01-16 09:15:00" [ref=e603]
+                  - cell [ref=e604]:
+                    - generic [ref=e605]:
+                      - button "查看" [ref=e606] [cursor=pointer]:
+                        - img
+                      - button "编辑" [ref=e607] [cursor=pointer]:
+                        - img
+                      - button "删除" [ref=e608] [cursor=pointer]:
+                        - img
+                      - button "复制" [ref=e609] [cursor=pointer]:
+                        - img
+                - row "⚠️BG202601003 2026 Q1 订单预算 直播支持 华南区 / 广东省办 广东省办 ¥ 800,000.00 已生效 2026-05-30 可申请 是 admin 2026-01-22 16:45:00" [ref=e610]:
+                  - cell [ref=e611]:
+                    - checkbox [ref=e612]
+                  - cell "⚠️BG202601003" [ref=e613]
+                  - cell "2026" [ref=e614]
+                  - cell "Q1" [ref=e615]
+                  - cell "订单预算" [ref=e616]
+                  - cell "直播支持" [ref=e617]
+                  - cell "华南区 / 广东省办" [ref=e618]
+                  - cell "广东省办" [ref=e619]
+                  - cell "¥ 800,000.00" [ref=e620]
+                  - cell "已生效" [ref=e621]:
+                    - generic [ref=e622]: 已生效
+                  - cell "2026-05-30" [ref=e623]
+                  - cell "可申请" [ref=e624]:
+                    - generic "该预算允许在工单系统中被选择并发起申请" [ref=e625]: 可申请
+                  - cell "是" [ref=e626]:
+                    - generic [ref=e627]: 是
+                  - cell "admin" [ref=e628]
+                  - cell "2026-01-22 16:45:00" [ref=e629]
+                  - cell [ref=e630]:
+                    - generic [ref=e631]:
+                      - button "查看" [ref=e632] [cursor=pointer]:
+                        - img
+                      - button "编辑" [ref=e633] [cursor=pointer]:
+                        - img
+                      - button "作废" [ref=e634] [cursor=pointer]:
+                        - img
+                      - button "复制" [ref=e635] [cursor=pointer]:
+                        - img
+                - row "BG202601004 2026 Q1 订单预算 出货活动-营养品 中原区 / 河南省办 河南省办 ¥ 1,200,000.00 已生效 2026-05-30 可申请 否 admin 2026-01-18 10:10:00" [ref=e636]:
+                  - cell [ref=e637]:
+                    - checkbox [ref=e638]
+                  - cell "BG202601004" [ref=e639]
+                  - cell "2026" [ref=e640]
+                  - cell "Q1" [ref=e641]
+                  - cell "订单预算" [ref=e642]
+                  - cell "出货活动-营养品" [ref=e643]
+                  - cell "中原区 / 河南省办" [ref=e644]
+                  - cell "河南省办" [ref=e645]
+                  - cell "¥ 1,200,000.00" [ref=e646]
+                  - cell "已生效" [ref=e647]:
+                    - generic [ref=e648]: 已生效
+                  - cell "2026-05-30" [ref=e649]
+                  - cell "可申请" [ref=e650]:
+                    - generic "该预算允许在工单系统中被选择并发起申请" [ref=e651]: 可申请
+                  - cell "否" [ref=e652]:
+                    - generic [ref=e653]: 否
+                  - cell "admin" [ref=e654]
+                  - cell "2026-01-18 10:10:00" [ref=e655]
+                  - cell [ref=e656]:
+                    - generic [ref=e657]:
+                      - button "查看" [ref=e658] [cursor=pointer]:
+                        - img
+                      - button "编辑" [ref=e659] [cursor=pointer]:
+                        - img
+                      - button "作废" [ref=e660] [cursor=pointer]:
+                        - img
+                      - button "复制" [ref=e661] [cursor=pointer]:
+                        - img
+                - row "BG202601005 2026 Q1 订单预算 出货活动-净水器 华西区 / 四川省办、云南省办 四川省办、云南省办 ¥ 350,000.00 草稿 2026-05-30 可申请 否 admin 2026-01-16 14:00:00" [ref=e662]:
+                  - cell [ref=e663]:
+                    - checkbox [ref=e664]
+                  - cell "BG202601005" [ref=e665]
+                  - cell "2026" [ref=e666]
+                  - cell "Q1" [ref=e667]
+                  - cell "订单预算" [ref=e668]
+                  - cell "出货活动-净水器" [ref=e669]
+                  - cell "华西区 / 四川省办、云南省办" [ref=e670]
+                  - cell "四川省办、云南省办" [ref=e671]
+                  - cell "¥ 350,000.00" [ref=e672]
+                  - cell "草稿" [ref=e673]:
+                    - generic [ref=e674]: 草稿
+                  - cell "2026-05-30" [ref=e675]
+                  - cell "可申请" [ref=e676]:
+                    - generic "该预算允许在工单系统中被选择并发起申请" [ref=e677]: 可申请
+                  - cell "否" [ref=e678]:
+                    - generic [ref=e679]: 否
+                  - cell "admin" [ref=e680]
+                  - cell "2026-01-16 14:00:00" [ref=e681]
+                  - cell [ref=e682]:
+                    - generic [ref=e683]:
+                      - button "查看" [ref=e684] [cursor=pointer]:
+                        - img
+                      - button "编辑" [ref=e685] [cursor=pointer]:
+                        - img
+                      - button "删除" [ref=e686] [cursor=pointer]:
+                        - img
+                      - button "复制" [ref=e687] [cursor=pointer]:
+                        - img
+                - row "BG202601006 2026 Q2 订单预算 出货活动-水杯 华东区 / 江苏省办 江苏省办 ¥ 800,000.00 已生效 2026-08-29 可申请 否 admin 2026-04-10 11:00:00" [ref=e688]:
+                  - cell [ref=e689]:
+                    - checkbox [ref=e690]
+                  - cell "BG202601006" [ref=e691]
+                  - cell "2026" [ref=e692]
+                  - cell "Q2" [ref=e693]
+                  - cell "订单预算" [ref=e694]
+                  - cell "出货活动-水杯" [ref=e695]
+                  - cell "华东区 / 江苏省办" [ref=e696]
+                  - cell "江苏省办" [ref=e697]
+                  - cell "¥ 800,000.00" [ref=e698]
+                  - cell "已生效" [ref=e699]:
+                    - generic [ref=e700]: 已生效
+                  - cell "2026-08-29" [ref=e701]
+                  - cell "可申请" [ref=e702]:
+                    - generic "该预算允许在工单系统中被选择并发起申请" [ref=e703]: 可申请
+                  - cell "否" [ref=e704]:
+                    - generic [ref=e705]: 否
+                  - cell "admin" [ref=e706]
+                  - cell "2026-04-10 11:00:00" [ref=e707]
+                  - cell [ref=e708]:
+                    - generic [ref=e709]:
+                      - button "查看" [ref=e710] [cursor=pointer]:
+                        - img
+                      - button "编辑" [ref=e711] [cursor=pointer]:
+                        - img
+                      - button "作废" [ref=e712] [cursor=pointer]:
+                        - img
+                      - button "复制" [ref=e713] [cursor=pointer]:
+                        - img
+                - row "BG202504007 2025 Q4 订单预算 出货活动-跨平台 华东区 / 上海省办 上海省办 ¥ 300,000.00 已到期 2026-03-01(已过期) 不可申请 否 admin 2026-03-01 09:00:00" [ref=e714]:
+                  - cell [ref=e715]:
+                    - checkbox [ref=e716]
+                  - cell "BG202504007" [ref=e717]
+                  - cell "2025" [ref=e718]
+                  - cell "Q4" [ref=e719]
+                  - cell "订单预算" [ref=e720]
+                  - cell "出货活动-跨平台" [ref=e721]
+                  - cell "华东区 / 上海省办" [ref=e722]
+                  - cell "上海省办" [ref=e723]
+                  - cell "¥ 300,000.00" [ref=e724]
+                  - cell "已到期" [ref=e725]:
+                    - generic [ref=e726]: 已到期
+                  - cell "2026-03-01(已过期)" [ref=e727]:
+                    - generic [ref=e728]: 2026-03-01(已过期)
+                  - cell "不可申请" [ref=e729]:
+                    - generic "该预算已到期（到期日 2026-03-01）" [ref=e730]: 不可申请
+                  - cell "否" [ref=e731]:
+                    - generic [ref=e732]: 否
+                  - cell "admin" [ref=e733]
+                  - cell "2026-03-01 09:00:00" [ref=e734]
+                  - cell [ref=e735]:
+                    - generic [ref=e736]:
+                      - button "查看" [ref=e737] [cursor=pointer]:
+                        - img
+                      - button "复制" [ref=e738] [cursor=pointer]:
+                        - img
+                - row "BG202601008 2026 Q1 订单预算 样品 华北区 / 北京省办 北京省办 ¥ 200,000.00 已作废 2026-05-30 不可申请 否 admin 2026-02-01 09:00:00" [ref=e739]:
+                  - cell [ref=e740]:
+                    - checkbox [ref=e741]
+                  - cell "BG202601008" [ref=e742]
+                  - cell "2026" [ref=e743]
+                  - cell "Q1" [ref=e744]
+                  - cell "订单预算" [ref=e745]
+                  - cell "样品" [ref=e746]
+                  - cell "华北区 / 北京省办" [ref=e747]
+                  - cell "北京省办" [ref=e748]
+                  - cell "¥ 200,000.00" [ref=e749]
+                  - cell "已作废" [ref=e750]:
+                    - generic [ref=e751]: 已作废
+                  - cell "2026-05-30" [ref=e752]
+                  - cell "不可申请" [ref=e753]:
+                    - generic "该预算已作废" [ref=e754]: 不可申请
+                  - cell "否" [ref=e755]:
+                    - generic [ref=e756]: 否
+                  - cell "admin" [ref=e757]
+                  - cell "2026-02-01 09:00:00" [ref=e758]
+                  - cell [ref=e759]:
+                    - generic [ref=e760]:
+                      - button "查看" [ref=e761] [cursor=pointer]:
+                        - img
+                      - button "复制" [ref=e762] [cursor=pointer]:
+                        - img
+                - row "⚠️BG202601009 2026 Q2 订单预算 Etup活动 华南区 / 广西省办 广西省办 ¥ 600,000.00 已生效 2026-08-29 可申请 是 admin 2026-04-20 16:00:00" [ref=e763]:
+                  - cell [ref=e764]:
+                    - checkbox [ref=e765]
+                  - cell "⚠️BG202601009" [ref=e766]
+                  - cell "2026" [ref=e767]
+                  - cell "Q2" [ref=e768]
+                  - cell "订单预算" [ref=e769]
+                  - cell "Etup活动" [ref=e770]
+                  - cell "华南区 / 广西省办" [ref=e771]
+                  - cell "广西省办" [ref=e772]
+                  - cell "¥ 600,000.00" [ref=e773]
+                  - cell "已生效" [ref=e774]:
+                    - generic [ref=e775]: 已生效
+                  - cell "2026-08-29" [ref=e776]
+                  - cell "可申请" [ref=e777]:
+                    - generic "该预算允许在工单系统中被选择并发起申请" [ref=e778]: 可申请
+                  - cell "是" [ref=e779]:
+                    - generic [ref=e780]: 是
+                  - cell "admin" [ref=e781]
+                  - cell "2026-04-20 16:00:00" [ref=e782]
+                  - cell [ref=e783]:
+                    - generic [ref=e784]:
+                      - button "查看" [ref=e785] [cursor=pointer]:
+                        - img
+                      - button "编辑" [ref=e786] [cursor=pointer]:
+                        - img
+                      - button "作废" [ref=e787] [cursor=pointer]:
+                        - img
+                      - button "复制" [ref=e788] [cursor=pointer]:
+                        - img
+                - row "BG202602010 2026 Q2 订单预算 会员 华东区 / 浙江省办 浙江省办 ¥ 900,000.00 已生效 2026-08-29 可申请 否 admin 2026-04-08 09:00:00" [ref=e789]:
+                  - cell [ref=e790]:
+                    - checkbox [ref=e791]
+                  - cell "BG202602010" [ref=e792]
+                  - cell "2026" [ref=e793]
+                  - cell "Q2" [ref=e794]
+                  - cell "订单预算" [ref=e795]
+                  - cell "会员" [ref=e796]
+                  - cell "华东区 / 浙江省办" [ref=e797]
+                  - cell "浙江省办" [ref=e798]
+                  - cell "¥ 900,000.00" [ref=e799]
+                  - cell "已生效" [ref=e800]:
+                    - generic [ref=e801]: 已生效
+                  - cell "2026-08-29" [ref=e802]
+                  - cell "可申请" [ref=e803]:
+                    - generic "该预算允许在工单系统中被选择并发起申请" [ref=e804]: 可申请
+                  - cell "否" [ref=e805]:
+                    - generic [ref=e806]: 否
+                  - cell "admin" [ref=e807]
+                  - cell "2026-04-08 09:00:00" [ref=e808]
+                  - cell [ref=e809]:
+                    - generic [ref=e810]:
+                      - button "查看" [ref=e811] [cursor=pointer]:
+                        - img
+                      - button "编辑" [ref=e812] [cursor=pointer]:
+                        - img
+                      - button "作废" [ref=e813] [cursor=pointer]:
+                        - img
+                      - button "复制" [ref=e814] [cursor=pointer]:
+                        - img
+            - generic [ref=e815]:
+              - generic [ref=e817]: "已生效预算数: 21"
+              - generic [ref=e818]:
+                - generic [ref=e819]: 共 25 条
+                - generic [ref=e820]:
+                  - button [disabled]:
+                    - img
+                  - generic [ref=e821]: "1"
+                  - button [ref=e822] [cursor=pointer]:
+                    - img
+                - generic [ref=e823]:
+                  - generic [ref=e824]: 前往
+                  - textbox [ref=e825]: "1"
+                  - generic [ref=e826]: 页
+  - region "Notifications alt+T"

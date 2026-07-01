@@ -1,0 +1,80 @@
+- main [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - button "‹" [ref=e7] [cursor=pointer]
+      - generic [ref=e8]: 产品申请工单
+    - generic [ref=e9]:
+      - generic [ref=e10]: 预算信息
+      - generic [ref=e11] [cursor=pointer]:
+        - generic [ref=e12]: 预算号 *
+        - generic [ref=e13]: 选择预算
+        - generic [ref=e14]: ›
+    - generic [ref=e15]:
+      - generic [ref=e16]:
+        - generic [ref=e17]: 申请信息
+        - generic [ref=e18]: 选择预算后展开
+      - generic [ref=e19]:
+        - generic [ref=e20]: 申请人
+        - generic [ref=e21]: 张三
+    - generic [ref=e23]: 此处开始填写需要预算核销的产品和订单归属专卖店
+    - generic [ref=e24]:
+      - generic [ref=e25] [cursor=pointer]:
+        - generic [ref=e26]:
+          - text: 产品申请订单明细1
+          - generic [ref=e27]: 同一个店编的预算核销产品填写在一个明细
+        - generic [ref=e29]: ▾
+      - generic [ref=e30]:
+        - generic [ref=e31]:
+          - generic [ref=e32]: 订单归属专卖店 *
+          - generic [ref=e33]:
+            - generic [ref=e34] [cursor=pointer]: 请选择订单归属专卖店
+            - generic [ref=e35] [cursor=pointer]: ›
+        - generic [ref=e36]:
+          - generic [ref=e38]: 产品 1
+          - generic [ref=e39] [cursor=pointer]:
+            - generic [ref=e40]: 产品编号 *
+            - generic [ref=e41]: 选择产品
+            - generic [ref=e42]: ›
+        - button "+ 添加产品" [ref=e43] [cursor=pointer]:
+          - generic [ref=e44]: +
+          - text: 添加产品
+    - generic [ref=e45]:
+      - button "+ 添加产品申请订单" [ref=e46] [cursor=pointer]:
+        - generic [ref=e47]: +
+        - text: 添加产品申请订单
+      - generic [ref=e48]:
+        - button "📋 批量导入产品" [ref=e49] [cursor=pointer]:
+          - generic [ref=e50]: 📋
+          - text: 批量导入产品
+        - generic [ref=e51]: 导入数据需包含产品SKU、数量、专卖店编号，系统将按专卖店编号自动拆分
+    - generic [ref=e52]:
+      - generic [ref=e53]:
+        - generic [ref=e54]: 附件上传
+        - generic [ref=e55]: (0/10)
+      - generic [ref=e56]: 💡 建议将照片和扫描件合并为一份 PDF 上传
+      - button "+ 上传附件" [ref=e58] [cursor=pointer]:
+        - generic [ref=e59]: +
+        - generic [ref=e60]: 上传附件
+      - generic [ref=e61]: 支持 JPG、PNG、PDF、Excel 等格式，单个文件不超过 20MB，最多 10 个
+    - button "提交" [ref=e63] [cursor=pointer]
+    - generic [ref=e65]:
+      - generic [ref=e66]: 批量导入产品
+      - generic [ref=e67]:
+        - text: 支持逗号、空格、Tab 分隔
+        - text: 字段顺序：
+        - strong [ref=e68]: 产品SKU，数量，专卖店编号
+        - text: 示例：
+        - code [ref=e69]: SKU001,10,31692
+      - textbox "粘贴数据到此处..." [ref=e70]: SKU001,5,31692 SKU002,3,31692 SKU003,2,31441
+      - generic [ref=e71]:
+        - generic [ref=e72]: 📁 或上传文件导入（.xlsx / .xls / .csv）— 第1行为表头，第2行起为数据
+        - generic [ref=e73]:
+          - button "选择文件" [ref=e74] [cursor=pointer]
+          - generic [ref=e75]: test-import.csv
+      - generic [ref=e76]:
+        - button "取消" [ref=e77] [cursor=pointer]
+        - button "识别检查" [active] [ref=e78] [cursor=pointer]
+      - button "确认导入（3 条数据）" [ref=e79] [cursor=pointer]
+      - generic [ref=e80]:
+        - generic [ref=e81]: ✅ 数据识别成功
+        - generic [ref=e82]: 共 3 条数据，将按专卖店编号拆分为 2 个产品申请订单明细

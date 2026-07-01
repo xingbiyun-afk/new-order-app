@@ -1,0 +1,58 @@
+- main [ref=e4]:
+  - generic [ref=e172]:
+    - generic [ref=e173]:
+      - button "‹" [ref=e174] [cursor=pointer]
+      - generic [ref=e175]: 选择产品
+    - generic [ref=e177]:
+      - img [ref=e178]
+      - textbox "输入产品编号或名称搜索" [ref=e180]
+    - generic [ref=e181]:
+      - generic [ref=e183] [cursor=pointer]:
+        - generic [ref=e184]:
+          - generic [ref=e185]:
+            - generic [ref=e186]: 智能马桶盖A款
+            - generic [ref=e187]: 打折
+          - generic [ref=e188]:
+            - generic [ref=e189]: 编号：SKU001
+            - generic [ref=e190]: JDE价格：¥1299.00
+            - generic [ref=e191]: 可申请数量：20
+            - generic [ref=e192]: 折扣：5.0折
+        - generic [ref=e193]: ›
+      - generic [ref=e195] [cursor=pointer]:
+        - generic [ref=e196]:
+          - generic [ref=e198]: 恒温花洒B款
+          - generic [ref=e199]:
+            - generic [ref=e200]: 编号：SKU002
+            - generic [ref=e201]: JDE价格：¥899.00
+            - generic [ref=e202]: 可申请数量：15
+        - generic [ref=e203]: ›
+      - generic [ref=e205] [cursor=pointer]:
+        - generic [ref=e206]:
+          - generic [ref=e207]:
+            - generic [ref=e208]: 浴室柜C款
+            - generic [ref=e209]: 打折
+          - generic [ref=e210]:
+            - generic [ref=e211]: 编号：SKU003
+            - generic [ref=e212]: JDE价格：¥2599.00
+            - generic [ref=e213]: 可申请数量：10
+            - generic [ref=e214]: 折扣：5.0折
+        - generic [ref=e215]: ›
+      - generic [ref=e217] [cursor=pointer]:
+        - generic [ref=e218]:
+          - generic [ref=e220]: 智能龙头D款
+          - generic [ref=e221]:
+            - generic [ref=e222]: 编号：SKU004
+            - generic [ref=e223]: JDE价格：¥699.00
+            - generic [ref=e224]: 可申请数量：30
+        - generic [ref=e225]: ›
+      - generic [ref=e227] [cursor=pointer]:
+        - generic [ref=e228]:
+          - generic [ref=e229]:
+            - generic [ref=e230]: 淋浴房E款
+            - generic [ref=e231]: 打折
+          - generic [ref=e232]:
+            - generic [ref=e233]: 编号：SKU005
+            - generic [ref=e234]: JDE价格：¥3299.00
+            - generic [ref=e235]: 可申请数量：8
+            - generic [ref=e236]: 折扣：5.0折
+        - generic [ref=e237]: ›
