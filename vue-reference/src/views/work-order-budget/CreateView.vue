@@ -27,8 +27,7 @@ function handleScroll() {
     showBudgetBar.value = false
     return
   }
-  // 当滚动超过预算信息区 + 申请信息区高度后显示摘要条
-  showBudgetBar.value = window.scrollY > 280
+  showBudgetBar.value = window.scrollY > BUDGET_SCROLL_THRESHOLD
 }
 
 // CR-20260702-002: 提交按钮可用状态
@@ -75,9 +74,11 @@ function fmtMoney(v: number): string {
 // CR-20260702-002: 标记是否从选择页返回（避免清空状态）
 const isFromSelectionPage = ref(false)
 
+// CR-20260702-002 验收整改：滚动阈值常量，语义明确
+const BUDGET_SCROLL_THRESHOLD = 280
+
 onMounted(() => {
   // CR-20260702-002: 无草稿状态 - 从非选择页进入时清空为空白态
-  // 判断是否为从选择页返回：有 from 参数 或 有 storeCode/productCode 回填参数
   const fromPath = route.query.from as string
   const hasStoreCode = !!route.query.storeCode
   const hasProductCode = !!route.query.productCode
@@ -90,16 +91,14 @@ onMounted(() => {
     store.clearCollapsed()
     attachments.value = []
   } else {
+    // 保留场景（选择页返回 / 驳回重提 / budgetId 回填）：只恢复状态，不做任何反向清空
     store.initStoreGroups()
     if (budgetId.value) {
       store.selectBudget(budgetId.value)
-    } else if (!rejectedFrom.value && !hasStoreCode && !hasProductCode) {
-      // 从选择页返回时保留已有预算选择，不重置
-      store.selectedBudget = null
     }
+    // 不再执行 store.selectedBudget = null 一类反向清空逻辑
   }
 
-  // CR-20260702-002: 监听滚动事件
   window.addEventListener('scroll', handleScroll, { passive: true })
 })
 
@@ -147,7 +146,7 @@ function qtyChange(gid: string, pid: string, v: number) {
 function delAtt(id: string) { attachments.value = attachments.value.filter(a => a.id !== id) }
 function addAtt() { attachments.value.push({ id: `att_${Date.now()}`, name: `附件_${attachments.value.length + 1}.pdf` }); showToast('附件已添加（模拟）') }
 function submit() {
-  if (!store.selectedBudget) { showToast('请选择预算号'); return }
+  if (!store.selectedBudget) { showToast('请选择预算'); return }
   // 预算可用金额校验（CR-20260630-002 3.5）
   if (store.totalAmount > store.selectedBudget.availableAmount) {
     showToast(`整单金额 ¥${fmtMoney(store.totalAmount)} 超过预算可用金额 ¥${fmtMoney(store.selectedBudget.availableAmount)}`)
@@ -155,7 +154,7 @@ function submit() {
   }
   for (const g of store.storeGroups) {
     if (!g.storeCode) { showToast('请选择订单归属专卖店'); return }
-    for (const p of g.products) { if (!p.productCode) { showToast('请选择产品编号'); return } }
+    for (const p of g.products) { if (!p.productCode) { showToast('请选择产品'); return } }
   }
   for (const [code, total] of store.skuTotalMap.entries()) {
     const p = store.storeGroups.flatMap(g => g.products).find(x => x.productCode === code)
@@ -175,7 +174,7 @@ function hasGroupOrProduct(): boolean {
 // CR-20260702-001 收尾：原单重提场景直接拦截
 function goBudgetSelect() {
   if (isRejectedRetrigger.value) {
-    showToast('当前为原单重提场景，预算号已锁定，不可更换')
+    showToast('当前为原单重提场景，预算已锁定，不可更换')
     return
   }
   if (hasGroupOrProduct()) {
@@ -472,7 +471,10 @@ function hasImportWarnings() {
           <span style="font-size: 12px; color: #bbb;">或通过以下方式快速录入</span>
           <div style="flex: 1; height: 1px; background-color: #f0f0f0;"></div>
         </div>
-        <button @click="openImport" style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #FFE082; background-color: #FFFDE7; color: #E65100; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">📋 批量导入产品</button>
+        <button @click="openImport" style="width: 100%; padding: 10px; border-radius: 10px; border: 1px dashed #22BDB8; background-color: #fff; color: #22BDB8; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22BDB8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          批量导入产品
+        </button>
         <div style="font-size: 11px; color: #bbb; margin-top: 6px; text-align: center; line-height: 1.5;">导入后将覆盖当前已填写内容，请谨慎使用</div>
       </div>
     </div>
@@ -496,7 +498,10 @@ function hasImportWarnings() {
         <span style="font-size: 13px; color: #999;">({{ attachments.length }}/10)</span>
       </div>
       <!-- PDF merge tip (CR-20260701-001 3.6) -->
-      <div style="font-size: 12px; color: #888; margin-bottom: 12px; padding: 8px 10px; background-color: #FFF8E1; border-radius: 6px; line-height: 1.5;">💡 建议将照片和扫描件合并为一份 PDF 上传</div>
+      <div style="font-size: 12px; color: #888; margin-bottom: 12px; padding: 8px 10px; background-color: #FFF8E1; border-radius: 6px; line-height: 1.5; display: flex; align-items: center; gap: 6px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF9800" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        建议将照片和扫描件合并为一份 PDF 上传
+      </div>
       <!-- Upload area -->
       <div style="display: flex; flex-wrap: wrap; gap: 10px;">
         <!-- Uploaded files -->
@@ -547,7 +552,7 @@ function hasImportWarnings() {
         <div style="font-size: 16px; font-weight: 600; color: #333; margin-bottom: 12px;">批量导入产品</div>
         <!-- Format hint -->
         <div style="font-size: 12px; color: #555; margin-bottom: 12px; padding: 10px 12px; background-color: #FFF8E1; border: 1px solid #FFE082; border-radius: 8px; line-height: 1.8;">
-          <div style="font-weight: 600; color: #FF8F00; margin-bottom: 6px;">字段顺序：产品编号，数量，专卖店编号</div>
+          <div style="font-weight: 600; color: #FF8F00; margin-bottom: 6px;">字段顺序：产品编码（产品编号），数量，专卖店编号</div>
           <div style="color: #666;">支持逗号、空格、Tab 分隔</div>
           <div style="color: #666;">示例：<code style="background:#fff; padding:2px 6px; border-radius:4px; font-size:11px; color:#333;">SKU001,10,31692</code></div>
         </div>
@@ -555,7 +560,10 @@ function hasImportWarnings() {
         <textarea v-model="importText" placeholder="粘贴数据到此处..." rows="8" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #e0e0e0; font-size: 13px; resize: vertical; font-family: monospace; box-sizing: border-box; line-height: 1.6;" @input="importChecked = false"></textarea>
         <!-- File import -->
         <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0f0f0;">
-          <div style="font-size: 12px; color: #888; margin-bottom: 6px;">📁 或上传文件导入（.xlsx / .xls / .csv）— 第1行为表头，第2行起为数据</div>
+          <div style="font-size: 12px; color: #888; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            或上传文件导入（.xlsx / .xls / .csv）— 第1行为表头，第2行起为数据
+          </div>
           <div style="display: flex; align-items: center; gap: 8px;">
             <input ref="fileInputRef" type="file" accept=".xlsx,.xls,.csv" @change="handleFileImport" style="display: none;" />
             <button @click="fileInputRef?.click()" style="padding: 6px 14px; border-radius: 6px; border: 1px solid #22BDB8; background-color: #F0FDFD; color: #22BDB8; font-size: 13px; cursor: pointer;">选择文件</button>
