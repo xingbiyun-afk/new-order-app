@@ -175,8 +175,10 @@ const emptyType = computed<'no-budget' | 'no-search' | null>(() => {
 // 6. 卡片交互（CR-20260702-001 第九章）
 // -------------------------------------------------------
 
-/** 判断预算是否可选 */
+/** 判断预算是否可选（CR-20260702-001 整改：applicationAvailable 独立参与判断） */
 function isSelectable(b: EnrichedBudget): boolean {
+  // applicationAvailable=false 时直接不可选（与额度、冻结期独立判断）
+  if (!b.applicationAvailable) return false
   // 零剩余额度不可选
   if (b.availableAmount <= 0) return false
   // 普通新发起场景：冻结期预算不可选
@@ -187,9 +189,11 @@ function isSelectable(b: EnrichedBudget): boolean {
 
 /** 点击卡片 */
 function handleClick(b: EnrichedBudget) {
-  // 不可选时给出反馈
+  // 不可选时给出反馈（CR-20260702-001 整改：独立提示 applicationAvailable=false）
   if (!isSelectable(b)) {
-    if (b.availableAmount <= 0) {
+    if (!b.applicationAvailable) {
+      alert('当前预算不可用于申请')
+    } else if (b.availableAmount <= 0) {
       alert('当前预算剩余额度不足，无法用于申请')
     } else {
       alert('当前预算已进入申请冻结期，不可用于新发起')

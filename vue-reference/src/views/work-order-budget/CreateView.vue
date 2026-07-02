@@ -9,7 +9,14 @@ const router = useRouter()
 const route = useRoute()
 const store = useWorkOrderStore()
 const budgetId = computed(() => route.query.budgetId as string)
+const rejectedFrom = computed(() => route.query.rejectedFrom as string) // 驳回后重提场景：原工单号
 const currentUser = { name: '张三', org: '南大 / 福建' }
+
+// 判断是否为驳回后重提场景
+const isRejectedRetrigger = computed(() => !!rejectedFrom.value)
+
+// 当前日期（Mock环境，正式环境用 new Date()）
+const TODAY = new Date('2026-07-02T00:00:00')
 const toast = ref('')
 function showToast(msg: string) { toast.value = msg; setTimeout(() => toast.value = '', 2500) }
 const attachments = ref<{ id: string; name: string }[]>([])
@@ -242,14 +249,52 @@ function hasImportWarnings() {
       <button @click="router.back()" style="position: absolute; left: 12px; background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; padding: 4px 8px;">&#8249;</button>
       <span style="color: #fff; font-size: 17px; font-weight: 500;">产品申请工单</span>
     </div>
-    <!-- Budget -->
+    <!-- Budget (CR-20260702-001 整改: 补齐预算摘要区 + 驳回后重提锁定) -->
     <div class="card" style="margin: 12px 16px; padding: 14px 16px;">
       <div style="font-size: 15px; font-weight: 600; color: #333; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0;">预算信息</div>
-      <div @click="goBudgetSelect" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5; cursor: pointer;">
+
+      <!-- 驳回后重提场景提示 -->
+      <div v-if="isRejectedRetrigger" style="background-color: #E3F2FD; color: #1565C0; font-size: 13px; padding: 8px 12px; border-radius: 8px; margin-bottom: 10px;">
+        原单重提：基于工单 {{ rejectedFrom }} 重新发起
+      </div>
+
+      <!-- 预算号：驳回重提时禁用选择入口 -->
+      <div @click="!isRejectedRetrigger && goBudgetSelect()" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5; cursor: pointer;" :style="{ opacity: isRejectedRetrigger ? 0.6 : 1 }">
         <span style="font-size: 14px; color: #666;">预算号<span style="color: #F44336;"> *</span></span>
         <span style="font-size: 14px;" :style="{ color: store.selectedBudget ? '#333' : '#bbb' }">{{ store.selectedBudget?.budgetNo || '选择预算' }}</span>
-        <span style="color: #999; margin-left: 4px; font-size: 16px;">&#8250;</span>
+        <span v-if="!isRejectedRetrigger" style="color: #999; margin-left: 4px; font-size: 16px;">&#8250;</span>
+        <span v-else style="font-size: 12px; color: #999; margin-left: 4px;">已锁定</span>
       </div>
+
+      <!-- 预算摘要区（CR-20260702-001 整改新增） -->
+      <template v-if="store.selectedBudget">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; padding: 8px 0; border-bottom: 1px solid #f5f5f5;">
+          <span style="font-size: 13px; color: #666;">剩余额度（净额）</span>
+          <span style="font-size: 16px; font-weight: 600; color: #22BDB8;">¥{{ fmtMoney(store.selectedBudget.availableAmount) }}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f5f5f5;">
+          <span style="font-size: 12px; color: #999;">预算总额（净额）</span>
+          <span style="font-size: 12px; color: #999;">¥{{ fmtMoney(store.selectedBudget.budgetTotalAmount) }}</span>
+        </div>
+        <div style="padding: 6px 0; border-bottom: 1px solid #f5f5f5;">
+          <span style="font-size: 12px; color: #999;">归属：</span>
+          <span style="font-size: 12px; color: #666;">{{ store.selectedBudget.budgetOrg }}</span>
+        </div>
+        <div style="padding: 6px 0;">
+          <span style="font-size: 12px; color: #999;">范围：</span>
+          <span style="font-size: 12px; color: #666;">{{ store.selectedBudget.budgetScope }}</span>
+        </div>
+
+        <!-- 驳回重提 + 冻结期提示 -->
+        <div v-if="isRejectedRetrigger && store.selectedBudget.freezeStartDate && new Date(store.selectedBudget.freezeStartDate) <= TODAY && TODAY < new Date(store.selectedBudget.budgetExpiryDate)" style="background-color: #FFF3E0; color: #E65100; font-size: 12px; padding: 8px 12px; border-radius: 8px; margin-top: 8px;">
+          当前预算已进入申请冻结期，仅允许沿用原预算重新发起，不可更换预算号
+        </div>
+        <div v-else-if="isRejectedRetrigger && TODAY >= new Date(store.selectedBudget.budgetExpiryDate)" style="background-color: #FFEBEE; color: #C62828; font-size: 12px; padding: 8px 12px; border-radius: 8px; margin-top: 8px;">
+          原预算已到期，不可继续基于原单重提，请新建空白工单
+        </div>
+      </template>
+
+      <!-- 异常提示保留 -->
       <div v-if="store.selectedBudget?.isAbnormal" style="background-color: #FFF8E1; color: #FF8F00; font-size: 13px; padding: 8px 12px; border-radius: 8px; margin-top: 8px;">&#9888; {{ store.selectedBudget.abnormalMessage }}</div>
     </div>
     <!-- Apply Info (CR-20260701-001 3.1: compress before budget selected) -->
