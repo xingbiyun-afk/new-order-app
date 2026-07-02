@@ -1,6 +1,6 @@
 # new-order-app Vue 参考实现
 
-本目录为 `new-order-app` 项目的 **Vue3 + TypeScript + Vite 参考实现**，初始迁移自 React 参考实现（`src/features/work-order-budget/`，CR-20260629-001），后续经多轮迭代优化（截至 CR-20260701-001）。
+本目录为 `new-order-app` 项目的 **Vue3 + TypeScript + Vite 参考实现**，初始迁移自 React 参考实现（`src/features/work-order-budget/`，CR-20260629-001），后续经多轮迭代优化（截至 CR-20260702-002）。
 
 ## 定位
 
@@ -44,4 +44,4 @@ npm run preview  # 预览构建
 
 - 变更清单：`../docs/change-logs/`
 - 开发总结：`../docs/development-summary/`
-- 最新迭代：CR-20260701-001（发起页交互优化与命名口径统一）
+- 最新迭代：CR-20260702-002（发起页样式与体验优化）
