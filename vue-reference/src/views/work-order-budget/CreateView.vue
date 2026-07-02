@@ -47,7 +47,12 @@ function fmtMoney(v: number): string {
 
 onMounted(() => {
   store.initStoreGroups()
-  if (budgetId.value) store.selectBudget(budgetId.value)
+  if (budgetId.value) {
+    store.selectBudget(budgetId.value)
+  } else if (!rejectedFrom.value) {
+    // 非重提场景且没有预算ID：清除上次选择，避免状态残留
+    store.selectedBudget = null
+  }
 })
 watch(() => store.storeGroups, () => store.persistStoreGroups(), { deep: true })
 
@@ -251,7 +256,7 @@ function hasImportWarnings() {
 <template>
   <div style="padding-bottom: 80px;">
     <div style="padding: 12px 16px; background-color: #22BDB8; display: flex; align-items: center; justify-content: center; position: relative;">
-      <button @click="router.back()" style="position: absolute; left: 12px; background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; padding: 4px 8px;">&#8249;</button>
+      <button @click="router.push('/create')" style="position: absolute; left: 12px; background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; padding: 4px 8px;">&#8249;</button>
       <span style="color: #fff; font-size: 17px; font-weight: 500;">产品申请工单</span>
     </div>
     <!-- Budget (CR-20260702-001 整改: 补齐预算摘要区 + 驳回后重提锁定) -->

@@ -204,12 +204,12 @@ function handleClick(b: EnrichedBudget) {
   selectedId.value = selectedId.value === b.id ? null : b.id
 }
 
-/** 确认选择 */
+/** 确认选择 — 用 replace 避免历史记录累积 */
 function confirmSelect() {
   if (!selectedId.value) return
   const b = enrichedList.value.find(x => x.id === selectedId.value)
   if (!b) return
-  router.push({
+  router.replace({
     path: '/product-apply/create',
     query: { budgetId: b.id },
   })
