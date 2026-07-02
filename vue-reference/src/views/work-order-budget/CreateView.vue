@@ -115,7 +115,12 @@ function hasGroupOrProduct(): boolean {
 }
 
 // 切换预算：带确认提示，确认后清空分组（CR-20260630-002 3.6）
+// CR-20260702-001 收尾：原单重提场景直接拦截
 function goBudgetSelect() {
+  if (isRejectedRetrigger.value) {
+    showToast('当前为原单重提场景，预算号已锁定，不可更换')
+    return
+  }
   if (hasGroupOrProduct()) {
     openConfirm('切换预算后，当前已填写的产品申请订单明细将被清空，是否继续？', () => {
       store.storeGroups = [createDefaultGroup()]
@@ -290,7 +295,7 @@ function hasImportWarnings() {
           当前预算已进入申请冻结期，仅允许沿用原预算重新发起，不可更换预算号
         </div>
         <div v-else-if="isRejectedRetrigger && TODAY >= new Date(store.selectedBudget.budgetExpiryDate)" style="background-color: #FFEBEE; color: #C62828; font-size: 12px; padding: 8px 12px; border-radius: 8px; margin-top: 8px;">
-          原预算已到期，不可继续基于原单重提，请新建空白工单
+          原预算已到期，当前不可继续基于原单重新发起，请联系相关人员处理
         </div>
       </template>
 
