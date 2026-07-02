@@ -3,7 +3,26 @@ export interface Budget {
   status: '草稿' | '已生效' | '已作废' | '已到期';
   applicationAvailable: boolean; isAbnormal: boolean;
   abnormalMessage?: string; applyType: string; applyReason: string;
-  availableAmount: number; usedAmount: number; applyingAmount: number;
+  // CR-20260702-001: 卡片展示字段调整
+  availableAmount: number;        // 剩余额度（净额）—— 第一优先级展示
+  budgetTotalAmount: number;      // 预算总额（净额）—— 新增
+  budgetOrg: string;              // 预算归属组织 —— 新增
+  budgetScope: string;            // 预算使用范围 —— 新增
+  budgetExpiryDate: string;       // 预算到期日 —— 用于标签计算与排序
+  freezeStartDate: string;        // 冻结开始日期 —— 用于"申请冻结中"标签
+  lastAppliedAt?: string;         // 最近申请时间 —— 用于"最近申请"标签
+  // 历史字段保留（后端兼容），前端展示中已用/申请中金额不再显示
+  usedAmount: number;
+  applyingAmount: number;
+}
+
+// CR-20260702-001: 预算标签类型
+export type BudgetTagType = 'recent' | 'expiring' | 'currentQuarter' | 'freezing';
+
+export interface BudgetTag {
+  type: BudgetTagType;
+  label: string;
+  priority: number; // 1=最高, 4=最低
 }
 export interface ProductItem {
   id: string; productCode: string; productName: string;

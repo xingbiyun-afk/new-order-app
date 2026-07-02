@@ -1,10 +1,81 @@
 import * as XLSX from 'xlsx'
 import type { Budget, ProductWorkOrder, WorkOrderCard, StoreGroup, ProductItem, ApprovalNode, GroupResult, ImportRow, ImportError } from '../types';
 
+// ============================================================
+// 预算选择页 Mock 数据（CR-20260702-001 更新）
+// ============================================================
+// 字段说明：
+// - availableAmount: 剩余额度（净额）—— 卡片第一优先级展示
+// - budgetTotalAmount: 预算总额（净额）—— 辅助申请人理解预算规模
+// - budgetOrg: 预算归属组织 —— 帮助申请人理解预算归属主体
+// - budgetScope: 预算使用范围 —— 纯组织架构口径（总部/区域/省办），不涉及店铺类型
+// - budgetExpiryDate: 预算到期日 —— 用于"15天内即将到期"标签 + 排序
+// - freezeStartDate: 冻结开始日期 —— 用于"申请冻结中"标签
+// - lastAppliedAt: 最近成功提交时间 —— 仅用户最近一次成功提交预算显示"最近申请"标签
+
+const today = '2026-07-02'
+
 export const mockBudgets: Budget[] = [
-  { id: '1', budgetNo: 'B2024Q3001', productCode: 'P001', status: '已生效', applicationAvailable: true, isAbnormal: false, applyType: '新品申请', applyReason: '季度新品推广活动，针对核心专卖店进行首批铺货支持', availableAmount: 50000, usedAmount: 12000, applyingAmount: 8000 },
-  { id: '2', budgetNo: 'B2024Q3002', productCode: 'P002', status: '已生效', applicationAvailable: true, isAbnormal: true, abnormalMessage: '组织调整中，预算归属可能发生变更', applyType: '活动申请', applyReason: '618促销活动产品支持', availableAmount: 30000, usedAmount: 5000, applyingAmount: 2000 },
-  { id: '3', budgetNo: 'B2024Q3003', productCode: 'P003', status: '已生效', applicationAvailable: false, isAbnormal: false, applyType: '补货申请', applyReason: '常规季度补货', availableAmount: 0, usedAmount: 45000, applyingAmount: 5000 },
+  // ===== 标签：最近申请（仅1条：用户最近一次成功提交的预算）=====
+  { id: '1', budgetNo: 'B2024Q3001', productCode: 'P001', status: '已生效', applicationAvailable: true, isAbnormal: false,
+    applyType: '新品申请', applyReason: '季度新品推广活动，针对核心专卖店进行首批铺货支持',
+    availableAmount: 50000, budgetTotalAmount: 70000, budgetOrg: '华南大区总部', budgetScope: '广东省、福建省、海南省',
+    budgetExpiryDate: '2026-07-30', freezeStartDate: '2026-07-20', lastAppliedAt: today,
+    usedAmount: 12000, applyingAmount: 8000 },
+
+  // ===== 标签：15天内即将到期（到期日在15天内，且无lastAppliedAt）=====
+  { id: '2', budgetNo: 'B2024Q3002', productCode: 'P002', status: '已生效', applicationAvailable: true, isAbnormal: true,
+    abnormalMessage: '组织调整中，预算归属可能发生变更', applyType: '活动申请', applyReason: '618促销活动产品支持',
+    availableAmount: 30000, budgetTotalAmount: 38000, budgetOrg: '华东大区-浙江分部', budgetScope: '浙江省全境',
+    budgetExpiryDate: '2026-07-15', freezeStartDate: '2026-07-20',
+    usedAmount: 5000, applyingAmount: 2000 },
+
+  { id: '9', budgetNo: 'B2024Q3009', productCode: 'P009', status: '已生效', applicationAvailable: true, isAbnormal: false,
+    applyType: '补货申请', applyReason: '紧急补货',
+    availableAmount: 12000, budgetTotalAmount: 15000, budgetOrg: '东北大区', budgetScope: '辽宁省、吉林省、黑龙江省',
+    budgetExpiryDate: '2026-07-10', freezeStartDate: '2026-07-20',
+    usedAmount: 2000, applyingAmount: 1000 },
+
+  // ===== 标签：本季度可申请（不在冻结期，无lastAppliedAt，到期日>15天）=====
+  { id: '4', budgetNo: 'B2024Q3004', productCode: 'P004', status: '已生效', applicationAvailable: true, isAbnormal: false,
+    applyType: '新品申请', applyReason: '智能系列产品区域推广',
+    availableAmount: 85000, budgetTotalAmount: 100000, budgetOrg: '西南大区总部', budgetScope: '四川省、重庆市、云南省',
+    budgetExpiryDate: '2026-09-30', freezeStartDate: '2026-08-15',
+    usedAmount: 10000, applyingAmount: 5000 },
+
+  // ===== 标签：申请冻结中（freezeStartDate <= today < budgetExpiryDate）=====
+  { id: '5', budgetNo: 'B2024Q3005', productCode: 'P005', status: '已生效', applicationAvailable: true, isAbnormal: false,
+    applyType: '活动申请', applyReason: '暑期促销活动专项预算',
+    availableAmount: 15000, budgetTotalAmount: 25000, budgetOrg: '华中营销中心', budgetScope: '湖北省、湖南省、河南省',
+    budgetExpiryDate: '2026-08-10', freezeStartDate: '2026-07-01',
+    usedAmount: 8000, applyingAmount: 2000 },
+
+  // ===== 零剩余额度 —— 展示但弱化后置，不可选 =====
+  { id: '3', budgetNo: 'B2024Q3003', productCode: 'P003', status: '已生效', applicationAvailable: false, isAbnormal: false,
+    applyType: '补货申请', applyReason: '常规季度补货',
+    availableAmount: 0, budgetTotalAmount: 50000, budgetOrg: '华北营销中心', budgetScope: '北京市、天津市、河北省',
+    budgetExpiryDate: '2026-07-30', freezeStartDate: '2026-07-20',
+    usedAmount: 45000, applyingAmount: 5000 },
+
+  // ===== 以下预算不应在选择页展示（仅用于过滤测试）=====
+  // 草稿
+  { id: '6', budgetNo: 'B2024Q3006-D', productCode: 'P006', status: '草稿', applicationAvailable: false, isAbnormal: false,
+    applyType: '补货申请', applyReason: '草稿预算测试中',
+    availableAmount: 20000, budgetTotalAmount: 20000, budgetOrg: '华东大区', budgetScope: '山东省全境',
+    budgetExpiryDate: '2026-07-30', freezeStartDate: '2026-07-20',
+    usedAmount: 0, applyingAmount: 0 },
+  // 已作废
+  { id: '7', budgetNo: 'B2024Q3007-V', productCode: 'P007', status: '已作废', applicationAvailable: false, isAbnormal: false,
+    applyType: '活动申请', applyReason: '已作废预算',
+    availableAmount: 0, budgetTotalAmount: 30000, budgetOrg: '华南大区', budgetScope: '广西省全境',
+    budgetExpiryDate: '2026-06-01', freezeStartDate: '2026-05-15',
+    usedAmount: 30000, applyingAmount: 0 },
+  // 已到期
+  { id: '8', budgetNo: 'B2024Q3008-E', productCode: 'P008', status: '已到期', applicationAvailable: false, isAbnormal: false,
+    applyType: '新品申请', applyReason: '到期预算',
+    availableAmount: 0, budgetTotalAmount: 40000, budgetOrg: '西北大区', budgetScope: '陕西省、甘肃省',
+    budgetExpiryDate: '2026-06-15', freezeStartDate: '2026-05-30',
+    usedAmount: 40000, applyingAmount: 0 },
 ];
 
 export function createDefaultProduct(): ProductItem {
