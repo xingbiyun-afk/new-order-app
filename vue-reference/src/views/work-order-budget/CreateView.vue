@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useWorkOrderStore } from '../../stores/workOrder'
 import { mockProductOptions, mockStores, calculateAmount, createDefaultGroup, parseImportText, validateImportRows, parseFileImport, downloadImportTemplate } from '../../mocks'
@@ -14,6 +14,33 @@ const currentUser = { name: '张三', org: '南大 / 福建' }
 
 // 判断是否为驳回后重提场景
 const isRejectedRetrigger = computed(() => !!rejectedFrom.value)
+
+// CR-20260702-002: 申请信息区展开状态
+const isApplyInfoExpanded = ref(false)
+
+// CR-20260702-002: 滚动态预算摘要条显示状态
+const showBudgetBar = ref(false)
+
+// CR-20260702-002: 监听页面滚动，控制预算摘要条显示
+function handleScroll() {
+  if (!store.selectedBudget) {
+    showBudgetBar.value = false
+    return
+  }
+  // 当滚动超过预算信息区 + 申请信息区高度后显示摘要条
+  showBudgetBar.value = window.scrollY > 280
+}
+
+// CR-20260702-002: 提交按钮可用状态
+const canSubmit = computed(() => {
+  // 未选择预算
+  if (!store.selectedBudget) return false
+  // 未上传附件
+  if (attachments.value.length === 0) return false
+  // 页面主体内容为空（没有填写任何专卖店或产品）
+  if (!hasGroupOrProduct()) return false
+  return true
+})
 
 // 当前日期（Mock环境，正式环境用 new Date()）
 const TODAY = new Date('2026-07-02T00:00:00')
@@ -45,14 +72,39 @@ function fmtMoney(v: number): string {
   return v.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
+// CR-20260702-002: 标记是否从选择页返回（避免清空状态）
+const isFromSelectionPage = ref(false)
+
 onMounted(() => {
-  store.initStoreGroups()
-  if (budgetId.value) {
-    store.selectBudget(budgetId.value)
-  } else if (!rejectedFrom.value) {
-    // 非重提场景且没有预算ID：清除上次选择，避免状态残留
+  // CR-20260702-002: 无草稿状态 - 从非选择页进入时清空为空白态
+  // 判断是否为从选择页返回：有 from 参数 或 有 storeCode/productCode 回填参数
+  const fromPath = route.query.from as string
+  const hasStoreCode = !!route.query.storeCode
+  const hasProductCode = !!route.query.productCode
+  isFromSelectionPage.value = (!!fromPath && ['budget-select', 'store-select', 'product-select'].includes(fromPath)) || hasStoreCode || hasProductCode
+
+  if (!isFromSelectionPage.value && !rejectedFrom.value && !budgetId.value) {
+    // 从非选择页进入且非重提场景：重置为空白态
     store.selectedBudget = null
+    store.storeGroups = [createDefaultGroup()]
+    store.clearCollapsed()
+    attachments.value = []
+  } else {
+    store.initStoreGroups()
+    if (budgetId.value) {
+      store.selectBudget(budgetId.value)
+    } else if (!rejectedFrom.value && !hasStoreCode && !hasProductCode) {
+      // 从选择页返回时保留已有预算选择，不重置
+      store.selectedBudget = null
+    }
   }
+
+  // CR-20260702-002: 监听滚动事件
+  window.addEventListener('scroll', handleScroll, { passive: true })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
 })
 watch(() => store.storeGroups, () => store.persistStoreGroups(), { deep: true })
 
@@ -130,10 +182,10 @@ function goBudgetSelect() {
     openConfirm('切换预算后，当前已填写的产品申请订单明细将被清空，是否继续？', () => {
       store.storeGroups = [createDefaultGroup()]
       store.clearCollapsed()  // CR-20260630-004 3.4
-      router.push('/product-apply/budget-select')
+      router.push({ path: '/product-apply/budget-select', query: { from: 'budget-select' } })
     })
   } else {
-    router.push('/product-apply/budget-select')
+    router.push({ path: '/product-apply/budget-select', query: { from: 'budget-select' } })
   }
 }
 
@@ -259,64 +311,76 @@ function hasImportWarnings() {
       <button @click="router.push('/create')" style="position: absolute; left: 12px; background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; padding: 4px 8px;">&#8249;</button>
       <span style="color: #fff; font-size: 17px; font-weight: 500;">产品申请工单</span>
     </div>
+    <!-- CR-20260702-002: 滚动态轻量预算摘要条 -->
+    <div v-if="showBudgetBar && store.selectedBudget" style="position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; padding: 8px 16px; background-color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.08); z-index: 90; display: flex; justify-content: space-between; align-items: center;">
+      <span style="font-size: 13px; color: #666;">剩余额度</span>
+      <span style="font-size: 15px; font-weight: 600; color: #22BDB8;">¥{{ fmtMoney(store.selectedBudget.availableAmount) }}</span>
+    </div>
+
     <!-- Budget (CR-20260702-001 整改: 补齐预算摘要区 + 驳回后重提锁定) -->
-    <div class="card" style="margin: 12px 16px; padding: 14px 16px;">
-      <div style="font-size: 15px; font-weight: 600; color: #333; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0;">预算信息</div>
+    <!-- CR-20260702-002: 进一步压缩预算信息区高度 -->
+    <div class="card" style="margin: 12px 16px; padding: 12px 16px;">
+      <div style="font-size: 15px; font-weight: 600; color: #333; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0;">预算信息</div>
 
       <!-- 驳回后重提场景提示 -->
-      <div v-if="isRejectedRetrigger" style="background-color: #E3F2FD; color: #1565C0; font-size: 13px; padding: 8px 12px; border-radius: 8px; margin-bottom: 10px;">
+      <div v-if="isRejectedRetrigger" style="background-color: #E3F2FD; color: #1565C0; font-size: 12px; padding: 6px 10px; border-radius: 6px; margin-bottom: 8px;">
         原单重提：基于工单 {{ rejectedFrom }} 重新发起
       </div>
 
       <!-- 预算号：驳回重提时禁用选择入口 -->
-      <div @click="!isRejectedRetrigger && goBudgetSelect()" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5; cursor: pointer;" :style="{ opacity: isRejectedRetrigger ? 0.6 : 1 }">
+      <div @click="!isRejectedRetrigger && goBudgetSelect()" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f5f5f5; cursor: pointer;" :style="{ opacity: isRejectedRetrigger ? 0.6 : 1 }">
         <span style="font-size: 14px; color: #666;">预算号<span style="color: #F44336;"> *</span></span>
-        <span style="font-size: 14px;" :style="{ color: store.selectedBudget ? '#333' : '#bbb' }">{{ store.selectedBudget?.budgetNo || '选择预算' }}</span>
-        <span v-if="!isRejectedRetrigger" style="color: #999; margin-left: 4px; font-size: 16px;">&#8250;</span>
-        <span v-else style="font-size: 12px; color: #999; margin-left: 4px;">已锁定</span>
+        <div style="display: flex; align-items: center; gap: 4px;">
+          <span style="font-size: 14px;" :style="{ color: store.selectedBudget ? '#333' : '#bbb' }">{{ store.selectedBudget?.budgetNo || '选择预算' }}</span>
+          <span v-if="!isRejectedRetrigger" style="color: #999; font-size: 16px;">&#8250;</span>
+          <span v-else style="font-size: 12px; color: #999;">已锁定</span>
+        </div>
       </div>
 
       <!-- 预算摘要区（CR-20260702-001 整改新增） -->
       <template v-if="store.selectedBudget">
-        <div style="display: flex; justify-content: space-between; align-items: baseline; padding: 8px 0; border-bottom: 1px solid #f5f5f5;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; padding: 6px 0; border-bottom: 1px solid #f5f5f5;">
           <span style="font-size: 13px; color: #666;">剩余额度（净额）</span>
-          <span style="font-size: 16px; font-weight: 600; color: #22BDB8;">¥{{ fmtMoney(store.selectedBudget.availableAmount) }}</span>
+          <span style="font-size: 18px; font-weight: 600; color: #22BDB8;">¥{{ fmtMoney(store.selectedBudget.availableAmount) }}</span>
         </div>
-        <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f5f5f5;">
-          <span style="font-size: 12px; color: #999;">预算总额（净额）</span>
-          <span style="font-size: 12px; color: #999;">¥{{ fmtMoney(store.selectedBudget.budgetTotalAmount) }}</span>
-        </div>
-        <div style="padding: 6px 0; border-bottom: 1px solid #f5f5f5;">
-          <span style="font-size: 12px; color: #999;">归属：</span>
-          <span style="font-size: 12px; color: #666;">{{ store.selectedBudget.budgetOrg }}</span>
-        </div>
-        <div style="padding: 6px 0;">
-          <span style="font-size: 12px; color: #999;">范围：</span>
-          <span style="font-size: 12px; color: #666;">{{ store.selectedBudget.budgetScope }}</span>
+        <div style="display: flex; justify-content: space-between; padding: 4px 0;">
+          <span style="font-size: 12px; color: #999;">总额 ¥{{ fmtMoney(store.selectedBudget.budgetTotalAmount) }} · 归属 {{ store.selectedBudget.budgetOrg }}</span>
         </div>
 
         <!-- 驳回重提 + 冻结期提示 -->
-        <div v-if="isRejectedRetrigger && store.selectedBudget.freezeStartDate && new Date(store.selectedBudget.freezeStartDate) <= TODAY && TODAY < new Date(store.selectedBudget.budgetExpiryDate)" style="background-color: #FFF3E0; color: #E65100; font-size: 12px; padding: 8px 12px; border-radius: 8px; margin-top: 8px;">
-          当前预算已进入申请冻结期，仅允许沿用原预算重新发起，不可更换预算号
+        <div v-if="isRejectedRetrigger && store.selectedBudget.freezeStartDate && new Date(store.selectedBudget.freezeStartDate) <= TODAY && TODAY < new Date(store.selectedBudget.budgetExpiryDate)" style="background-color: #FFF3E0; color: #E65100; font-size: 12px; padding: 6px 10px; border-radius: 6px; margin-top: 6px;">
+          当前预算已进入申请冻结期，仅允许沿用原预算重新发起
         </div>
-        <div v-else-if="isRejectedRetrigger && TODAY >= new Date(store.selectedBudget.budgetExpiryDate)" style="background-color: #FFEBEE; color: #C62828; font-size: 12px; padding: 8px 12px; border-radius: 8px; margin-top: 8px;">
-          原预算已到期，当前不可继续基于原单重新发起，请联系相关人员处理
+        <div v-else-if="isRejectedRetrigger && TODAY >= new Date(store.selectedBudget.budgetExpiryDate)" style="background-color: #FFEBEE; color: #C62828; font-size: 12px; padding: 6px 10px; border-radius: 6px; margin-top: 6px;">
+          原预算已到期，不可继续基于原单重新发起
         </div>
       </template>
 
       <!-- 异常提示保留 -->
-      <div v-if="store.selectedBudget?.isAbnormal" style="background-color: #FFF8E1; color: #FF8F00; font-size: 13px; padding: 8px 12px; border-radius: 8px; margin-top: 8px;">&#9888; {{ store.selectedBudget.abnormalMessage }}</div>
+      <div v-if="store.selectedBudget?.isAbnormal" style="background-color: #FFF8E1; color: #FF8F00; font-size: 12px; padding: 6px 10px; border-radius: 6px; margin-top: 6px;">&#9888; {{ store.selectedBudget.abnormalMessage }}</div>
     </div>
-    <!-- Apply Info (CR-20260701-001 3.1: compress before budget selected) -->
-    <div class="card" style="margin: 12px 16px; padding: 14px 16px;">
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+    <!-- Apply Info (CR-20260702-002: 压缩 + 可展开收起) -->
+    <div class="card" style="margin: 12px 16px; padding: 12px 16px;">
+      <div @click="store.selectedBudget && (isApplyInfoExpanded = !isApplyInfoExpanded)" style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
         <span style="font-size: 15px; font-weight: 600; color: #333;">申请信息</span>
-        <span v-if="!store.selectedBudget" style="font-size: 12px; color: #999;">选择预算后展开</span>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span v-if="!store.selectedBudget" style="font-size: 12px; color: #999;">选择预算后展开</span>
+          <span v-else style="font-size: 12px; color: #999;">{{ isApplyInfoExpanded ? '收起' : '展开' }}</span>
+          <span v-if="store.selectedBudget" style="color: #999; font-size: 14px; transition: transform 0.2s;" :style="{ transform: isApplyInfoExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }">&#9662;</span>
+        </div>
       </div>
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">申请人</span><span style="font-size: 14px; color: #333;">{{ currentUser.name }}</span></div>
-      <template v-if="store.selectedBudget">
-        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">申请类型</span><span style="font-size: 14px; color: #333;">{{ store.selectedBudget.applyType }}</span></div>
-        <div style="display: flex; align-items: flex-start; gap: 8px; padding: 10px 0;"><span style="font-size: 14px; color: #666; white-space: nowrap;">申请理由</span><span style="font-size: 14px; color: #333; line-height: 1.5; word-break: break-all; flex: 1;">{{ store.selectedBudget.applyReason }}</span></div>
+      <!-- 收起态：仅显示申请人摘要 -->
+      <div v-if="!isApplyInfoExpanded" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0 0;">
+        <span style="font-size: 13px; color: #666;">申请人</span>
+        <span style="font-size: 13px; color: #333;">{{ currentUser.name }} {{ store.selectedBudget ? `· ${store.selectedBudget.applyType}` : '' }}</span>
+      </div>
+      <!-- 展开态：完整信息 -->
+      <template v-else>
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">申请人</span><span style="font-size: 14px; color: #333;">{{ currentUser.name }}</span></div>
+        <template v-if="store.selectedBudget">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">申请类型</span><span style="font-size: 14px; color: #333;">{{ store.selectedBudget.applyType }}</span></div>
+          <div style="display: flex; align-items: flex-start; gap: 8px; padding: 8px 0 0;"><span style="font-size: 14px; color: #666; white-space: nowrap;">申请理由</span><span style="font-size: 13px; color: #666; line-height: 1.5; word-break: break-all; flex: 1;">{{ store.selectedBudget.applyReason }}</span></div>
+        </template>
       </template>
     </div>
     <!-- Store Groups Header (CR-20260701-001 3.3) -->
@@ -336,10 +400,16 @@ function hasImportWarnings() {
           <span style="color: #999; font-size: 18px; transition: transform 0.2s;" :style="{ transform: isCol(group.id) ? 'rotate(-90deg)' : 'rotate(0deg)' }">&#9662;</span>
         </div>
       </div>
-      <!-- Collapsed -->
-      <div v-if="isCol(group.id)" style="padding: 8px 0; color: #999; font-size: 14px; display: flex; justify-content: space-between; align-items: center;">
-        <span>订单归属专卖店：{{ group.storeCode ? `${group.storeCode} ${group.storeName}` : '未选择' }}</span>
-        <span style="color: #22BDB8; font-weight: 500;">{{ group.products.length }} 件产品</span>
+      <!-- Collapsed (CR-20260702-002: 新增分组小计金额) -->
+      <div v-if="isCol(group.id)" style="padding: 8px 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <span style="font-size: 14px; color: #666;">{{ group.storeCode ? `${group.storeCode} ${group.storeName}` : '未选择专卖店' }}</span>
+          <span style="font-size: 13px; color: #22BDB8; font-weight: 500;">{{ group.products.length }} 件产品</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span></span>
+          <span style="font-size: 13px; color: #666;">小计 <span style="font-size: 15px; font-weight: 600; color: #22BDB8;">¥{{ group.products.reduce((s, p) => s + p.amount, 0).toFixed(2) }}</span></span>
+        </div>
       </div>
       <!-- Expanded -->
       <div v-else>
@@ -357,8 +427,9 @@ function hasImportWarnings() {
             <span style="font-size: 14px; font-weight: 500; color: #22BDB8;">产品 {{ pi + 1 }}</span>
             <button v-if="group.products.length > 1" @click="store.deleteProduct(group.id, prod.id)" style="background: none; border: none; color: #F44336; font-size: 12px; cursor: pointer;">删除</button>
           </div>
+          <!-- CR-20260702-002: 产品入口术语统一为"产品" -->
           <div @click="router.push(`/product-apply/product-select?groupId=${group.id}&productId=${prod.id}`)" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5; cursor: pointer; margin-bottom: 10px;">
-            <span style="font-size: 14px; color: #666;">产品编号<span style="color: #F44336;"> *</span></span>
+            <span style="font-size: 14px; color: #666;">产品<span style="color: #F44336;"> *</span></span>
             <span style="font-size: 14px;" :style="{ color: prod.productCode ? '#333' : '#bbb' }">{{ prod.productCode || '选择产品' }}</span>
             <span style="color: #999; margin-left: 4px; font-size: 16px;">&#8250;</span>
           </div>
@@ -374,11 +445,11 @@ function hasImportWarnings() {
                 <input type="number" :min="1" :max="prod.maxQuantity" :value="prod.quantity" @change="qtyChange(group.id, prod.id, parseInt(($event.target as HTMLInputElement).value) || 1)" style="flex: 1; height: 36px; text-align: center; border-radius: 8px; border: 1px solid #e0e0e0; font-size: 15px;">
                 <button @click="qtyChange(group.id, prod.id, prod.quantity + 1)" style="width: 36px; height: 36px; border-radius: 8px; border: 1px solid #e0e0e0; background-color: #f5f5f5; font-size: 18px; cursor: pointer;">+</button>
               </div>
+              <!-- CR-20260702-002: 数量提示优化 - 突出主判断 -->
               <div style="margin-top: 4px; font-size: 12px; line-height: 1.5;">
-                <span style="color: #999;">本组已申请 {{ prod.quantity }}，全单已申请 {{ store.skuTotalMap.get(prod.productCode) || 0 }} / {{ prod.maxQuantity }}</span>
-                <span v-if="(store.skuTotalMap.get(prod.productCode) || 0) > prod.maxQuantity" style="color: #F44336; font-weight: 500;"> 全单总数量已超过可申请数量 {{ prod.maxQuantity }}，请调整</span>
-                <span v-else-if="prod.maxQuantity - (store.skuTotalMap.get(prod.productCode) || 0) > 0" style="color: #4CAF50;"> 还可申请 {{ prod.maxQuantity - (store.skuTotalMap.get(prod.productCode) || 0) }}</span>
-                <span v-else style="color: #FF9800;"> 已达到可申请上限</span>
+                <span v-if="(store.skuTotalMap.get(prod.productCode) || 0) > prod.maxQuantity" style="color: #F44336; font-weight: 500;">⚠ 已超过可申请数量，请调整</span>
+                <span v-else-if="(store.skuTotalMap.get(prod.productCode) || 0) === prod.maxQuantity" style="color: #FF9800;">已达到可申请上限 {{ prod.maxQuantity }}</span>
+                <span v-else style="color: #4CAF50;">还可申请 {{ prod.maxQuantity - (store.skuTotalMap.get(prod.productCode) || 0) }} / 上限 {{ prod.maxQuantity }}</span>
               </div>
             </div>
             <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0;"><span style="font-size: 14px; color: #666;">金额（净额）</span><span style="font-size: 14px; color: #22BDB8; font-weight: 600;">¥{{ prod.amount.toFixed(2) }}</span></div>
@@ -390,24 +461,39 @@ function hasImportWarnings() {
         </div>
       </div>
     </div>
-    <!-- Add Group + Import -->
+    <!-- Add Group + Import (CR-20260702-002: 操作层级优化) -->
     <div style="padding: 0 16px; margin-bottom: 12px;">
+      <!-- 主操作：添加空明细 -->
       <button @click="store.addGroup" style="width: 100%; padding: 12px; border-radius: 12px; border: 1px dashed #22BDB8; background-color: #fff; color: #22BDB8; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;"><span style="font-size: 20px;">+</span> 添加产品申请订单</button>
-      <div style="margin-top: 10px;">
-        <button @click="openImport" style="width: 100%; padding: 12px; border-radius: 12px; border: 1px dashed #FF9800; background-color: #FFF8E1; color: #E65100; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;"><span style="font-size: 20px;">📋</span> 批量导入产品</button>
-        <div style="font-size: 12px; color: #999; margin-top: 6px; text-align: center; line-height: 1.5;">导入数据需包含产品编号、数量、专卖店编号，系统将按专卖店编号自动拆分</div>
+      <!-- 辅助操作：批量导入（视觉上降级，与主操作区分） -->
+      <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0f0f0;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+          <div style="flex: 1; height: 1px; background-color: #f0f0f0;"></div>
+          <span style="font-size: 12px; color: #bbb;">或通过以下方式快速录入</span>
+          <div style="flex: 1; height: 1px; background-color: #f0f0f0;"></div>
+        </div>
+        <button @click="openImport" style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #FFE082; background-color: #FFFDE7; color: #E65100; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">📋 批量导入产品</button>
+        <div style="font-size: 11px; color: #bbb; margin-top: 6px; text-align: center; line-height: 1.5;">导入后将覆盖当前已填写内容，请谨慎使用</div>
       </div>
     </div>
-    <!-- Total -->
-    <div v-if="store.totalAmount > 0" style="padding: 14px 16px; background-color: #fff; margin: 0 16px 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
-      <span style="font-size: 15px; font-weight: 500; color: #333;">金额合计</span>
-      <span style="font-size: 20px; font-weight: 600; color: #22BDB8;">¥{{ store.totalAmount.toFixed(2) }}</span>
+    <!-- Total (CR-20260702-002: 增加预算关系提示) -->
+    <div v-if="store.totalAmount > 0" style="padding: 14px 16px; background-color: #fff; margin: 0 16px 12px; border-radius: 12px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+        <span style="font-size: 15px; font-weight: 500; color: #333;">金额合计</span>
+        <span style="font-size: 20px; font-weight: 600; color: #22BDB8;">¥{{ store.totalAmount.toFixed(2) }}</span>
+      </div>
+      <!-- 轻量级预算关系提示 -->
+      <div v-if="store.selectedBudget" style="display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
+        <span style="color: #999;">剩余额度 ¥{{ fmtMoney(store.selectedBudget.availableAmount) }}</span>
+        <span v-if="store.totalAmount > store.selectedBudget.availableAmount" style="color: #F44336; font-weight: 500;">⚠ 已超过预算剩余额度</span>
+        <span v-else style="color: #4CAF50;">还可使用 ¥{{ fmtMoney(store.selectedBudget.availableAmount - store.totalAmount) }}</span>
+      </div>
     </div>
-    <!-- Attachments (CR-20260701-001 3.5/3.6: upgraded layout + PDF tip) -->
+    <!-- Attachments (CR-20260702-002: 必传感知增强) -->
     <div class="card" style="margin: 12px 16px; padding: 14px 16px;">
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0;">
-        <span style="font-size: 15px; font-weight: 600; color: #333;">附件上传</span>
-        <span v-if="attachments.length > 0 || true" style="font-size: 13px; color: #999;">({{ attachments.length }}/10)</span>
+        <span style="font-size: 15px; font-weight: 600; color: #333;">附件上传<span style="color: #F44336;"> *</span><span v-if="attachments.length === 0" style="font-size: 12px; color: #F44336; font-weight: 400; margin-left: 6px;">（必传）</span></span>
+        <span style="font-size: 13px; color: #999;">({{ attachments.length }}/10)</span>
       </div>
       <!-- PDF merge tip (CR-20260701-001 3.6) -->
       <div style="font-size: 12px; color: #888; margin-bottom: 12px; padding: 8px 10px; background-color: #FFF8E1; border-radius: 6px; line-height: 1.5;">💡 建议将照片和扫描件合并为一份 PDF 上传</div>
@@ -432,9 +518,16 @@ function hasImportWarnings() {
       </div>
       <div style="font-size: 11px; color: #bbb; margin-top: 10px;">支持 JPG、PNG、PDF、Excel 等格式，单个文件不超过 20MB，最多 10 个</div>
     </div>
-    <!-- Submit -->
+    <!-- Submit (CR-20260702-002: 前置禁用态) -->
     <div style="position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; padding: 12px 16px; background-color: #fff; box-shadow: 0 -2px 8px rgba(0,0,0,0.06); z-index: 100;">
-      <button @click="submit" style="width: 100%; padding: 14px; border-radius: 24px; border: none; background-color: #22BDB8; color: #fff; font-size: 16px; font-weight: 500; cursor: pointer;">提交</button>
+      <button
+        @click="canSubmit && submit()"
+        :disabled="!canSubmit"
+        style="width: 100%; padding: 14px; border-radius: 24px; border: none; font-size: 16px; font-weight: 500; cursor: pointer;"
+        :style="canSubmit ? 'background-color: #22BDB8; color: #fff;' : 'background-color: #ccc; color: #fff; cursor: not-allowed;'"
+      >
+        {{ !store.selectedBudget ? '请选择预算' : attachments.length === 0 ? '请上传附件' : !hasGroupOrProduct() ? '请填写产品明细' : '提交' }}
+      </button>
     </div>
     <!-- Confirm Dialog (CR-20260630-002 3.6) -->
     <div v-if="showConfirm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5); z-index: 2000; display: flex; align-items: center; justify-content: center;">
