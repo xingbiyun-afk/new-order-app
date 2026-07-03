@@ -387,13 +387,15 @@ function hasImportWarnings() {
     </div>
     <!-- Store Groups -->
     <div v-for="(group, gi) in store.storeGroups" :key="group.id" class="card" style="margin: 12px 16px; padding: 14px 16px;">
+      <!-- CR-20260703-001 §7.5: 编号移到卡片右上角 -->
       <div @click="store.toggleGroupCollapse(group.id)" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; cursor: pointer;">
-        <div>
-          <span style="font-size: 15px; font-weight: 600; color: #333;">产品申请订单明细{{ gi + 1 }}{{ group.storeCode ? ` · ${group.storeCode}` : '' }}</span>
+        <div style="flex: 1; min-width: 0;">
+          <span style="font-size: 15px; font-weight: 600; color: #333;">产品申请订单明细{{ group.storeCode ? ` · ${group.storeCode}` : '' }}</span>
           <!-- Group Description (CR-20260701-001 3.3): 标题下方、分隔线上方 -->
           <div v-if="!isCol(group.id)" style="font-size: 12px; color: #aaa; margin-top: 4px; line-height: 1.5;">同一个店编的预算核销产品填写在一个明细</div>
         </div>
-        <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
+          <span style="display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; padding: 0 8px; border-radius: 12px; background-color: #E0F7F6; color: #22BDB8; font-size: 12px; font-weight: 600;">{{ gi + 1 }}</span>
           <button v-if="store.storeGroups.length > 1" @click.stop="store.deleteGroup(group.id)" style="background: none; border: none; color: #F44336; font-size: 13px; cursor: pointer;">删除</button>
           <span style="color: #999; font-size: 18px; transition: transform 0.2s;" :style="{ transform: isCol(group.id) ? 'rotate(-90deg)' : 'rotate(0deg)' }">&#9662;</span>
         </div>
@@ -425,14 +427,14 @@ function hasImportWarnings() {
             <span style="font-size: 14px; font-weight: 500; color: #22BDB8;">产品 {{ pi + 1 }}</span>
             <button v-if="group.products.length > 1" @click="store.deleteProduct(group.id, prod.id)" style="background: none; border: none; color: #F44336; font-size: 12px; cursor: pointer;">删除</button>
           </div>
-          <!-- CR-20260702-002: 产品入口术语统一为"产品" -->
-          <div @click="router.push(`/product-apply/product-select?groupId=${group.id}&productId=${prod.id}`)" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5; cursor: pointer; margin-bottom: 10px;">
-            <span style="font-size: 14px; color: #666;">产品<span style="color: #F44336;"> *</span></span>
-            <span style="font-size: 14px;" :style="{ color: prod.productCode ? '#333' : '#bbb' }">{{ prod.productCode || '选择产品' }}</span>
-            <span style="color: #999; margin-left: 4px; font-size: 16px;">&#8250;</span>
+          <!-- CR-20260702-002: 产品入口术语统一为"产品"; CR-20260703-001 §7.1+7.2: 产品编号与名称一体化展示（长名截断+title 提示） -->
+          <div @click="router.push(`/product-apply/product-select?groupId=${group.id}&productId=${prod.id}`)" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5; cursor: pointer; margin-bottom: 10px; gap: 8px;">
+            <span style="font-size: 14px; color: #666; flex-shrink: 0;">产品<span style="color: #F44336;"> *</span></span>
+            <span v-if="prod.productCode" :title="prod.productName" style="flex: 1; min-width: 0; font-size: 14px; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right;">{{ prod.productCode }} {{ prod.productName }}</span>
+            <span v-else style="flex: 1; font-size: 14px; color: #bbb; text-align: right;">选择产品</span>
+            <span style="color: #999; font-size: 16px; flex-shrink: 0;">&#8250;</span>
           </div>
           <div v-if="prod.productCode">
-            <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">产品名称</span><span style="font-size: 14px; color: #333;">{{ prod.productName }}</span></div>
             <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">JDE价格</span><span style="font-size: 14px; color: #333;">¥{{ fmtMoney(prod.jdePrice) }}</span></div>
             <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">是否打折产品</span><span style="font-size: 14px; color: #333;">{{ prod.isDiscount ? '是' : '否' }}</span></div>
             <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">可申请数量</span><span style="font-size: 14px; color: #333;">{{ prod.maxQuantity }}</span></div>
