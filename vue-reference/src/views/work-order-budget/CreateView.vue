@@ -2,7 +2,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useWorkOrderStore } from '../../stores/workOrder'
-import { mockProductOptions, mockStores, calculateAmount, createDefaultGroup, parseImportText, validateImportRows, parseFileImport, downloadImportTemplate } from '../../mocks'
+import { mockProductOptions, mockStores, calculateAmount, createDefaultGroup, parseImportText, validateImportRows, parseFileImport, downloadImportTemplate, findBudgetByWorkOrderNo } from '../../mocks'
 import type { ProductItem, ImportError } from '../../types'
 import { formatAmount } from '../../utils/format'
 
@@ -95,7 +95,22 @@ onMounted(() => {
     if (budgetId.value) {
       store.selectBudget(budgetId.value)
     }
-    // 不再执行 store.selectedBudget = null 一类反向清空逻辑
+    // CR-20260703-001 §2: 驳回后重提 → 查原工单号 → 冻结期带入原预算；非冻结期按方案 B（按普通新建，不带入）
+    if (rejectedFrom.value) {
+      const originalBudget = findBudgetByWorkOrderNo(rejectedFrom.value)
+      if (originalBudget) {
+        const isFreezing = TODAY >= new Date(originalBudget.freezeStartDate) && TODAY < new Date(originalBudget.budgetExpiryDate)
+        const isExpired = TODAY >= new Date(originalBudget.budgetExpiryDate)
+        if (isFreezing) {
+          // 冻结期：带入原预算并锁定，用户不能切换
+          store.selectBudget(originalBudget.id)
+        } else if (isExpired) {
+          // 已到期：带入原预算让用户看到"已到期"提示，但不允许提交
+          store.selectBudget(originalBudget.id)
+        }
+        // 非冻结期：方案 B — 不带入原预算，按普通新建（selectedBudget 保持 null）
+      }
+    }
   }
 
   window.addEventListener('scroll', handleScroll, { passive: true })

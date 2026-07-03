@@ -175,6 +175,24 @@ export function calculateAmount(product: ProductItem): number {
 }
 
 // ============================================================
+// CR-20260703-001 §2: 驳回后重新发起 — 工单号 → 原预算 映射（Mock）
+// ============================================================
+
+/** 演示用：根据工单号查原预算。
+ *  真实环境替换为接口请求。 */
+const workOrderBudgetMap: Record<string, string> = {
+  // PA202406260001 关联一个冻结期预算（id='5'，freezeStartDate=2026-07-01）
+  // 用于验证"驳回后重提 → 冻结期"承接逻辑
+  'PA202406260001': '5',
+}
+
+export function findBudgetByWorkOrderNo(workOrderNo: string): Budget | null {
+  const budgetId = workOrderBudgetMap[workOrderNo]
+  if (!budgetId) return null
+  return mockBudgets.find(b => b.id === budgetId) || null
+}
+
+// ============================================================
 // CR-20260701-002: 批量导入校验与解析
 // ============================================================
 
