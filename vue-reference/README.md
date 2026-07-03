@@ -1,6 +1,6 @@
 # new-order-app Vue 参考实现
 
-本目录为 `new-order-app` 项目的 **Vue3 + TypeScript + Vite 参考实现**，初始迁移自 React 参考实现（`src/features/work-order-budget/`，CR-20260629-001），后续经多轮迭代优化（截至 CR-20260703-001）。
+本目录为 `new-order-app` 项目的 **Vue3 + TypeScript + Vite 参考实现**，初始迁移自 React 参考实现（`src/features/work-order-budget/`，CR-20260629-001），后续经多轮迭代优化（截至 CR-20260703-003）。
 
 ## 定位
 
@@ -11,10 +11,10 @@
 ## 技术栈
 
 - Vue 3.5 + TypeScript
-- Vite 8
+- Vite 5.4（参考实现阶段因沙盒环境限制从 Vite 8 降级，生产环境可恢复）
 - Vue Router 4（Hash 模式）
 - Pinia（状态管理）
-- Tailwind CSS 4
+- 基础 CSS（`@tailwindcss/vite` 已在 CR-20260703-003 中移除，项目组件未使用 Tailwind utility class）
 
 ## 页面清单
 
@@ -27,7 +27,7 @@
 | `/product-apply/budget-select` | 预算选择页 | 搜索过滤+预算卡片 |
 | `/product-apply/store-select` | 专卖店搜索页 | 搜索+列表+回填 |
 | `/product-apply/product-select` | 产品搜索页 | 搜索+卡片+回填 |
-| `/product-apply/detail/:id` | 详情页 | 基础信息/审批流/订单结果/审批操作 |
+| `/product-apply/detail/:id` | 详情页 | 驳回态Banner/基础信息/发起信息/预算与申请信息/产品明细(汇总+折叠)/附件/审批流/订单结果/审批操作/重新发起入口 |
 
 ## 开发命令
 
@@ -45,4 +45,4 @@ npm run preview  # 预览构建
 - 变更清单：`../docs/change-logs/`
 - 开发总结：`../docs/development-summary/`
 - 页面规则文档：`../docs/product/work-order-budget/产品申请工单创建页面规则明细.md`（创建页正式规则明细）、`../docs/product/work-order-budget/产品申请工单选择预算页面规则明细.md`（预算选择页正式规则明细）
-- 最新迭代：CR-20260703-002（创建链路收尾 + 专卖店选择页回归 + 文案口径统一），详见 `../docs/development-summary/2026-07-03/`
+- 最新迭代：CR-20260703-003（详情页驳回态与重新发起链路优化），详见 `../docs/development-summary/2026-07-03/`
