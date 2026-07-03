@@ -24,6 +24,23 @@ const remark = ref('')
 const toast = ref('')
 const showReapplyConfirm = ref(false)
 
+// ===== 产品明细折叠状态 =====
+const expandedGroups = ref<Set<string>>(new Set())
+function isGroupExpanded(gid: string) { return expandedGroups.value.has(gid) }
+function toggleGroup(gid: string) {
+  const s = expandedGroups.value
+  if (s.has(gid)) s.delete(gid)
+  else s.add(gid)
+}
+
+// ===== 汇总计算 =====
+const summary = computed(() => {
+  const groupCount = order.storeGroups.length
+  const storeCount = new Set(order.storeGroups.map(g => g.storeCode)).size
+  const productCount = order.storeGroups.reduce((sum, g) => sum + g.products.length, 0)
+  return { groupCount, storeCount, productCount }
+})
+
 // 当前用户是否为处理人（mock固定为true）
 const isCurrentApprover = true
 const isHandled = ref(false)
@@ -268,65 +285,78 @@ function getProductLabelText(pi: number): string {
         <span class="kv-label">适用范围</span>
         <span class="kv-value">{{ order.budget.budgetScope }}</span>
       </div>
-      <div class="kv-row budget-amount-row">
-        <span class="kv-label">预算总额（净额）</span>
-        <span class="kv-value amount">¥{{ formatAmount(order.budget.budgetTotalAmount) }}</span>
-      </div>
-      <div class="kv-row budget-amount-row">
-        <span class="kv-label">剩余额度（净额）</span>
-        <span class="kv-value amount" :class="{ 'amount-warning': order.budget.availableAmount <= 0 }">
-          ¥{{ formatAmount(order.budget.availableAmount) }}
-        </span>
-      </div>
+      <!-- 预算总额弱化，本次申请额度主色突出 -->
       <div class="kv-row">
-        <span class="kv-label">金额合计</span>
+        <span class="kv-label" style="color:#999;">预算总额（净额）</span>
+        <span class="kv-value" style="color:#999; font-weight:400;">¥{{ formatAmount(order.budget.budgetTotalAmount) }}</span>
+      </div>
+      <div class="kv-row budget-amount-row">
+        <span class="kv-label">本次申请额度（净额）</span>
         <span class="kv-value amount">¥{{ formatAmount(order.totalAmount) }}</span>
       </div>
     </div>
 
-    <!-- ==================== 产品申请订单明细 ==================== -->
-    <div v-for="(g, gi) in order.storeGroups" :key="g.id" class="card">
-      <div class="section-title group-title">
-        <span>产品申请订单明细 {{ gi + 1 }}</span>
-        <span class="group-badge">{{ g.products.length }} 个产品</span>
-      </div>
-      <div class="kv-row">
-        <span class="kv-label">订单归属专卖店</span>
-        <span class="kv-value">{{ g.storeCode }} {{ g.storeName }}</span>
+    <!-- ==================== 产品申请订单明细（汇总 + 折叠） ==================== -->
+    <div class="card">
+      <!-- 汇总行 -->
+      <div class="summary-bar">
+        共 <span class="summary-num">{{ summary.groupCount }}</span> 笔产品申请订单，涉及 <span class="summary-num">{{ summary.storeCount }}</span> 个专卖店，共 <span class="summary-num">{{ summary.productCount }}</span> 个产品
       </div>
 
-      <!-- 产品明细卡片 -->
-      <div v-for="(p, pi) in g.products" :key="p.id" class="product-card">
-        <div class="product-header">
-          <span class="product-label">{{ getProductLabelText(pi) }}</span>
-          <span v-if="p.isDiscount" class="discount-tag">打折 {{ (p.discount * 100).toFixed(0) }}%</span>
+      <!-- 每个明细卡片默认折叠 -->
+      <div v-for="(g, gi) in order.storeGroups" :key="g.id" class="group-fold-card">
+        <!-- 标题行：可点击展开/折叠 -->
+        <div class="group-fold-header" @click="toggleGroup(g.id)">
+          <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
+            <span style="font-size:15px;font-weight:600;color:#333;line-height:32px;white-space:nowrap;">产品申请订单明细</span>
+            <!-- 胶囊编号（与创建页样式一致） -->
+            <span class="capsule-num">{{ gi + 1 }}</span>
+            <span class="group-badge">{{ g.products.length }} 个产品</span>
+          </div>
+          <span class="fold-arrow" :class="{ expanded: isGroupExpanded(g.id) }">&#9662;</span>
         </div>
-        <div class="kv-row compact">
-          <span class="kv-label">产品编号</span>
-          <span class="kv-value">{{ p.productCode }}</span>
-        </div>
-        <div class="kv-row compact">
-          <span class="kv-label">产品名称</span>
-          <span class="kv-value product-name">{{ p.productName }}</span>
-        </div>
-        <div class="kv-row compact">
-          <span class="kv-label">JDE价格</span>
-          <span class="kv-value">¥{{ formatAmount(p.jdePrice) }}</span>
-        </div>
-        <div class="kv-row compact">
-          <span class="kv-label">申请数量</span>
-          <span class="kv-value">{{ p.quantity }}</span>
-        </div>
-        <div class="kv-row compact">
-          <span class="kv-label">金额（净额）</span>
-          <span class="kv-value amount">¥{{ formatAmount(p.amount) }}</span>
-        </div>
-      </div>
 
-      <!-- 分组小计 -->
-      <div class="group-subtotal">
-        <span>分组小计</span>
-        <span class="amount">¥{{ formatAmount(g.groupAmount) }}</span>
+        <!-- 展开内容 -->
+        <div v-show="isGroupExpanded(g.id)" class="group-fold-body">
+          <div class="kv-row">
+            <span class="kv-label">订单归属专卖店</span>
+            <span class="kv-value">{{ g.storeCode }} {{ g.storeName }}</span>
+          </div>
+
+          <!-- 产品明细卡片 -->
+          <div v-for="(p, pi) in g.products" :key="p.id" class="product-card">
+            <div class="product-header">
+              <span class="product-label">{{ getProductLabelText(pi) }}</span>
+              <span v-if="p.isDiscount" class="discount-tag">打折 {{ (p.discount * 100).toFixed(0) }}%</span>
+            </div>
+            <div class="kv-row compact">
+              <span class="kv-label">产品编号</span>
+              <span class="kv-value">{{ p.productCode }}</span>
+            </div>
+            <div class="kv-row compact">
+              <span class="kv-label">产品名称</span>
+              <span class="kv-value product-name">{{ p.productName }}</span>
+            </div>
+            <div class="kv-row compact">
+              <span class="kv-label">JDE价格</span>
+              <span class="kv-value">¥{{ formatAmount(p.jdePrice) }}</span>
+            </div>
+            <div class="kv-row compact">
+              <span class="kv-label">申请数量</span>
+              <span class="kv-value">{{ p.quantity }}</span>
+            </div>
+            <div class="kv-row compact">
+              <span class="kv-label">金额（净额）</span>
+              <span class="kv-value amount">¥{{ formatAmount(p.amount) }}</span>
+            </div>
+          </div>
+
+          <!-- 分组小计 -->
+          <div class="group-subtotal">
+            <span>分组小计</span>
+            <span class="amount">¥{{ formatAmount(g.groupAmount) }}</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -680,6 +710,77 @@ function getProductLabelText(pi: number): string {
 }
 .product-name {
   font-weight: 500;
+}
+
+/* ========== 汇总行 ========== */
+.summary-bar {
+  padding: 12px 0;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 14px;
+  color: #666;
+  line-height: 1.6;
+}
+.summary-num {
+  color: #22BDB8;
+  font-weight: 600;
+}
+
+/* ========== 折叠卡片 ========== */
+.group-fold-card {
+  margin-top: 10px;
+  padding: 12px;
+  background-color: #FAFAFA;
+  border-radius: 10px;
+}
+.group-fold-card + .group-fold-card {
+  margin-top: 8px;
+}
+.group-fold-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+.group-fold-body {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* ========== 胶囊编号（与创建页样式一致） ========== */
+.capsule-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 12px;
+  background-color: #E0F7F6;
+  color: #22BDB8;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* ========== 折叠箭头 ========== */
+.fold-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: #999;
+  font-size: 18px;
+  line-height: 1;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+.fold-arrow.expanded {
+  transform: rotate(-180deg);
 }
 
 /* ========== 分组小计 ========== */
