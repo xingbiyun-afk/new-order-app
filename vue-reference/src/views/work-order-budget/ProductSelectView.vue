@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { mockProductOptions } from '../../mocks'
+import { formatAmount } from '../../utils/format'
 const router = useRouter()
 const route = useRoute()
 const q = ref('')
@@ -39,7 +40,7 @@ function select(p: typeof mockProductOptions[0]) {
             </div>
             <div style="font-size: 13px; color: #666; line-height: 1.8;">
               <div>编号：{{ p.code }}</div>
-              <div>JDE价格：¥{{ p.jdePrice.toFixed(2) }}</div>
+              <div>JDE价格：¥{{ formatAmount(p.jdePrice) }}</div>
               <div>可申请数量：{{ p.maxQuantity }}</div>
               <div v-if="p.isDiscount">折扣：{{ (p.discount*10).toFixed(1) }}折</div>
             </div>

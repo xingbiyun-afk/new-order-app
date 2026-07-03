@@ -4,6 +4,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useWorkOrderStore } from '../../stores/workOrder'
 import { mockProductOptions, mockStores, calculateAmount, createDefaultGroup, parseImportText, validateImportRows, parseFileImport, downloadImportTemplate } from '../../mocks'
 import type { ProductItem, ImportError } from '../../types'
+import { formatAmount } from '../../utils/format'
 
 const router = useRouter()
 const route = useRoute()
@@ -66,10 +67,8 @@ function execConfirm() {
   closeConfirm()
 }
 
-// 金额格式化
-function fmtMoney(v: number): string {
-  return v.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
+// 金额格式化（CR-20260703-001 §6: 统一调用 formatAmount）
+const fmtMoney = formatAmount
 
 // CR-20260702-002: 标记是否从选择页返回（避免清空状态）
 const isFromSelectionPage = ref(false)
@@ -407,7 +406,7 @@ function hasImportWarnings() {
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <span></span>
-          <span style="font-size: 13px; color: #666;">小计 <span style="font-size: 15px; font-weight: 600; color: #22BDB8;">¥{{ group.products.reduce((s, p) => s + p.amount, 0).toFixed(2) }}</span></span>
+          <span style="font-size: 13px; color: #666;">小计 <span style="font-size: 15px; font-weight: 600; color: #22BDB8;">¥{{ fmtMoney(group.products.reduce((s, p) => s + p.amount, 0)) }}</span></span>
         </div>
       </div>
       <!-- Expanded -->
@@ -434,7 +433,7 @@ function hasImportWarnings() {
           </div>
           <div v-if="prod.productCode">
             <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">产品名称</span><span style="font-size: 14px; color: #333;">{{ prod.productName }}</span></div>
-            <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">JDE价格</span><span style="font-size: 14px; color: #333;">¥{{ prod.jdePrice.toFixed(2) }}</span></div>
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">JDE价格</span><span style="font-size: 14px; color: #333;">¥{{ fmtMoney(prod.jdePrice) }}</span></div>
             <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">是否打折产品</span><span style="font-size: 14px; color: #333;">{{ prod.isDiscount ? '是' : '否' }}</span></div>
             <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">可申请数量</span><span style="font-size: 14px; color: #333;">{{ prod.maxQuantity }}</span></div>
             <div style="margin-top: 8px;">
@@ -451,12 +450,12 @@ function hasImportWarnings() {
                 <span v-else style="color: #4CAF50;">还可申请 {{ prod.maxQuantity - (store.skuTotalMap.get(prod.productCode) || 0) }} / 上限 {{ prod.maxQuantity }}</span>
               </div>
             </div>
-            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0;"><span style="font-size: 14px; color: #666;">金额（净额）</span><span style="font-size: 14px; color: #22BDB8; font-weight: 600;">¥{{ prod.amount.toFixed(2) }}</span></div>
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0;"><span style="font-size: 14px; color: #666;">金额（净额）</span><span style="font-size: 14px; color: #22BDB8; font-weight: 600;">¥{{ fmtMoney(prod.amount) }}</span></div>
           </div>
         </div>
         <button @click="store.addProduct(group.id)" style="width: 100%; margin-top: 12px; padding: 10px; border-radius: 8px; border: 1px dashed #22BDB8; background-color: #F0FDFD; color: #22BDB8; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;"><span style="font-size: 18px;">+</span> 添加产品</button>
         <div v-if="group.products.some(p => p.amount > 0)" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #f0f0f0; text-align: right; font-size: 14px; color: #666;">
-          分组小计：<span style="color: #22BDB8; font-weight: 600; font-size: 16px;">¥{{ group.products.reduce((s, p) => s + p.amount, 0).toFixed(2) }}</span>
+          分组小计：<span style="color: #22BDB8; font-weight: 600; font-size: 16px;">¥{{ fmtMoney(group.products.reduce((s, p) => s + p.amount, 0)) }}</span>
         </div>
       </div>
     </div>
@@ -482,7 +481,7 @@ function hasImportWarnings() {
     <div v-if="store.totalAmount > 0" style="padding: 14px 16px; background-color: #fff; margin: 0 16px 12px; border-radius: 12px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
         <span style="font-size: 15px; font-weight: 500; color: #333;">金额合计</span>
-        <span style="font-size: 20px; font-weight: 600; color: #22BDB8;">¥{{ store.totalAmount.toFixed(2) }}</span>
+        <span style="font-size: 20px; font-weight: 600; color: #22BDB8;">¥{{ fmtMoney(store.totalAmount) }}</span>
       </div>
       <!-- 轻量级预算关系提示 -->
       <div v-if="store.selectedBudget" style="display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
