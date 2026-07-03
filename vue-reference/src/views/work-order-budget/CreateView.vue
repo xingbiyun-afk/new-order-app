@@ -410,9 +410,11 @@ function hasImportWarnings() {
           <div v-if="!isCol(group.id)" style="font-size: 12px; color: #aaa; margin-top: 4px; line-height: 1.5;">同一个店编的预算核销产品填写在一个明细</div>
         </div>
         <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
-          <span style="display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; padding: 0 8px; border-radius: 12px; background-color: #E0F7F6; color: #22BDB8; font-size: 12px; font-weight: 600;">{{ gi + 1 }}</span>
-          <button v-if="store.storeGroups.length > 1" @click.stop="store.deleteGroup(group.id)" style="background: none; border: none; color: #F44336; font-size: 13px; cursor: pointer;">删除</button>
-          <span style="color: #999; font-size: 18px; transition: transform 0.2s;" :style="{ transform: isCol(group.id) ? 'rotate(-90deg)' : 'rotate(0deg)' }">&#9662;</span>
+          <!-- CR-20260703-001 §4.2: 数字胶囊（24px 行高基线） -->
+          <span style="display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; padding: 0 8px; border-radius: 12px; background-color: #E0F7F6; color: #22BDB8; font-size: 12px; font-weight: 600; line-height: 1;">{{ gi + 1 }}</span>
+          <button v-if="store.storeGroups.length > 1" @click.stop="store.deleteGroup(group.id)" style="background: none; border: none; color: #F44336; font-size: 13px; cursor: pointer; height: 24px; line-height: 24px; padding: 0;">删除</button>
+          <!-- CR-20260703-001 §4.2: 折叠 icon 统一 24px 行高（与数字胶囊基线对齐） -->
+          <span style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; color: #999; font-size: 16px; line-height: 1; transition: transform 0.2s;" :style="{ transform: isCol(group.id) ? 'rotate(-90deg)' : 'rotate(0deg)' }">&#9662;</span>
         </div>
       </div>
       <!-- Collapsed (CR-20260702-002: 新增分组小计金额) -->
