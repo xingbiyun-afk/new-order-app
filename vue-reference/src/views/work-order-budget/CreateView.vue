@@ -563,7 +563,7 @@ function hasImportWarnings() {
         <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0f0f0;">
           <div style="font-size: 12px; color: #888; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-            或上传文件导入（.xlsx / .xls / .csv）— 第1行为表头，第2行起为数据
+            或上传文件导入（.xlsx / .xls / .csv）— 第1行即为数据，无表头
           </div>
           <div style="display: flex; align-items: center; gap: 8px;">
             <input ref="fileInputRef" type="file" accept=".xlsx,.xls,.csv" @change="handleFileImport" style="display: none;" />
