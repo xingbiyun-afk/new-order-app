@@ -56,5 +56,7 @@
 | `docs/technical/mobile-ui-baseline.md` | 移动端样式基线 |
 | `docs/technical/cross-end-work-order-ui-strategy.md` | 跨端工单 UI 复用策略 |
 | `docs/product/work-order-budget/README.md` | 产品申请工单 / 预算核销产品文档入口 |
+| `docs/product/work-order-budget/产品申请工单选择预算页面规则明细.md` | 预算选择页字段/标签/可选性/排序/冻结期规则（页面级正式规则文档）|
+| `docs/product/work-order-budget/产品申请工单创建页面规则明细.md` | 发起页初始化/预算区/申请信息区/明细/产品选择/批量导入/附件/提交按钮规则（页面级正式规则文档）|
 
 如 README、CLAUDE、历史文档与《项目协作基线》冲突，以《项目协作基线》为准。
