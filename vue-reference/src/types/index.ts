@@ -52,12 +52,35 @@ export interface GroupResult {
 export interface Attachment {
   id: string; name: string; url: string; type: string; size: number;
 }
+// CR-20260703-003: 驳回信息类型
+export interface RejectionInfo {
+  rejectedAt: string;           // 驳回时间
+  rejectedBy: string;           // 驳回人
+  rejectNodeName: string;       // 驳回节点名称
+  rejectReason: string;         // 驳回原因
+  rejectRemark?: string;        // 驳回备注
+}
+
+// CR-20260703-003: 重新发起条件判断结果
+export type ReapplyAvailability = 'available' | 'budget_expired' | 'freeze_period_locked' | 'non_freeze_new';
+
+export interface ReapplyCondition {
+  availability: ReapplyAvailability;  // 是否允许重新发起
+  message: string;                    // 提示信息
+  originalBudgetNo?: string;          // 原预算号（冻结期场景沿用）
+  canSwitchBudget: boolean;           // 是否允许切换预算号
+}
+
 export interface ProductWorkOrder {
   id: string; workOrderNo: string; displayStatus: string;
   applicantName: string; applicantOrg: string; createTime: string;
   budget: Budget; storeGroups: StoreGroup[]; totalAmount: number;
   attachments: Attachment[]; approvalNodes: ApprovalNode[];
   groupResults?: GroupResult[]; failReason?: string;
+  // CR-20260703-003: 驳回信息（已驳回状态时有值）
+  rejectionInfo?: RejectionInfo;
+  // CR-20260703-003: 重新发起条件（已驳回状态时有值）
+  reapplyCondition?: ReapplyCondition;
 }
 export interface WorkOrderCard {
   id: string; workOrderType: string; displayStatus: string;
