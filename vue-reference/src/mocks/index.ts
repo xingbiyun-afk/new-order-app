@@ -1,4 +1,3 @@
-import ExcelJS from 'exceljs'
 import type { Budget, ProductWorkOrder, WorkOrderCard, StoreGroup, ProductItem, ApprovalNode, GroupResult, ImportRow, ImportError } from '../types';
 
 // ============================================================
@@ -291,6 +290,8 @@ export async function parseFileImport(file: File): Promise<{ rows: string[]; err
 
   if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
     try {
+      // CR-20260703-001 §7: exceljs 按需加载，减小首屏主包体积
+      const ExcelJS = (await import('exceljs')).default
       const buf = await file.arrayBuffer()
       const workbook = new ExcelJS.Workbook()
       await workbook.xlsx.load(buf)
