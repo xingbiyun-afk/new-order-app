@@ -169,6 +169,186 @@ export const mockWorkOrderDetail: ProductWorkOrder = {
   groupResults: mockGroupResults,
 };
 
+// ============================================================
+// CR-20260703-003: 详情页多场景 Mock 数据
+// ============================================================
+
+// 场景1：处理中（多明细 + 多附件 + 完整审批流）
+const mockProcessingNodes: ApprovalNode[] = [
+  { id: 'p1_start', nodeType: 'start', handlerName: '陈十六', handlerTime: '2024-07-01 09:30:00', functionOrderNo: 'FO20240701001', functionOrderStatus: '预占中' },
+  { id: 'p1_n1', nodeType: 'approval', handlerName: '刘经理', handlerTime: '2024-07-01 10:15:00', result: '通过', remark: '预算充足，同意申请' },
+  { id: 'p1_n2', nodeType: 'approval', handlerName: '赵总监', handlerTime: '', result: '待处理', remark: '' },
+];
+
+export const mockWorkOrderProcessing: ProductWorkOrder = {
+  id: '2', workOrderNo: 'PA202407010001', displayStatus: '处理中', applicantName: '陈十六', applicantOrg: '华东 / 浙江', createTime: '2024-07-01 09:30:00',
+  budget: mockBudgets[3], // B2024Q3004 大额度预算
+  storeGroups: [
+    { id: 'g1', storeCode: '31375', storeName: '大连瑞轩商贸有限公司', products: [
+      { id: 'p1', productCode: 'SKU001', productName: '智能马桶盖A款', jdePrice: 1299.00, isDiscount: true, discount: 0.5, maxQuantity: 20, quantity: 5, amount: 3247.50 },
+      { id: 'p2', productCode: 'SKU004', productName: '智能龙头D款', jdePrice: 699.00, isDiscount: false, discount: 1, maxQuantity: 30, quantity: 10, amount: 6990.00 },
+    ], groupAmount: 10237.50 },
+    { id: 'g2', storeCode: '34998', storeName: '福州晋安第五小学专卖店 林志高', products: [
+      { id: 'p3', productCode: 'SKU002', productName: '恒温花洒B款', jdePrice: 899.00, isDiscount: false, discount: 1, maxQuantity: 15, quantity: 3, amount: 2697.00 },
+    ], groupAmount: 2697.00 },
+    { id: 'g3', storeCode: '37235', storeName: '游秋燕', products: [
+      { id: 'p4', productCode: 'SKU005', productName: '淋浴房E款', jdePrice: 3299.00, isDiscount: true, discount: 0.5, maxQuantity: 8, quantity: 2, amount: 3299.00 },
+    ], groupAmount: 3299.00 },
+  ],
+  totalAmount: 16233.50,
+  attachments: [
+    { id: 'a1', name: '促销活动方案.pdf', url: '#', type: 'pdf', size: 1024 * 1024 * 3 },
+    { id: 'a2', name: '专卖店资质证明.pdf', url: '#', type: 'pdf', size: 1024 * 1024 * 1.5 },
+    { id: 'a3', name: '产品需求清单.xlsx', url: '#', type: 'excel', size: 1024 * 256 },
+    { id: 'a4', name: '预算使用说明.docx', url: '#', type: 'word', size: 1024 * 128 },
+  ],
+  approvalNodes: mockProcessingNodes,
+};
+
+// 场景2：已驳回 — 冻结期原单重提（预算号沿用，不可切换）
+const mockRejectedFreezeNodes: ApprovalNode[] = [
+  { id: 'rf_start', nodeType: 'start', handlerName: '王五', handlerTime: '2024-06-28 14:20:00', functionOrderNo: 'FO20240628003', functionOrderStatus: '已取消' },
+  { id: 'rf_n1', nodeType: 'approval', handlerName: '李经理', handlerTime: '2024-06-28 15:00:00', result: '通过', remark: '初审通过' },
+  { id: 'rf_n2', nodeType: 'approval', handlerName: '张总监', handlerTime: '2024-06-28 16:30:00', result: '驳回', remark: '申请数量超出该专卖店历史采购上限，请核实后调整数量重新提交' },
+];
+
+export const mockWorkOrderRejectedFreeze: ProductWorkOrder = {
+  id: '3', workOrderNo: 'PA202406280003', displayStatus: '已驳回', applicantName: '王五', applicantOrg: '华南 / 广东', createTime: '2024-06-28 14:20:00',
+  budget: mockBudgets[4], // B2024Q3005 - 冻结期预算（freezeStartDate: 2026-07-01）
+  storeGroups: [
+    { id: 'g1', storeCode: '31692', storeName: '赵晋安 宋晓华', products: [
+      { id: 'p1', productCode: 'SKU001', productName: '智能马桶盖A款', jdePrice: 1299.00, isDiscount: true, discount: 0.5, maxQuantity: 20, quantity: 15, amount: 9742.50 },
+    ], groupAmount: 9742.50 },
+  ],
+  totalAmount: 9742.50,
+  attachments: [{ id: 'a1', name: '补货申请表.pdf', url: '#', type: 'pdf', size: 1024 * 512 }],
+  approvalNodes: mockRejectedFreezeNodes,
+  rejectionInfo: {
+    rejectedAt: '2024-06-28 16:30:00',
+    rejectedBy: '张总监',
+    rejectNodeName: '二级审批',
+    rejectReason: '申请数量超出该专卖店历史采购上限',
+    rejectRemark: '请核实后调整数量重新提交',
+  },
+  reapplyCondition: {
+    availability: 'freeze_period_locked',
+    message: '当前预算处于冻结期，原预算号将沿用，提交时按剩余额度校验',
+    originalBudgetNo: 'B2024Q3005',
+    canSwitchBudget: false,
+  },
+};
+
+// 场景3：已驳回 — 原预算已到期，不可继续基于原单重提
+const mockRejectedExpiredNodes: ApprovalNode[] = [
+  { id: 're_start', nodeType: 'start', handlerName: '周八', handlerTime: '2024-06-15 10:00:00', functionOrderNo: 'FO20240615001', functionOrderStatus: '已取消' },
+  { id: 're_n1', nodeType: 'approval', handlerName: '吴经理', handlerTime: '2024-06-15 11:30:00', result: '驳回', remark: '该预算已到期，无法继续申请' },
+];
+
+export const mockWorkOrderRejectedExpired: ProductWorkOrder = {
+  id: '4', workOrderNo: 'PA202406150001', displayStatus: '已驳回', applicantName: '周八', applicantOrg: '华东 / 浙江', createTime: '2024-06-15 10:00:00',
+  budget: { ...mockBudgets[4], budgetExpiryDate: '2024-06-20', status: '已到期', applicationAvailable: false },
+  storeGroups: [
+    { id: 'g1', storeCode: '31441', storeName: '赵晋杰', products: [
+      { id: 'p1', productCode: 'SKU002', productName: '恒温花洒B款', jdePrice: 899.00, isDiscount: false, discount: 1, maxQuantity: 15, quantity: 5, amount: 4495.00 },
+    ], groupAmount: 4495.00 },
+  ],
+  totalAmount: 4495.00,
+  attachments: [{ id: 'a1', name: '活动申请附件.pdf', url: '#', type: 'pdf', size: 1024 * 1024 }],
+  approvalNodes: mockRejectedExpiredNodes,
+  rejectionInfo: {
+    rejectedAt: '2024-06-15 11:30:00',
+    rejectedBy: '吴经理',
+    rejectNodeName: '一级审批',
+    rejectReason: '原预算已到期，无法继续申请',
+    rejectRemark: '请选择新的有效预算后重新发起',
+  },
+  reapplyCondition: {
+    availability: 'budget_expired',
+    message: '原预算已到期，不可继续基于原单重提，请选择新的有效预算',
+    canSwitchBudget: true,
+  },
+};
+
+// 场景4：已驳回 — 非冻结期，按普通新建重新发起
+const mockRejectedNonFreezeNodes: ApprovalNode[] = [
+  { id: 'rn_start', nodeType: 'start', handlerName: '郑十', handlerTime: '2024-06-20 09:00:00', functionOrderNo: 'FO20240620001', functionOrderStatus: '已取消' },
+  { id: 'rn_n1', nodeType: 'approval', handlerName: '孙经理', handlerTime: '2024-06-20 10:30:00', result: '通过', remark: '资料齐全' },
+  { id: 'rn_n2', nodeType: 'approval', handlerName: '钱总监', handlerTime: '2024-06-20 14:00:00', result: '驳回', remark: '产品型号不符合当前推广政策' },
+];
+
+export const mockWorkOrderRejectedNonFreeze: ProductWorkOrder = {
+  id: '5', workOrderNo: 'PA202406200001', displayStatus: '已驳回', applicantName: '郑十', applicantOrg: '华中 / 湖北', createTime: '2024-06-20 09:00:00',
+  budget: mockBudgets[3], // B2024Q3004 - 非冻结期
+  storeGroups: [
+    { id: 'g1', storeCode: '31371', storeName: '沈阳迎续商贸有限公司', products: [
+      { id: 'p1', productCode: 'SKU003', productName: '浴室柜C款', jdePrice: 2599.00, isDiscount: true, discount: 0.5, maxQuantity: 10, quantity: 3, amount: 3898.50 },
+      { id: 'p2', productCode: 'SKU004', productName: '智能龙头D款', jdePrice: 699.00, isDiscount: false, discount: 1, maxQuantity: 30, quantity: 5, amount: 3495.00 },
+    ], groupAmount: 7393.50 },
+  ],
+  totalAmount: 7393.50,
+  attachments: [{ id: 'a1', name: '新品推广申请.pdf', url: '#', type: 'pdf', size: 1024 * 768 }],
+  approvalNodes: mockRejectedNonFreezeNodes,
+  rejectionInfo: {
+    rejectedAt: '2024-06-20 14:00:00',
+    rejectedBy: '钱总监',
+    rejectNodeName: '二级审批',
+    rejectReason: '产品型号不符合当前推广政策',
+    rejectRemark: '请更换符合推广政策的产品后重新发起',
+  },
+  reapplyCondition: {
+    availability: 'non_freeze_new',
+    message: '可按普通新建发起，自行选择预算号',
+    canSwitchBudget: true,
+  },
+};
+
+// 场景5：已结束 — 审批通过，部分订单成功部分失败
+const mockCompletedNodes: ApprovalNode[] = [
+  { id: 'c_start', nodeType: 'start', handlerName: '钱十一', handlerTime: '2024-06-10 08:30:00', functionOrderNo: 'FO20240610001', functionOrderStatus: '已取消' },
+  { id: 'c_n1', nodeType: 'approval', handlerName: '孙经理', handlerTime: '2024-06-10 09:15:00', result: '通过', remark: '预算内，同意' },
+  { id: 'c_n2', nodeType: 'approval', handlerName: '李总监', handlerTime: '2024-06-10 11:00:00', result: '通过', remark: '审批通过，准予执行', functionOrderNo: 'FO20240610001', functionOrderStatus: '已取消', relatedOrders: [
+    { orderNo: 'O20240610001', orderType: '产品申请表订单', orderStatus: '已生成', remark: '-' },
+    { orderNo: 'O20240610002', orderType: '内部申请表订单', orderStatus: '生成失败', remark: '客户层级不匹配' },
+  ]},
+];
+
+const mockCompletedGroupResults: GroupResult[] = [
+  { groupId: 'g1', storeCode: '31692', storeName: '赵晋安 宋晓华', functionOrderNo: 'FO20240610001', functionOrderStatus: '已取消', relatedOrders: [{ orderNo: 'O20240610001', orderType: '产品申请表订单', orderStatus: '已生成', remark: '-' }] },
+  { groupId: 'g2', storeCode: '31441', storeName: '赵晋杰', functionOrderNo: 'FO20240610002', functionOrderStatus: '已取消', relatedOrders: [{ orderNo: 'O20240610002', orderType: '内部申请表订单', orderStatus: '生成失败', remark: '客户层级不匹配' }], failReason: '客户层级为4，不满足内部申请表订单生成条件' },
+];
+
+export const mockWorkOrderCompleted: ProductWorkOrder = {
+  id: '6', workOrderNo: 'PA202406100001', displayStatus: '已结束', applicantName: '钱十一', applicantOrg: '华南 / 福建', createTime: '2024-06-10 08:30:00',
+  budget: mockBudgets[0],
+  storeGroups: [
+    { id: 'g1', storeCode: '31692', storeName: '赵晋安 宋晓华', products: [
+      { id: 'p1', productCode: 'SKU001', productName: '智能马桶盖A款', jdePrice: 1299.00, isDiscount: true, discount: 0.5, maxQuantity: 20, quantity: 2, amount: 1299.00 },
+    ], groupAmount: 1299.00 },
+    { id: 'g2', storeCode: '31441', storeName: '赵晋杰', products: [
+      { id: 'p2', productCode: 'SKU002', productName: '恒温花洒B款', jdePrice: 899.00, isDiscount: false, discount: 1, maxQuantity: 15, quantity: 3, amount: 2697.00 },
+    ], groupAmount: 2697.00 },
+  ],
+  totalAmount: 3996.00,
+  attachments: [
+    { id: 'a1', name: '审批附件1.pdf', url: '#', type: 'pdf', size: 1024 * 512 },
+    { id: 'a2', name: '产品照片.zip', url: '#', type: 'zip', size: 1024 * 1024 * 5 },
+  ],
+  approvalNodes: mockCompletedNodes,
+  groupResults: mockCompletedGroupResults,
+};
+
+/** 根据场景ID获取对应的 mock 详情数据 */
+export function getMockWorkOrderDetail(scene?: string): ProductWorkOrder {
+  switch (scene) {
+    case 'processing': return mockWorkOrderProcessing;
+    case 'rejected-freeze': return mockWorkOrderRejectedFreeze;
+    case 'rejected-expired': return mockWorkOrderRejectedExpired;
+    case 'rejected-nonfreeze': return mockWorkOrderRejectedNonFreeze;
+    case 'completed': return mockWorkOrderCompleted;
+    default: return mockWorkOrderDetail;
+  }
+}
+
 export function calculateAmount(product: ProductItem): number {
   if (product.isDiscount) return Number((product.jdePrice * product.quantity * product.discount).toFixed(2));
   return Number((product.jdePrice * product.quantity).toFixed(2));
