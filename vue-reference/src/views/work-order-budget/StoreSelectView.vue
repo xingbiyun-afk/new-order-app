@@ -13,7 +13,15 @@ const route = useRoute()
 const q = ref('')
 const gid = route.query.groupId as string
 
-// 搜索历史记录（sessionStorage持久化）
+// ============================================================
+// 搜索历史记录（App 原页面现有交互能力承接）
+//
+// 说明：
+// 1. 搜索历史记录能力属于 App 原页面现有交互，不是本轮新增业务规则；
+// 2. 当前 Vue 参考实现采用 sessionStorage 做轻量持久化占位，仅用于还原
+//    App 现有页面体验；
+// 3. 正式工程需结合真实客户端能力或统一历史记录机制，评估最终实现方式。
+// ============================================================
 const SEARCH_HISTORY_KEY = 'store_search_history'
 const searchHistory = ref<string[]>([])
 
@@ -47,14 +55,6 @@ function clearSearchHistory() {
   searchHistory.value = []
   try {
     sessionStorage.removeItem(SEARCH_HISTORY_KEY)
-  } catch { /* ignore */ }
-}
-
-// 删除单条历史
-function removeHistoryItem(item: string) {
-  searchHistory.value = searchHistory.value.filter(h => h !== item)
-  try {
-    sessionStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(searchHistory.value))
   } catch { /* ignore */ }
 }
 

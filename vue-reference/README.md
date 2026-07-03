@@ -45,4 +45,4 @@ npm run preview  # 预览构建
 - 变更清单：`../docs/change-logs/`
 - 开发总结：`../docs/development-summary/`
 - 页面规则文档：`../docs/product/work-order-budget/产品申请工单创建页面规则明细.md`（创建页正式规则明细）、`../docs/product/work-order-budget/产品申请工单选择预算页面规则明细.md`（预算选择页正式规则明细）
-- 最新迭代：CR-20260703-002（创建链路收尾 + 专卖店选择页1:1回归 + 文案口径统一）已完成，前置 CR-20260703-001（选择链路优化 + 驳回后重提 + xlsx→exceljs + 主包瘦身）也已合并，详见 `../docs/development-summary/2026-07-03/`
+- 最新迭代：CR-20260703-002（创建链路收尾 + 专卖店选择页回归 + 文案口径统一），详见 `../docs/development-summary/2026-07-03/`
