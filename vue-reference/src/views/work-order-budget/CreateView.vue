@@ -402,20 +402,22 @@ function hasImportWarnings() {
     </div>
     <!-- Store Groups -->
     <div v-for="(group, gi) in store.storeGroups" :key="group.id" class="card" style="margin: 12px 16px; padding: 14px 16px;">
-      <!-- CR-20260703-001 §7.5: 编号移到卡片右上角 -->
-      <div @click="store.toggleGroupCollapse(group.id)" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; cursor: pointer;">
-        <div style="flex: 1; min-width: 0;">
-          <span style="font-size: 15px; font-weight: 600; color: #333;">产品申请订单明细{{ group.storeCode ? ` · ${group.storeCode}` : '' }}</span>
-          <!-- Group Description (CR-20260701-001 3.3): 标题下方、分隔线上方 -->
-          <div v-if="!isCol(group.id)" style="font-size: 12px; color: #aaa; margin-top: 4px; line-height: 1.5;">同一个店编的预算核销产品填写在一个明细</div>
+      <!-- CR-20260703-001 §7.5 + §4.2: 明细头 — 三元素（标题/编号/icon）严格同一行对齐 -->
+      <div @click="store.toggleGroupCollapse(group.id)" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; cursor: pointer;">
+        <div style="display: flex; justify-content: space-between; align-items: center; min-height: 32px;">
+          <div style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 16px; font-weight: 600; color: #333; line-height: 32px; white-space: nowrap;">产品申请订单明细{{ group.storeCode ? ` · ${group.storeCode}` : '' }}</span>
+            <!-- CR-20260703-001 §4.2: 数字胶囊（与标题/折叠 icon 严格同一行） -->
+            <span style="display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; padding: 0 8px; border-radius: 12px; background-color: #E0F7F6; color: #22BDB8; font-size: 12px; font-weight: 600; line-height: 1;">{{ gi + 1 }}</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+            <button v-if="store.storeGroups.length > 1" @click.stop="store.deleteGroup(group.id)" style="background: none; border: none; color: #F44336; font-size: 13px; cursor: pointer; height: 32px; line-height: 32px; padding: 0;">删除</button>
+            <!-- CR-20260703-001 §4.2: 折叠 icon 严格 32px 行高居中（与标题同一基线） -->
+            <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; color: #999; font-size: 18px; line-height: 1; transition: transform 0.2s;" :style="{ transform: isCol(group.id) ? 'rotate(-90deg)' : 'rotate(0deg)' }">&#9662;</span>
+          </div>
         </div>
-        <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
-          <!-- CR-20260703-001 §4.2: 数字胶囊（24px 行高基线） -->
-          <span style="display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; padding: 0 8px; border-radius: 12px; background-color: #E0F7F6; color: #22BDB8; font-size: 12px; font-weight: 600; line-height: 1;">{{ gi + 1 }}</span>
-          <button v-if="store.storeGroups.length > 1" @click.stop="store.deleteGroup(group.id)" style="background: none; border: none; color: #F44336; font-size: 13px; cursor: pointer; height: 24px; line-height: 24px; padding: 0;">删除</button>
-          <!-- CR-20260703-001 §4.2: 折叠 icon 统一 24px 行高（与数字胶囊基线对齐） -->
-          <span style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; color: #999; font-size: 16px; line-height: 1; transition: transform 0.2s;" :style="{ transform: isCol(group.id) ? 'rotate(-90deg)' : 'rotate(0deg)' }">&#9662;</span>
-        </div>
+        <!-- CR-20260703-001 §4.2: 副标题独占第二行（不干扰主行基线对齐） -->
+        <div v-if="!isCol(group.id)" style="font-size: 12px; color: #aaa; line-height: 1.4;">同一个店编的预算核销产品填写在一个明细</div>
       </div>
       <!-- Collapsed (CR-20260702-002: 新增分组小计金额) -->
       <div v-if="isCol(group.id)" style="padding: 8px 0;">
