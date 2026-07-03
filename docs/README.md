@@ -56,6 +56,7 @@ docs/
 │       ├── 产品申请工单页面结构草图说明.md
 │       ├── 产品申请工单"我的"页规则明细说明.md
 │       ├── 产品申请工单选择预算页面规则明细.md
+│       ├── 产品申请工单创建页面规则明细.md
 │       ├── budget-management-integration.md
 │       ├── open-questions.md
 │       ├── process-and-status-rules.md

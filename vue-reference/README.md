@@ -44,4 +44,5 @@ npm run preview  # 预览构建
 
 - 变更清单：`../docs/change-logs/`
 - 开发总结：`../docs/development-summary/`
-- 最新迭代：CR-20260702-002（发起页样式与体验优化）
+- 页面规则文档：`../docs/product/work-order-budget/产品申请工单创建页面规则明细.md`（创建页正式规则明细）、`../docs/product/work-order-budget/产品申请工单选择预算页面规则明细.md`（预算选择页正式规则明细）
+- 最新迭代：CR-20260702-002（发起页样式与体验优化）已通过验收整改（PR #17 合并）
