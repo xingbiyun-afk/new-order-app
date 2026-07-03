@@ -185,5 +185,14 @@ npm run build:react-legacy  # 构建历史 React 项目
   - 关键变更：xlsx → exceljs 替换（high → moderate 漏洞）；exceljs 动态加载（主包 509KB → 180KB）；千分符统一补丁（建 formatAmount 工具）；专卖店选择页 / 产品选择页 / 创建页视觉与 BudgetSelectView 对齐；批量导入模板去表头；驳回后重提承接（冻结期完整 + 非冻结期方案 B）
   - 变更清单：`docs/change-logs/2026-07-03/CR-20260703-001 变更清单.md`
   - 开发总结：`docs/development-summary/2026-07-03/CR-20260703-001-开发总结.md`
-  - 分支：`feature/CR-20260703-001-xlsx-exceljs-and-experience`（待推 + PR 合并）
+  - 分支：`feature/CR-20260703-001-xlsx-exceljs-and-experience`（已合并）
+- **已完成（2026-07-03）：CR-20260703-002 产品申请工单创建链路收尾与样式口径统一补充**
+  - 专卖店选择页按App现有页面1:1回归：从卡片式全面改为行式列表+搜索历史记录风格
+  - 创建页文案口径统一：预算相关文案统一为"剩余额度（净额）"和"预算总额（净额）"，emoji收敛
+  - 批量导入弹窗说明补强：术语统一、placeholder增强、无表头提示强化
+  - uuid moderate漏洞评估与风险记录
+  - 创建链路进入相对稳定状态，为后续详情页优化腾出空间
+  - 变更清单：`docs/change-logs/2026-07-03/CR-20260703-002 变更清单.md`
+  - 开发总结：`docs/development-summary/2026-07-03/CR-20260703-002-开发总结.md`
+  - 分支：`feature/CR-20260703-002-create-link-cleanup`（待推 + PR 合并）
 - 后续：正式开发进入 Vue / Vue2 工程，不在当前仓库直接推进生产实现

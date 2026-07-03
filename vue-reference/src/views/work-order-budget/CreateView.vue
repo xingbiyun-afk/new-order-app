@@ -163,7 +163,7 @@ function submit() {
   if (!store.selectedBudget) { showToast('请选择预算'); return }
   // 预算可用金额校验（CR-20260630-002 3.5）
   if (store.totalAmount > store.selectedBudget.availableAmount) {
-    showToast(`整单金额 ¥${fmtMoney(store.totalAmount)} 超过预算可用金额 ¥${fmtMoney(store.selectedBudget.availableAmount)}`)
+    showToast(`整单金额 ¥${fmtMoney(store.totalAmount)} 超过剩余额度（净额）¥${fmtMoney(store.selectedBudget.availableAmount)}`)
     return
   }
   for (const g of store.storeGroups) {
@@ -326,7 +326,7 @@ function hasImportWarnings() {
     </div>
     <!-- CR-20260702-002: 滚动态轻量预算摘要条 -->
     <div v-if="showBudgetBar && store.selectedBudget" style="position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; padding: 8px 16px; background-color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.08); z-index: 90; display: flex; justify-content: space-between; align-items: center;">
-      <span style="font-size: 13px; color: #666;">剩余额度</span>
+      <span style="font-size: 13px; color: #666;">剩余额度（净额）</span>
       <span style="font-size: 15px; font-weight: 600; color: #22BDB8;">¥{{ fmtMoney(store.selectedBudget.availableAmount) }}</span>
     </div>
 
@@ -357,7 +357,7 @@ function hasImportWarnings() {
           <span style="font-size: 18px; font-weight: 600; color: #22BDB8;">¥{{ fmtMoney(store.selectedBudget.availableAmount) }}</span>
         </div>
         <div style="display: flex; justify-content: space-between; padding: 4px 0;">
-          <span style="font-size: 12px; color: #999;">总额 ¥{{ fmtMoney(store.selectedBudget.budgetTotalAmount) }} · 归属 {{ store.selectedBudget.budgetOrg }}</span>
+          <span style="font-size: 12px; color: #999;">预算总额（净额）¥{{ fmtMoney(store.selectedBudget.budgetTotalAmount) }} · 归属 {{ store.selectedBudget.budgetOrg }}</span>
         </div>
 
         <!-- 驳回重提 + 冻结期提示 -->
@@ -466,7 +466,7 @@ function hasImportWarnings() {
               </div>
               <!-- CR-20260702-002: 数量提示优化 - 突出主判断 -->
               <div style="margin-top: 4px; font-size: 12px; line-height: 1.5;">
-                <span v-if="(store.skuTotalMap.get(prod.productCode) || 0) > prod.maxQuantity" style="color: #F44336; font-weight: 500;">⚠ 已超过可申请数量，请调整</span>
+                <span v-if="(store.skuTotalMap.get(prod.productCode) || 0) > prod.maxQuantity" style="color: #F44336; font-weight: 500;">已超过可申请数量，请调整</span>
                 <span v-else-if="(store.skuTotalMap.get(prod.productCode) || 0) === prod.maxQuantity" style="color: #FF9800;">已达到可申请上限 {{ prod.maxQuantity }}</span>
                 <span v-else style="color: #4CAF50;">还可申请 {{ prod.maxQuantity - (store.skuTotalMap.get(prod.productCode) || 0) }} / 上限 {{ prod.maxQuantity }}</span>
               </div>
@@ -506,8 +506,8 @@ function hasImportWarnings() {
       </div>
       <!-- 轻量级预算关系提示 -->
       <div v-if="store.selectedBudget" style="display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
-        <span style="color: #999;">剩余额度 ¥{{ fmtMoney(store.selectedBudget.availableAmount) }}</span>
-        <span v-if="store.totalAmount > store.selectedBudget.availableAmount" style="color: #F44336; font-weight: 500;">⚠ 已超过预算剩余额度</span>
+        <span style="color: #999;">剩余额度（净额）¥{{ fmtMoney(store.selectedBudget.availableAmount) }}</span>
+        <span v-if="store.totalAmount > store.selectedBudget.availableAmount" style="color: #F44336; font-weight: 500;">已超过剩余额度（净额）</span>
         <span v-else style="color: #4CAF50;">还可使用 ¥{{ fmtMoney(store.selectedBudget.availableAmount - store.totalAmount) }}</span>
       </div>
     </div>
@@ -572,12 +572,12 @@ function hasImportWarnings() {
         <div style="font-size: 16px; font-weight: 600; color: #333; margin-bottom: 12px;">批量导入产品</div>
         <!-- Format hint -->
         <div style="font-size: 12px; color: #555; margin-bottom: 12px; padding: 10px 12px; background-color: #FFF8E1; border: 1px solid #FFE082; border-radius: 8px; line-height: 1.8;">
-          <div style="font-weight: 600; color: #FF8F00; margin-bottom: 6px;">字段顺序：产品编码（产品编号），数量，专卖店编号</div>
+          <div style="font-weight: 600; color: #FF8F00; margin-bottom: 6px;">字段顺序：产品编号，数量，专卖店编号</div>
           <div style="color: #666;">支持逗号、空格、Tab 分隔</div>
           <div style="color: #666;">示例：<code style="background:#fff; padding:2px 6px; border-radius:4px; font-size:11px; color:#333;">SKU001,10,31692</code></div>
         </div>
         <!-- Textarea -->
-        <textarea v-model="importText" placeholder="粘贴数据到此处..." rows="8" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #e0e0e0; font-size: 13px; resize: vertical; font-family: monospace; box-sizing: border-box; line-height: 1.6;" @input="importChecked = false"></textarea>
+        <textarea v-model="importText" placeholder="请粘贴数据（产品编号,数量,专卖店编号）&#10;第1行即为数据，无表头..." rows="8" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #e0e0e0; font-size: 13px; resize: vertical; font-family: monospace; box-sizing: border-box; line-height: 1.6;" @input="importChecked = false"></textarea>
         <!-- File import -->
         <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0f0f0;">
           <div style="font-size: 12px; color: #888; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">
@@ -604,12 +604,12 @@ function hasImportWarnings() {
         </div>
         <!-- Warnings (over-limit) -->
         <div v-if="hasImportWarnings()" style="margin-top: 12px; padding: 10px 12px; background-color: #FFF8E1; border-radius: 8px; border: 1px solid #FFE082;">
-          <div style="font-size: 13px; font-weight: 600; color: #FF8F00; margin-bottom: 8px;">⚠ 存在 {{ importWarnings.length }} 条超量警告（超量产品可导入但提交时将无法通过）：</div>
+          <div style="font-size: 13px; font-weight: 600; color: #FF8F00; margin-bottom: 8px;">存在 {{ importWarnings.length }} 条超量警告（超量产品可导入但提交时将无法通过）：</div>
           <div v-for="(w, wi) in importWarnings" :key="wi" style="font-size: 12px; color: #E65100; padding: 4px 0; border-bottom: 1px solid #FFE082;" :style="{ borderBottom: wi === importWarnings.length - 1 ? 'none' : '1px solid #FFE082' }">第 {{ w.line }} 行 · {{ w.field }}：{{ w.message }}</div>
         </div>
         <!-- Success summary -->
         <div v-if="importChecked && !hasImportHardErrors()" style="margin-top: 12px; padding: 10px 12px; background-color: #E8F5E9; border-radius: 8px; border: 1px solid #C8E6C9;">
-          <div style="font-size: 13px; color: #2E7D32;">✅ 数据识别成功</div>
+          <div style="font-size: 13px; color: #2E7D32; font-weight: 500;">数据识别成功</div>
           <div style="font-size: 12px; color: #388E3C; margin-top: 4px; line-height: 1.5;">共 {{ importParsedRows.length }} 条数据，将按专卖店编号拆分为 {{ new Set(importParsedRows.map(r => r.storeCode)).size }} 个产品申请订单明细</div>
         </div>
       </div>

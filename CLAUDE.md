@@ -63,7 +63,7 @@
 |------|------|------|
 | `/product-apply/create` | 发起页 | 预算信息/申请信息/产品申请订单明细/附件/提交（CR-20260702-002 体验优化） |
 | `/product-apply/budget-select` | 预算选择页 | 搜索过滤+预算卡片+标签机制+选中/不可选/空态（CR-20260702-001） |
-| `/product-apply/store-select` | 专卖店搜索选择页 | 搜索+列表+回填 |
+| `/product-apply/store-select` | 专卖店搜索选择页 | 搜索栏+历史记录+行式列表+回填（CR-20260703-002 按App现有页面1:1回归） |
 | `/product-apply/product-select` | 产品搜索选择页 | 搜索+卡片+回填 |
 | `/product-apply/detail/:id` | 详情页 | 基础信息/发起信息/审批流/订单结果/审批操作 |
 | `/create` | 发起工单入口页 | 物流/客服/产品申请三个入口 |
