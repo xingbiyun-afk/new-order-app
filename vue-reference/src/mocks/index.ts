@@ -1,4 +1,3 @@
-import * as XLSX from 'xlsx'
 import type { Budget, ProductWorkOrder, WorkOrderCard, StoreGroup, ProductItem, ApprovalNode, GroupResult, ImportRow, ImportError } from '../types';
 
 // ============================================================
@@ -176,6 +175,24 @@ export function calculateAmount(product: ProductItem): number {
 }
 
 // ============================================================
+// CR-20260703-001 §2: 驳回后重新发起 — 工单号 → 原预算 映射（Mock）
+// ============================================================
+
+/** 演示用：根据工单号查原预算。
+ *  真实环境替换为接口请求。 */
+const workOrderBudgetMap: Record<string, string> = {
+  // PA202406260001 关联一个冻结期预算（id='5'，freezeStartDate=2026-07-01）
+  // 用于验证"驳回后重提 → 冻结期"承接逻辑
+  'PA202406260001': '5',
+}
+
+export function findBudgetByWorkOrderNo(workOrderNo: string): Budget | null {
+  const budgetId = workOrderBudgetMap[workOrderNo]
+  if (!budgetId) return null
+  return mockBudgets.find(b => b.id === budgetId) || null
+}
+
+// ============================================================
 // CR-20260701-002: 批量导入校验与解析
 // ============================================================
 
@@ -280,9 +297,10 @@ export async function parseFileImport(file: File): Promise<{ rows: string[]; err
   if (name.endsWith('.csv')) {
     try {
       const text = await file.text()
+      // CR-20260703-001: 模板无首行表头，第 1 行即为数据
       const lines = text.split('\n').map(l => l.trim()).filter(l => l)
-      if (lines.length <= 1) return { rows: [], error: '文件仅包含表头，无有效数据行' }
-      return { rows: lines.slice(1), error: null }
+      if (lines.length === 0) return { rows: [], error: '文件无有效数据行' }
+      return { rows: lines, error: null }
     } catch {
       return { rows: [], error: 'CSV 文件读取失败，请检查文件编码' }
     }
@@ -290,16 +308,27 @@ export async function parseFileImport(file: File): Promise<{ rows: string[]; err
 
   if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
     try {
+      // CR-20260703-001 §7: exceljs 按需加载，减小首屏主包体积
+      const ExcelJS = (await import('exceljs')).default
       const buf = await file.arrayBuffer()
-      const wb = XLSX.read(buf, { type: 'array' })
-      if (wb.SheetNames.length === 0) return { rows: [], error: 'Excel 文件不包含任何工作表' }
-      const sheet = wb.Sheets[wb.SheetNames[0]]
-      const data: unknown[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 })
-      if (data.length <= 1) return { rows: [], error: '文件仅包含表头，无有效数据行' }
-      const rows = data.slice(1)
-        .filter((row: unknown[]) => row.some(c => c != null && String(c).trim() !== ''))
-        .map((row: unknown[]) => row.slice(0, 3).map(c => String(c ?? '').trim()).join(','))
-      if (rows.length === 0) return { rows: [], error: '文件仅包含表头，无有效数据行' }
+      const workbook = new ExcelJS.Workbook()
+      await workbook.xlsx.load(buf)
+      const sheetName = workbook.worksheets[0]?.name
+      if (!sheetName) return { rows: [], error: 'Excel 文件不包含任何工作表' }
+      const sheet = workbook.getWorksheet(sheetName)
+      if (!sheet) return { rows: [], error: 'Excel 文件不包含任何工作表' }
+      // CR-20260703-001: 模板无首行表头，第 1 行即为数据
+      const data: string[][] = []
+      sheet.eachRow({ includeEmpty: false }, (row) => {
+        const cells: string[] = []
+        row.eachCell({ includeEmpty: true }, (cell) => {
+          const v = cell.value
+          cells.push(v == null ? '' : String(v).trim())
+        })
+        if (cells.some(c => c !== '')) data.push(cells.slice(0, 3))
+      })
+      if (data.length === 0) return { rows: [], error: '文件无有效数据行' }
+      const rows = data.map(cells => cells.join(','))
       return { rows, error: null }
     } catch {
       return { rows: [], error: 'Excel 文件解析失败，请检查文件是否损坏' }
@@ -309,15 +338,15 @@ export async function parseFileImport(file: File): Promise<{ rows: string[]; err
   return { rows: [], error: '不支持的文件格式，请上传 .xlsx、.xls 或 .csv 文件' }
 }
 
-/** 下载导入模板（UTF-8 CSV 格式，含表头 + 2 行示例数据） */
+/** 下载导入模板（UTF-8 CSV 格式，无表头，按"产品编号,数量,专卖店编号"顺序纯数据） */
 export function downloadImportTemplate(event?: Event) {
   event?.preventDefault()
   event?.stopPropagation()
 
   // CSV with UTF-8 BOM for proper Chinese character display in Excel/WPS
   const BOM = '\uFEFF'
+  // CR-20260703-001: 模板无首行表头，直接为 2 行示例数据
   const csv = BOM
-    + '产品编号,数量,专卖店编号\n'
     + 'SKU001,5,31692\n'
     + 'SKU002,3,31441\n'
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })

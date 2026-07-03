@@ -2,8 +2,9 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useWorkOrderStore } from '../../stores/workOrder'
-import { mockProductOptions, mockStores, calculateAmount, createDefaultGroup, parseImportText, validateImportRows, parseFileImport, downloadImportTemplate } from '../../mocks'
+import { mockProductOptions, mockStores, calculateAmount, createDefaultGroup, parseImportText, validateImportRows, parseFileImport, downloadImportTemplate, findBudgetByWorkOrderNo } from '../../mocks'
 import type { ProductItem, ImportError } from '../../types'
+import { formatAmount } from '../../utils/format'
 
 const router = useRouter()
 const route = useRoute()
@@ -66,10 +67,8 @@ function execConfirm() {
   closeConfirm()
 }
 
-// 金额格式化
-function fmtMoney(v: number): string {
-  return v.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
+// 金额格式化（CR-20260703-001 §6: 统一调用 formatAmount）
+const fmtMoney = formatAmount
 
 // CR-20260702-002: 标记是否从选择页返回（避免清空状态）
 const isFromSelectionPage = ref(false)
@@ -96,7 +95,22 @@ onMounted(() => {
     if (budgetId.value) {
       store.selectBudget(budgetId.value)
     }
-    // 不再执行 store.selectedBudget = null 一类反向清空逻辑
+    // CR-20260703-001 §2: 驳回后重提 → 查原工单号 → 冻结期带入原预算；非冻结期按方案 B（按普通新建，不带入）
+    if (rejectedFrom.value) {
+      const originalBudget = findBudgetByWorkOrderNo(rejectedFrom.value)
+      if (originalBudget) {
+        const isFreezing = TODAY >= new Date(originalBudget.freezeStartDate) && TODAY < new Date(originalBudget.budgetExpiryDate)
+        const isExpired = TODAY >= new Date(originalBudget.budgetExpiryDate)
+        if (isFreezing) {
+          // 冻结期：带入原预算并锁定，用户不能切换
+          store.selectBudget(originalBudget.id)
+        } else if (isExpired) {
+          // 已到期：带入原预算让用户看到"已到期"提示，但不允许提交
+          store.selectBudget(originalBudget.id)
+        }
+        // 非冻结期：方案 B — 不带入原预算，按普通新建（selectedBudget 保持 null）
+      }
+    }
   }
 
   window.addEventListener('scroll', handleScroll, { passive: true })
@@ -388,16 +402,22 @@ function hasImportWarnings() {
     </div>
     <!-- Store Groups -->
     <div v-for="(group, gi) in store.storeGroups" :key="group.id" class="card" style="margin: 12px 16px; padding: 14px 16px;">
-      <div @click="store.toggleGroupCollapse(group.id)" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; cursor: pointer;">
-        <div>
-          <span style="font-size: 15px; font-weight: 600; color: #333;">产品申请订单明细{{ gi + 1 }}{{ group.storeCode ? ` · ${group.storeCode}` : '' }}</span>
-          <!-- Group Description (CR-20260701-001 3.3): 标题下方、分隔线上方 -->
-          <div v-if="!isCol(group.id)" style="font-size: 12px; color: #aaa; margin-top: 4px; line-height: 1.5;">同一个店编的预算核销产品填写在一个明细</div>
+      <!-- CR-20260703-001 §7.5 + §4.2: 明细头 — 三元素（标题/编号/icon）严格同一行对齐 -->
+      <div @click="store.toggleGroupCollapse(group.id)" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; cursor: pointer;">
+        <div style="display: flex; justify-content: space-between; align-items: center; min-height: 32px;">
+          <div style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 16px; font-weight: 600; color: #333; line-height: 32px; white-space: nowrap;">产品申请订单明细{{ group.storeCode ? ` · ${group.storeCode}` : '' }}</span>
+            <!-- CR-20260703-001 §4.2: 数字胶囊（与标题/折叠 icon 严格同一行） -->
+            <span style="display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; padding: 0 8px; border-radius: 12px; background-color: #E0F7F6; color: #22BDB8; font-size: 12px; font-weight: 600; line-height: 1;">{{ gi + 1 }}</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+            <button v-if="store.storeGroups.length > 1" @click.stop="store.deleteGroup(group.id)" style="background: none; border: none; color: #F44336; font-size: 13px; cursor: pointer; height: 32px; line-height: 32px; padding: 0;">删除</button>
+            <!-- CR-20260703-001 §4.2: 折叠 icon 严格 32px 行高居中（与标题同一基线） -->
+            <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; color: #999; font-size: 18px; line-height: 1; transition: transform 0.2s;" :style="{ transform: isCol(group.id) ? 'rotate(-90deg)' : 'rotate(0deg)' }">&#9662;</span>
+          </div>
         </div>
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <button v-if="store.storeGroups.length > 1" @click.stop="store.deleteGroup(group.id)" style="background: none; border: none; color: #F44336; font-size: 13px; cursor: pointer;">删除</button>
-          <span style="color: #999; font-size: 18px; transition: transform 0.2s;" :style="{ transform: isCol(group.id) ? 'rotate(-90deg)' : 'rotate(0deg)' }">&#9662;</span>
-        </div>
+        <!-- CR-20260703-001 §4.2: 副标题独占第二行（不干扰主行基线对齐） -->
+        <div v-if="!isCol(group.id)" style="font-size: 12px; color: #aaa; line-height: 1.4;">同一个店编的预算核销产品填写在一个明细</div>
       </div>
       <!-- Collapsed (CR-20260702-002: 新增分组小计金额) -->
       <div v-if="isCol(group.id)" style="padding: 8px 0;">
@@ -407,7 +427,7 @@ function hasImportWarnings() {
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <span></span>
-          <span style="font-size: 13px; color: #666;">小计 <span style="font-size: 15px; font-weight: 600; color: #22BDB8;">¥{{ group.products.reduce((s, p) => s + p.amount, 0).toFixed(2) }}</span></span>
+          <span style="font-size: 13px; color: #666;">小计 <span style="font-size: 15px; font-weight: 600; color: #22BDB8;">¥{{ fmtMoney(group.products.reduce((s, p) => s + p.amount, 0)) }}</span></span>
         </div>
       </div>
       <!-- Expanded -->
@@ -426,15 +446,15 @@ function hasImportWarnings() {
             <span style="font-size: 14px; font-weight: 500; color: #22BDB8;">产品 {{ pi + 1 }}</span>
             <button v-if="group.products.length > 1" @click="store.deleteProduct(group.id, prod.id)" style="background: none; border: none; color: #F44336; font-size: 12px; cursor: pointer;">删除</button>
           </div>
-          <!-- CR-20260702-002: 产品入口术语统一为"产品" -->
-          <div @click="router.push(`/product-apply/product-select?groupId=${group.id}&productId=${prod.id}`)" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5; cursor: pointer; margin-bottom: 10px;">
-            <span style="font-size: 14px; color: #666;">产品<span style="color: #F44336;"> *</span></span>
-            <span style="font-size: 14px;" :style="{ color: prod.productCode ? '#333' : '#bbb' }">{{ prod.productCode || '选择产品' }}</span>
-            <span style="color: #999; margin-left: 4px; font-size: 16px;">&#8250;</span>
+          <!-- CR-20260702-002: 产品入口术语统一为"产品"; CR-20260703-001 §7.1+7.2: 产品编号与名称一体化展示（长名截断+title 提示） -->
+          <div @click="router.push(`/product-apply/product-select?groupId=${group.id}&productId=${prod.id}`)" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5; cursor: pointer; margin-bottom: 10px; gap: 8px;">
+            <span style="font-size: 14px; color: #666; flex-shrink: 0;">产品<span style="color: #F44336;"> *</span></span>
+            <span v-if="prod.productCode" :title="prod.productName" style="flex: 1; min-width: 0; font-size: 14px; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right;">{{ prod.productCode }} {{ prod.productName }}</span>
+            <span v-else style="flex: 1; font-size: 14px; color: #bbb; text-align: right;">选择产品</span>
+            <span style="color: #999; font-size: 16px; flex-shrink: 0;">&#8250;</span>
           </div>
           <div v-if="prod.productCode">
-            <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">产品名称</span><span style="font-size: 14px; color: #333;">{{ prod.productName }}</span></div>
-            <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">JDE价格</span><span style="font-size: 14px; color: #333;">¥{{ prod.jdePrice.toFixed(2) }}</span></div>
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">JDE价格</span><span style="font-size: 14px; color: #333;">¥{{ fmtMoney(prod.jdePrice) }}</span></div>
             <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">是否打折产品</span><span style="font-size: 14px; color: #333;">{{ prod.isDiscount ? '是' : '否' }}</span></div>
             <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f5f5f5;"><span style="font-size: 14px; color: #666;">可申请数量</span><span style="font-size: 14px; color: #333;">{{ prod.maxQuantity }}</span></div>
             <div style="margin-top: 8px;">
@@ -451,12 +471,12 @@ function hasImportWarnings() {
                 <span v-else style="color: #4CAF50;">还可申请 {{ prod.maxQuantity - (store.skuTotalMap.get(prod.productCode) || 0) }} / 上限 {{ prod.maxQuantity }}</span>
               </div>
             </div>
-            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0;"><span style="font-size: 14px; color: #666;">金额（净额）</span><span style="font-size: 14px; color: #22BDB8; font-weight: 600;">¥{{ prod.amount.toFixed(2) }}</span></div>
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0;"><span style="font-size: 14px; color: #666;">金额（净额）</span><span style="font-size: 14px; color: #22BDB8; font-weight: 600;">¥{{ fmtMoney(prod.amount) }}</span></div>
           </div>
         </div>
         <button @click="store.addProduct(group.id)" style="width: 100%; margin-top: 12px; padding: 10px; border-radius: 8px; border: 1px dashed #22BDB8; background-color: #F0FDFD; color: #22BDB8; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;"><span style="font-size: 18px;">+</span> 添加产品</button>
         <div v-if="group.products.some(p => p.amount > 0)" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #f0f0f0; text-align: right; font-size: 14px; color: #666;">
-          分组小计：<span style="color: #22BDB8; font-weight: 600; font-size: 16px;">¥{{ group.products.reduce((s, p) => s + p.amount, 0).toFixed(2) }}</span>
+          分组小计：<span style="color: #22BDB8; font-weight: 600; font-size: 16px;">¥{{ fmtMoney(group.products.reduce((s, p) => s + p.amount, 0)) }}</span>
         </div>
       </div>
     </div>
@@ -482,7 +502,7 @@ function hasImportWarnings() {
     <div v-if="store.totalAmount > 0" style="padding: 14px 16px; background-color: #fff; margin: 0 16px 12px; border-radius: 12px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
         <span style="font-size: 15px; font-weight: 500; color: #333;">金额合计</span>
-        <span style="font-size: 20px; font-weight: 600; color: #22BDB8;">¥{{ store.totalAmount.toFixed(2) }}</span>
+        <span style="font-size: 20px; font-weight: 600; color: #22BDB8;">¥{{ fmtMoney(store.totalAmount) }}</span>
       </div>
       <!-- 轻量级预算关系提示 -->
       <div v-if="store.selectedBudget" style="display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
@@ -562,7 +582,7 @@ function hasImportWarnings() {
         <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0f0f0;">
           <div style="font-size: 12px; color: #888; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-            或上传文件导入（.xlsx / .xls / .csv）— 第1行为表头，第2行起为数据
+            或上传文件导入（.xlsx / .xls / .csv）— 第1行即为数据，无表头
           </div>
           <div style="display: flex; align-items: center; gap: 8px;">
             <input ref="fileInputRef" type="file" accept=".xlsx,.xls,.csv" @change="handleFileImport" style="display: none;" />

@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { mockWorkOrderDetail } from '../../mocks'
+import { formatAmount } from '../../utils/format'
 const router = useRouter()
 const order = mockWorkOrderDetail
 const remark = ref('')
@@ -45,7 +46,7 @@ const sc = getStatusColor(order.displayStatus)
       <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f8f8f8;"><span style="font-size: 14px; color: #666;">预算号</span><span style="font-size: 14px; color: #333;">{{ order.budget.budgetNo }}</span></div>
       <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f8f8f8;"><span style="font-size: 14px; color: #666;">申请类型</span><span style="font-size: 14px; color: #333;">{{ order.budget.applyType }}</span></div>
       <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f8f8f8;"><span style="font-size: 14px; color: #666;">申请理由</span><span style="font-size: 14px; color: #333; text-align: right; word-break: break-all;">{{ order.budget.applyReason }}</span></div>
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;"><span style="font-size: 14px; color: #666;">金额合计</span><span style="font-size: 14px; color: #22BDB8; font-weight: 600;">¥{{ order.totalAmount.toFixed(2) }}</span></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;"><span style="font-size: 14px; color: #666;">金额合计</span><span style="font-size: 14px; color: #22BDB8; font-weight: 600;">¥{{ formatAmount(order.totalAmount) }}</span></div>
     </div>
     <!-- Groups -->
     <div v-for="(g, gi) in order.storeGroups" :key="g.id" class="card" style="margin: 12px 16px; padding: 14px 16px;">
@@ -56,12 +57,12 @@ const sc = getStatusColor(order.displayStatus)
         <div style="font-size: 13px; font-weight: 500; color: #22BDB8; margin-bottom: 8px;">商品 {{ pi + 1 }}</div>
         <div style="display: flex; justify-content: space-between; padding: 4px 0;"><span style="font-size: 13px; color: #666;">产品编号</span><span style="font-size: 13px; color: #333;">{{ p.productCode }}</span></div>
         <div style="display: flex; justify-content: space-between; padding: 4px 0;"><span style="font-size: 13px; color: #666;">产品名称</span><span style="font-size: 13px; color: #333;">{{ p.productName }}</span></div>
-        <div style="display: flex; justify-content: space-between; padding: 4px 0;"><span style="font-size: 13px; color: #666;">JDE价格</span><span style="font-size: 13px; color: #333;">¥{{ p.jdePrice.toFixed(2) }}</span></div>
+        <div style="display: flex; justify-content: space-between; padding: 4px 0;"><span style="font-size: 13px; color: #666;">JDE价格</span><span style="font-size: 13px; color: #333;">¥{{ formatAmount(p.jdePrice) }}</span></div>
         <div style="display: flex; justify-content: space-between; padding: 4px 0;"><span style="font-size: 13px; color: #666;">是否打折产品</span><span style="font-size: 13px; color: #333;">{{ p.isDiscount ? '是' : '否' }}</span></div>
         <div style="display: flex; justify-content: space-between; padding: 4px 0;"><span style="font-size: 13px; color: #666;">申请数量</span><span style="font-size: 13px; color: #333;">{{ p.quantity }}</span></div>
-        <div style="display: flex; justify-content: space-between; padding: 4px 0;"><span style="font-size: 13px; color: #666;">金额（净额）</span><span style="font-size: 13px; color: #22BDB8; font-weight: 600;">¥{{ p.amount.toFixed(2) }}</span></div>
+        <div style="display: flex; justify-content: space-between; padding: 4px 0;"><span style="font-size: 13px; color: #666;">金额（净额）</span><span style="font-size: 13px; color: #22BDB8; font-weight: 600;">¥{{ formatAmount(p.amount) }}</span></div>
       </div>
-      <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid #f0f0f0; text-align: right; font-size: 14px; color: #666;">分组小计：<span style="color: #22BDB8; font-weight: 600;">¥{{ g.groupAmount.toFixed(2) }}</span></div>
+      <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid #f0f0f0; text-align: right; font-size: 14px; color: #666;">分组小计：<span style="color: #22BDB8; font-weight: 600;">¥{{ formatAmount(g.groupAmount) }}</span></div>
     </div>
     <!-- Attachments -->
     <div v-if="order.attachments.length" class="card" style="margin: 12px 16px; padding: 14px 16px;">

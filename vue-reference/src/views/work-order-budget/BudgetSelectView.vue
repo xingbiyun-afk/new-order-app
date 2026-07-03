@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { mockBudgets } from '../../mocks'
 import type { Budget, BudgetTagType } from '../../types'
+import { formatAmount } from '../../utils/format'
 
 // ============================================================
 // CR-20260702-001: 产品申请工单发起页预算选择页面样式与体验优化
@@ -14,10 +15,8 @@ const route = useRoute()
 // 当前日期（Mock环境固定值，正式环境使用 new Date()）
 const TODAY = new Date('2026-07-02T00:00:00')
 
-// 金额格式化：千分位 + 两位小数
-function fmtMoney(v: number): string {
-  return v.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
+// 金额格式化（CR-20260703-001 §6: 统一调用 formatAmount）
+const fmtMoney = formatAmount
 
 // 搜索关键词
 const q = ref('')
