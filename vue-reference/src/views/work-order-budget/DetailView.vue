@@ -15,6 +15,9 @@ const idSceneMap: Record<string, string> = {
   '4': 'rejected-expired',
   '5': 'rejected-nonfreeze',
   '6': 'completed',
+  '7': 'completed-full',
+  '8': 'completed-merged',
+  '9': 'completed-retry',
 }
 const routeId = route.params.id as string
 const scene = (route.query.scene as string | undefined) || idSceneMap[routeId] || undefined
@@ -36,6 +39,21 @@ function toggleGroup(gid: string) {
   const s = expandedGroups.value
   if (s.has(gid)) s.delete(gid)
   else s.add(gid)
+}
+
+// CR-20260706-002: 多次失败重试历史折叠状态（key: 订单号）
+const expandedRetries = ref<Set<string>>(new Set())
+function isRetryExpanded(orderNo: string) { return expandedRetries.value.has(orderNo) }
+function toggleRetry(orderNo: string) {
+  const s = expandedRetries.value
+  if (s.has(orderNo)) s.delete(orderNo)
+  else s.add(orderNo)
+}
+
+// CR-20260706-002: 失败原因去重
+function dedupFailReasons(reasons?: string[]): string[] {
+  if (!reasons || reasons.length === 0) return []
+  return Array.from(new Set(reasons))
 }
 
 // ===== 汇总计算 =====
@@ -112,6 +130,14 @@ const currentApprovalNode = computed(() => {
   if (!isProcessing.value) return null
   return order.approvalNodes.find(n => n.result === '待处理') || null
 })
+
+function getNodeClass(n: { nodeType: string; result?: string; id: string }): string {
+  if (n.nodeType === 'start') return 'node-start'
+  if (n.result === '驳回') return 'node-rejected'
+  if (n.result === '待处理' && currentApprovalNode.value?.id === n.id) return 'node-current'
+  if (n.result === '通过') return 'node-passed'
+  return ''
+}
 
 const pendingNodeName = computed(() => {
   const node = currentApprovalNode.value
@@ -456,9 +482,9 @@ function getProductLabelText(pi: number): string {
           <div class="timeline-line" />
           <div v-for="(n, i) in order.approvalNodes" :key="n.id" class="timeline-node" :style="{ marginBottom: i < order.approvalNodes.length - 1 ? '20px' : '0' }">
             <div class="timeline-dot" :style="{ backgroundColor: getNodeDotColor(n) }" />
-            <div class="timeline-content">
+            <div class="timeline-content" :class="getNodeClass(n)">
               <div class="node-title">
-                {{ n.nodeType === 'start' ? '发起工单' : `审批节点 ${i}` }}
+                {{ n.nodeName || (n.nodeType === 'start' ? '发起工单' : `审批节点 ${i}`) }}
                 <span v-if="n.result" class="node-result" :style="getNodeResultColor(n.result)">{{ n.result }}</span>
               </div>
               <div class="node-meta">
@@ -467,14 +493,11 @@ function getProductLabelText(pi: number): string {
                 <span v-else class="pending-text">待处理</span>
               </div>
               <div v-if="n.remark" class="node-remark">{{ n.remark }}</div>
-              <div v-if="n.functionOrderNo" class="node-function-order">
-                功能订单：{{ n.functionOrderNo }}（{{ n.functionOrderStatus }}）
-              </div>
-              <div v-if="n.relatedOrders?.length" class="related-orders">
-                <div v-for="o in n.relatedOrders" :key="o.orderNo" class="related-order-item" :style="{ borderLeftColor: getOrderBorderColor(o.orderStatus) }">
-                  <div class="related-order-type">{{ o.orderType }}</div>
-                  <div class="related-order-no">{{ o.orderNo }}</div>
-                  <span class="related-order-status" :style="getOrderStatusColor(o.orderStatus)">{{ o.orderStatus }}</span>
+              <!-- CR-20260706-002: 发起节点展示所有预占订单编号；审批节点不展示（已合并到订单结果） -->
+              <div v-if="n.nodeType === 'start' && n.functionOrderNos?.length" class="node-function-order">
+                <div class="node-function-order-label">预占订单（{{ n.functionOrderNos.length }}）</div>
+                <div class="node-function-order-list">
+                  <span v-for="fo in n.functionOrderNos" :key="fo" class="fo-chip">{{ fo }}</span>
                 </div>
               </div>
             </div>
@@ -490,9 +513,9 @@ function getProductLabelText(pi: number): string {
             <span>{{ r.storeCode }} {{ r.storeName }}</span>
             <span class="result-count">{{ r.relatedOrders.length }} 个关联订单</span>
           </div>
-          <div class="result-function-order">
-            <span>功能订单：{{ r.functionOrderNo }}</span>
-            <span>状态：{{ r.functionOrderStatus }}</span>
+          <!-- CR-20260706-002: 预占订单编号只展示编号，不展示状态 -->
+          <div v-if="r.functionOrderNos?.length" class="result-function-order">
+            预占订单：{{ r.functionOrderNos.join('、') }}
           </div>
           <div v-for="o in r.relatedOrders" :key="o.orderNo" class="result-order-item" :style="{ borderLeftColor: getOrderBorderColor(o.orderStatus) }">
             <div class="result-order-header">
@@ -501,15 +524,30 @@ function getProductLabelText(pi: number): string {
             </div>
             <div class="result-order-detail">
               <span>订单编号：{{ o.orderNo }}</span>
-              <span v-if="o.remark && o.remark !== '-'">备注：{{ o.remark }}</span>
+            </div>
+            <!-- CR-20260706-002: 多次失败重试 - 折叠收起 + 最终态展示 -->
+            <div v-if="r.retryHistory?.[o.orderNo]?.length" class="result-retry-section">
+              <div class="result-retry-toggle" @click="toggleRetry(o.orderNo)">
+                <span class="result-retry-toggle-text">
+                  生成尝试历史（{{ r.retryHistory[o.orderNo].length }} 次）
+                </span>
+                <span class="fold-arrow-mini" :class="{ expanded: isRetryExpanded(o.orderNo) }">&#9662;</span>
+              </div>
+              <div v-show="isRetryExpanded(o.orderNo)" class="result-retry-list">
+                <div v-for="(att, ai) in r.retryHistory[o.orderNo]" :key="ai" class="result-retry-item" :class="{ 'is-fail': att.status === '生成失败', 'is-success': att.status === '已生成' }">
+                  <span class="result-retry-time">{{ att.attemptAt }}</span>
+                  <span class="result-retry-status" :style="getOrderStatusColor(att.status)">{{ att.status }}</span>
+                  <span v-if="att.failReason" class="result-retry-reason">{{ att.failReason }}</span>
+                </div>
+              </div>
             </div>
           </div>
-          <!-- 失败原因 (§9 统一提示风格) -->
-          <div v-if="r.failReason" class="tip-banner tip-error tip-inline">
+          <!-- CR-20260706-002: 失败原因 (§9 统一提示风格, failReasons[] 数组去重展示) -->
+          <div v-for="(fr, fi) in dedupFailReasons(r.failReasons)" :key="fi" class="tip-banner tip-error tip-inline">
             <div class="tip-icon">&#9888;</div>
             <div class="tip-content">
               <div class="tip-title">订单生成失败</div>
-              <div class="tip-text">{{ r.failReason }}</div>
+              <div class="tip-text">{{ fr }}</div>
             </div>
           </div>
         </div>
@@ -526,9 +564,8 @@ function getProductLabelText(pi: number): string {
             <span>{{ r.storeCode }} {{ r.storeName }}</span>
             <span class="result-count">{{ r.relatedOrders.length }} 个关联订单</span>
           </div>
-          <div class="result-function-order">
-            <span>功能订单：{{ r.functionOrderNo }}</span>
-            <span>状态：{{ r.functionOrderStatus }}</span>
+          <div v-if="r.functionOrderNos?.length" class="result-function-order">
+            预占订单：{{ r.functionOrderNos.join('、') }}
           </div>
           <div v-for="o in r.relatedOrders" :key="o.orderNo" class="result-order-item" :style="{ borderLeftColor: getOrderBorderColor(o.orderStatus) }">
             <div class="result-order-header">
@@ -537,15 +574,30 @@ function getProductLabelText(pi: number): string {
             </div>
             <div class="result-order-detail">
               <span>订单编号：{{ o.orderNo }}</span>
-              <span v-if="o.remark && o.remark !== '-'">备注：{{ o.remark }}</span>
+            </div>
+            <!-- CR-20260706-002: 多次失败重试 - 折叠收起 + 最终态展示 -->
+            <div v-if="r.retryHistory?.[o.orderNo]?.length" class="result-retry-section">
+              <div class="result-retry-toggle" @click="toggleRetry(o.orderNo)">
+                <span class="result-retry-toggle-text">
+                  生成尝试历史（{{ r.retryHistory[o.orderNo].length }} 次）
+                </span>
+                <span class="fold-arrow-mini" :class="{ expanded: isRetryExpanded(o.orderNo) }">&#9662;</span>
+              </div>
+              <div v-show="isRetryExpanded(o.orderNo)" class="result-retry-list">
+                <div v-for="(att, ai) in r.retryHistory[o.orderNo]" :key="ai" class="result-retry-item" :class="{ 'is-fail': att.status === '生成失败', 'is-success': att.status === '已生成' }">
+                  <span class="result-retry-time">{{ att.attemptAt }}</span>
+                  <span class="result-retry-status" :style="getOrderStatusColor(att.status)">{{ att.status }}</span>
+                  <span v-if="att.failReason" class="result-retry-reason">{{ att.failReason }}</span>
+                </div>
+              </div>
             </div>
           </div>
-          <!-- 失败原因 -->
-          <div v-if="r.failReason" class="tip-banner tip-error tip-inline">
+          <!-- CR-20260706-002: 失败原因（数组去重） -->
+          <div v-for="(fr, fi) in dedupFailReasons(r.failReasons)" :key="fi" class="tip-banner tip-error tip-inline">
             <div class="tip-icon">&#9888;</div>
             <div class="tip-content">
               <div class="tip-title">订单生成失败</div>
-              <div class="tip-text">{{ r.failReason }}</div>
+              <div class="tip-text">{{ fr }}</div>
             </div>
           </div>
         </div>
@@ -560,7 +612,7 @@ function getProductLabelText(pi: number): string {
             <div class="timeline-dot" :style="{ backgroundColor: getNodeDotColor(n) }" />
             <div class="timeline-content">
               <div class="node-title">
-                {{ n.nodeType === 'start' ? '发起工单' : `审批节点 ${i}` }}
+                {{ n.nodeName || (n.nodeType === 'start' ? '发起工单' : `审批节点 ${i}`) }}
                 <span v-if="n.result" class="node-result" :style="getNodeResultColor(n.result)">{{ n.result }}</span>
               </div>
               <div class="node-meta">
@@ -568,6 +620,13 @@ function getProductLabelText(pi: number): string {
                 <span v-if="n.handlerTime">{{ n.handlerTime }}</span>
               </div>
               <div v-if="n.remark" class="node-remark">{{ n.remark }}</div>
+              <!-- CR-20260706-002: 发起节点展示所有预占订单编号 -->
+              <div v-if="n.nodeType === 'start' && n.functionOrderNos?.length" class="node-function-order">
+                <div class="node-function-order-label">预占订单（{{ n.functionOrderNos.length }}）</div>
+                <div class="node-function-order-list">
+                  <span v-for="fo in n.functionOrderNos" :key="fo" class="fo-chip">{{ fo }}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1073,7 +1132,33 @@ function getProductLabelText(pi: number): string {
   text-decoration: underline;
 }
 
-/* ========== 审批流程时间线 ========== */
+/* ========== 审批节点类型视觉区分 (§4) ========== */
+.node-start .node-title { color: #22BDB8; font-weight: 600; }
+.node-passed .node-title { color: #333; }
+.node-current { background: #FFF8E1; border-radius: 8px; padding: 8px; margin: -8px -4px; }
+.node-current .node-title { color: #FF9800; font-weight: 600; }
+.node-current .pending-text { font-weight: 600; }
+.node-rejected { background: #FFEBEE; border-radius: 8px; padding: 8px; margin: -8px -4px; }
+.node-rejected .node-title { color: #F44336; font-weight: 600; }
+.node-rejected .node-remark { background: rgba(244, 67, 54, 0.08); border-left: 3px solid #F44336; }
+/* 审批意见贴近节点 */
+.node-remark { margin-top: 6px; padding: 8px 10px; background: #FAFAFA; border-radius: 8px; font-size: 13px; color: #666; line-height: 1.5; }
+
+/* ========== 预占订单辅助字段降层级 (§6) ========== */
+.node-function-order { margin-top: 8px; padding: 6px 0; }
+.node-function-order-label { font-size: 12px; color: #999; margin-bottom: 6px; }
+.node-function-order-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.fo-chip {
+  display: inline-block;
+  font-size: 12px;
+  color: #666;
+  background: #f5f5f5;
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-family: 'SF Mono', 'Monaco', monospace;
+  letter-spacing: 0.3px;
+}
+.result-function-order { font-size: 12px; color: #999; padding: 6px 0; margin-bottom: 8px; }
 .timeline {
   position: relative;
   padding-left: 20px;
@@ -1173,6 +1258,74 @@ function getProductLabelText(pi: number): string {
   padding: 2px 8px;
   border-radius: 4px;
   font-weight: 500;
+}
+
+/* ========== CR-20260706-002: 多次失败重试（折叠收起 + 最终态） ========== */
+.result-retry-section {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #e0e0e0;
+}
+.result-retry-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  cursor: pointer;
+  user-select: none;
+}
+.result-retry-toggle-text {
+  font-size: 12px;
+  color: #22BDB8;
+  font-weight: 500;
+}
+.fold-arrow-mini {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: #999;
+  font-size: 12px;
+  transition: transform 0.2s;
+}
+.fold-arrow-mini.expanded {
+  transform: rotate(-180deg);
+}
+.result-retry-list {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.result-retry-item {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 8px;
+  background: #f5f5f5;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.result-retry-item.is-fail { background: #FFEBEE; }
+.result-retry-item.is-success { background: #E8F5E9; }
+.result-retry-time {
+  color: #666;
+  font-family: 'SF Mono', 'Monaco', monospace;
+}
+.result-retry-status {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.result-retry-reason {
+  color: #666;
+  flex: 1;
+  min-width: 0;
 }
 
 /* ========== 订单结果 ========== */

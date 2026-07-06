@@ -143,14 +143,14 @@ export const mockInitiatedCards: WorkOrderCard[] = [
 ];
 
 const mockApprovalNodes: ApprovalNode[] = [
-  { id: 'node_start', nodeType: 'start', handlerName: '张三', handlerTime: '2024-06-26 10:17:30', functionOrderNo: 'FO20240626001', functionOrderStatus: '已取消' },
-  { id: 'node_1', nodeType: 'approval', handlerName: '李经理', handlerTime: '2024-06-26 11:30:00', result: '通过', remark: '同意，预算充足' },
-  { id: 'node_2', nodeType: 'approval', handlerName: '王总监', handlerTime: '2024-06-26 14:00:00', result: '通过', remark: '审批通过', functionOrderNo: 'FO20240626001', functionOrderStatus: '已取消', relatedOrders: [{ orderNo: 'O20240626001', orderType: '产品申请表订单', orderStatus: '已生成' }] },
+  { id: 'node_start', nodeType: 'start', nodeName: '发起工单', handlerName: '张三', handlerTime: '2024-06-26 10:17:30', functionOrderNos: ['FO20240626001'] },
+  { id: 'node_1', nodeType: 'approval', nodeName: '一级审批', handlerName: '李经理', handlerTime: '2024-06-26 11:30:00', result: '通过', remark: '同意，预算充足' },
+  { id: 'node_2', nodeType: 'approval', nodeName: '二级审批', handlerName: '王总监', handlerTime: '2024-06-26 14:00:00', result: '通过', remark: '审批通过' },
 ];
 
 const mockGroupResults: GroupResult[] = [
-  { groupId: 'group_1', storeCode: '31692', storeName: '赵晋安 宋晓华', functionOrderNo: 'FO20240626001', functionOrderStatus: '已取消', relatedOrders: [{ orderNo: 'O20240626001', orderType: '产品申请表订单', orderStatus: '已生成', remark: '-' }] },
-  { groupId: 'group_2', storeCode: '31441', storeName: '赵晋杰', functionOrderNo: 'FO20240626002', functionOrderStatus: '已取消', relatedOrders: [{ orderNo: 'O20240626002', orderType: '内部申请表订单', orderStatus: '生成失败', remark: '客户信息不满足下单规则' }], failReason: '客户信息不满足下单规则，请检查客户层级和资质' },
+  { groupId: 'group_1', storeCode: '31692', storeName: '赵晋安 宋晓华', functionOrderNos: ['FO20240626001'], relatedOrders: [{ orderNo: 'O20240626001', orderType: '产品申请表订单', orderStatus: '已生成' }] },
+  { groupId: 'group_2', storeCode: '31441', storeName: '赵晋杰', functionOrderNos: ['FO20240626002'], relatedOrders: [{ orderNo: 'O20240626002', orderType: '内部申请表订单', orderStatus: '生成失败' }], failReasons: ['客户信息不满足下单规则，请检查客户层级和资质'] },
 ];
 
 export const mockWorkOrderDetail: ProductWorkOrder = {
@@ -175,11 +175,12 @@ export const mockWorkOrderDetail: ProductWorkOrder = {
 // CR-20260703-003: 详情页多场景 Mock 数据
 // ============================================================
 
-// 场景1：处理中（多明细 + 多附件 + 完整审批流）
+// 场景1：处理中（多明细 + 多附件 + 完整审批流 + 多节点 + 发起阶段多笔预占订单）
 const mockProcessingNodes: ApprovalNode[] = [
-  { id: 'p1_start', nodeType: 'start', handlerName: '陈十六', handlerTime: '2024-07-01 09:30:00', functionOrderNo: 'FO20240701001', functionOrderStatus: '预占中' },
-  { id: 'p1_n1', nodeType: 'approval', handlerName: '刘经理', handlerTime: '2024-07-01 10:15:00', result: '通过', remark: '预算充足，同意申请' },
-  { id: 'p1_n2', nodeType: 'approval', handlerName: '赵总监', handlerTime: '', result: '待处理', remark: '' },
+  // CR-20260706-002: 发起阶段展示所有预占订单编号（4笔明细 → 4笔预占订单）
+  { id: 'p1_start', nodeType: 'start', nodeName: '发起工单', handlerName: '陈十六', handlerTime: '2024-07-01 09:30:00', functionOrderNos: ['FO20240701001', 'FO20240701002', 'FO20240701003', 'FO20240701004'] },
+  { id: 'p1_n1', nodeType: 'approval', nodeName: '一级审批', handlerName: '刘经理', handlerTime: '2024-07-01 10:15:00', result: '通过', remark: '预算充足，同意申请' },
+  { id: 'p1_n2', nodeType: 'approval', nodeName: '二级审批', handlerName: '赵总监', handlerTime: '', result: '待处理', remark: '' },
 ];
 
 export const mockWorkOrderProcessing: ProductWorkOrder = {
@@ -222,9 +223,9 @@ export const mockWorkOrderProcessing: ProductWorkOrder = {
 
 // 场景2：已驳回 — 冻结期原单重提（预算号沿用，不可切换）
 const mockRejectedFreezeNodes: ApprovalNode[] = [
-  { id: 'rf_start', nodeType: 'start', handlerName: '王五', handlerTime: '2024-06-28 14:20:00', functionOrderNo: 'FO20240628003', functionOrderStatus: '已取消' },
-  { id: 'rf_n1', nodeType: 'approval', handlerName: '李经理', handlerTime: '2024-06-28 15:00:00', result: '通过', remark: '初审通过' },
-  { id: 'rf_n2', nodeType: 'approval', handlerName: '张总监', handlerTime: '2024-06-28 16:30:00', result: '驳回', remark: '申请数量超出该专卖店历史采购上限，请核实后调整数量重新提交' },
+  { id: 'rf_start', nodeType: 'start', nodeName: '发起工单', handlerName: '王五', handlerTime: '2024-06-28 14:20:00', functionOrderNos: ['FO20240628003'] },
+  { id: 'rf_n1', nodeType: 'approval', nodeName: '一级审批', handlerName: '李经理', handlerTime: '2024-06-28 15:00:00', result: '通过', remark: '初审通过' },
+  { id: 'rf_n2', nodeType: 'approval', nodeName: '二级审批', handlerName: '张总监', handlerTime: '2024-06-28 16:30:00', result: '驳回', remark: '申请数量超出该专卖店历史采购上限，请核实后调整数量重新提交' },
 ];
 
 export const mockWorkOrderRejectedFreeze: ProductWorkOrder = {
@@ -255,8 +256,8 @@ export const mockWorkOrderRejectedFreeze: ProductWorkOrder = {
 
 // 场景3：已驳回 — 原预算已到期，不可继续基于原单重提
 const mockRejectedExpiredNodes: ApprovalNode[] = [
-  { id: 're_start', nodeType: 'start', handlerName: '周八', handlerTime: '2024-06-15 10:00:00', functionOrderNo: 'FO20240615001', functionOrderStatus: '已取消' },
-  { id: 're_n1', nodeType: 'approval', handlerName: '吴经理', handlerTime: '2024-06-15 11:30:00', result: '驳回', remark: '该预算已到期，无法继续申请' },
+  { id: 're_start', nodeType: 'start', nodeName: '发起工单', handlerName: '周八', handlerTime: '2024-06-15 10:00:00', functionOrderNos: ['FO20240615001'] },
+  { id: 're_n1', nodeType: 'approval', nodeName: '一级审批', handlerName: '吴经理', handlerTime: '2024-06-15 11:30:00', result: '驳回', remark: '该预算已到期，无法继续申请' },
 ];
 
 export const mockWorkOrderRejectedExpired: ProductWorkOrder = {
@@ -286,9 +287,9 @@ export const mockWorkOrderRejectedExpired: ProductWorkOrder = {
 
 // 场景4：已驳回 — 非冻结期，按普通新建重新发起
 const mockRejectedNonFreezeNodes: ApprovalNode[] = [
-  { id: 'rn_start', nodeType: 'start', handlerName: '郑十', handlerTime: '2024-06-20 09:00:00', functionOrderNo: 'FO20240620001', functionOrderStatus: '已取消' },
-  { id: 'rn_n1', nodeType: 'approval', handlerName: '孙经理', handlerTime: '2024-06-20 10:30:00', result: '通过', remark: '资料齐全' },
-  { id: 'rn_n2', nodeType: 'approval', handlerName: '钱总监', handlerTime: '2024-06-20 14:00:00', result: '驳回', remark: '产品型号不符合当前推广政策' },
+  { id: 'rn_start', nodeType: 'start', nodeName: '发起工单', handlerName: '郑十', handlerTime: '2024-06-20 09:00:00', functionOrderNos: ['FO20240620001'] },
+  { id: 'rn_n1', nodeType: 'approval', nodeName: '一级审批', handlerName: '孙经理', handlerTime: '2024-06-20 10:30:00', result: '通过', remark: '资料齐全' },
+  { id: 'rn_n2', nodeType: 'approval', nodeName: '二级审批', handlerName: '钱总监', handlerTime: '2024-06-20 14:00:00', result: '驳回', remark: '产品型号不符合当前推广政策' },
 ];
 
 export const mockWorkOrderRejectedNonFreeze: ProductWorkOrder = {
@@ -318,18 +319,17 @@ export const mockWorkOrderRejectedNonFreeze: ProductWorkOrder = {
 };
 
 // 场景5：已结束 — 审批通过，部分订单成功部分失败
+// CR-20260706-002: 最终审批通过节点不展示预占订单编号和产品申请订单
 const mockCompletedNodes: ApprovalNode[] = [
-  { id: 'c_start', nodeType: 'start', handlerName: '钱十一', handlerTime: '2024-06-10 08:30:00', functionOrderNo: 'FO20240610001', functionOrderStatus: '已取消' },
-  { id: 'c_n1', nodeType: 'approval', handlerName: '孙经理', handlerTime: '2024-06-10 09:15:00', result: '通过', remark: '预算内，同意' },
-  { id: 'c_n2', nodeType: 'approval', handlerName: '李总监', handlerTime: '2024-06-10 11:00:00', result: '通过', remark: '审批通过，准予执行', functionOrderNo: 'FO20240610001', functionOrderStatus: '已取消', relatedOrders: [
-    { orderNo: 'O20240610001', orderType: '产品申请表订单', orderStatus: '已生成', remark: '-' },
-    { orderNo: 'O20240610002', orderType: '内部申请表订单', orderStatus: '生成失败', remark: '客户层级不匹配' },
-  ]},
+  { id: 'c_start', nodeType: 'start', nodeName: '发起工单', handlerName: '钱十一', handlerTime: '2024-06-10 08:30:00', functionOrderNos: ['FO20240610001', 'FO20240610002'] },
+  { id: 'c_n1', nodeType: 'approval', nodeName: '一级审批', handlerName: '孙经理', handlerTime: '2024-06-10 09:15:00', result: '通过', remark: '预算内，同意' },
+  { id: 'c_n2', nodeType: 'approval', nodeName: '二级审批', handlerName: '李总监', handlerTime: '2024-06-10 11:00:00', result: '通过', remark: '审批通过，准予执行' },
 ];
 
+// CR-20260706-002: 去除 RelatedOrder.remark，去除 GroupResult.failReason 单一字段改为 failReasons[]
 const mockCompletedGroupResults: GroupResult[] = [
-  { groupId: 'g1', storeCode: '31692', storeName: '赵晋安 宋晓华', functionOrderNo: 'FO20240610001', functionOrderStatus: '已取消', relatedOrders: [{ orderNo: 'O20240610001', orderType: '产品申请表订单', orderStatus: '已生成', remark: '-' }] },
-  { groupId: 'g2', storeCode: '31441', storeName: '赵晋杰', functionOrderNo: 'FO20240610002', functionOrderStatus: '已取消', relatedOrders: [{ orderNo: 'O20240610002', orderType: '内部申请表订单', orderStatus: '生成失败', remark: '客户层级不匹配' }], failReason: '客户层级为4，不满足内部申请表订单生成条件' },
+  { groupId: 'g1', storeCode: '31692', storeName: '赵晋安 宋晓华', functionOrderNos: ['FO20240610001'], relatedOrders: [{ orderNo: 'O20240610001', orderType: '产品申请表订单', orderStatus: '已生成' }] },
+  { groupId: 'g2', storeCode: '31441', storeName: '赵晋杰', functionOrderNos: ['FO20240610002'], relatedOrders: [{ orderNo: 'O20240626002', orderType: '内部申请表订单', orderStatus: '生成失败' }], failReasons: ['客户层级为4，不满足内部申请表订单生成条件'] },
 ];
 
 export const mockWorkOrderCompleted: ProductWorkOrder = {
@@ -352,6 +352,138 @@ export const mockWorkOrderCompleted: ProductWorkOrder = {
   groupResults: mockCompletedGroupResults,
 };
 
+// 场景6：已结束 — 全部成功（两种订单类型均覆盖）
+// CR-20260706-002: 最终审批通过节点不展示预占订单和产品申请订单
+const mockCompletedFullNodes: ApprovalNode[] = [
+  { id: 'cf_start', nodeType: 'start', nodeName: '发起工单', handlerName: '孙十九', handlerTime: '2024-07-02 08:00:00', functionOrderNos: ['FO20240702001', 'FO20240702002'] },
+  { id: 'cf_n1', nodeType: 'approval', nodeName: '一级审批', handlerName: '周经理', handlerTime: '2024-07-02 09:30:00', result: '通过', remark: '通过' },
+  { id: 'cf_n2', nodeType: 'approval', nodeName: '二级审批', handlerName: '吴总监', handlerTime: '2024-07-02 11:00:00', result: '通过', remark: '审批通过' },
+];
+
+const mockCompletedFullGroupResults: GroupResult[] = [
+  { groupId: 'g1', storeCode: '31692', storeName: '赵晋安 宋晓华', functionOrderNos: ['FO20240702001'], relatedOrders: [{ orderNo: 'O20240702001', orderType: '产品申请表订单', orderStatus: '已生成' }] },
+  { groupId: 'g2', storeCode: '31375', storeName: '大连瑞轩商贸有限公司', functionOrderNos: ['FO20240702002'], relatedOrders: [{ orderNo: 'O20240702002', orderType: '内部申请表订单', orderStatus: '已生成' }] },
+];
+
+export const mockWorkOrderCompletedFull: ProductWorkOrder = {
+  id: '7', workOrderNo: 'PA202407020001', displayStatus: '已结束', applicantName: '孙十九', applicantOrg: '华南 / 广东', createTime: '2024-07-02 08:00:00',
+  budget: mockBudgets[0],
+  storeGroups: [
+    { id: 'g1', storeCode: '31692', storeName: '赵晋安 宋晓华', products: [
+      { id: 'p1', productCode: 'SKU001', productName: '智能马桶盖A款', jdePrice: 1299.00, isDiscount: true, discount: 0.5, maxQuantity: 20, quantity: 3, amount: 1948.50 },
+    ], groupAmount: 1948.50 },
+    { id: 'g2', storeCode: '31375', storeName: '大连瑞轩商贸有限公司', products: [
+      { id: 'p2', productCode: 'SKU002', productName: '恒温花洒B款', jdePrice: 899.00, isDiscount: false, discount: 1, maxQuantity: 15, quantity: 5, amount: 4495.00 },
+    ], groupAmount: 4495.00 },
+  ],
+  totalAmount: 6443.50,
+  attachments: [{ id: 'a1', name: '全部成功示例.pdf', url: '#', type: 'pdf', size: 1024 * 1024 }],
+  approvalNodes: mockCompletedFullNodes,
+  groupResults: mockCompletedFullGroupResults,
+};
+
+// 场景7：已结束 — 多明细归并生成同一正式订单
+const mockCompletedMergedNodes: ApprovalNode[] = [
+  { id: 'cm_start', nodeType: 'start', nodeName: '发起工单', handlerName: '郑二十', handlerTime: '2024-07-03 09:00:00', functionOrderNos: ['FO20240703001', 'FO20240703002'] },
+  { id: 'cm_n1', nodeType: 'approval', nodeName: '一级审批', handlerName: '王经理', handlerTime: '2024-07-03 10:00:00', result: '通过', remark: '同意' },
+  { id: 'cm_n2', nodeType: 'approval', nodeName: '二级审批', handlerName: '李总监', handlerTime: '2024-07-03 11:30:00', result: '通过', remark: '审批通过，归并生成正式订单' },
+];
+
+const mockCompletedMergedGroupResults: GroupResult[] = [
+  // 两笔明细归并到同一正式订单
+  { groupId: 'g1', storeCode: '31692', storeName: '赵晋安 宋晓华', functionOrderNos: ['FO20240703001'], relatedOrders: [{ orderNo: 'O20240703001', orderType: '产品申请表订单', orderStatus: '已生成' }] },
+  { groupId: 'g2', storeCode: '31441', storeName: '赵晋杰', functionOrderNos: ['FO20240703002'], relatedOrders: [{ orderNo: 'O20240703001', orderType: '产品申请表订单', orderStatus: '已生成' }] },
+];
+
+export const mockWorkOrderCompletedMerged: ProductWorkOrder = {
+  id: '8', workOrderNo: 'PA202407030001', displayStatus: '已结束', applicantName: '郑二十', applicantOrg: '华东 / 浙江', createTime: '2024-07-03 09:00:00',
+  budget: mockBudgets[3],
+  storeGroups: [
+    { id: 'g1', storeCode: '31692', storeName: '赵晋安 宋晓华', products: [
+      { id: 'p1', productCode: 'SKU001', productName: '智能马桶盖A款', jdePrice: 1299.00, isDiscount: true, discount: 0.5, maxQuantity: 20, quantity: 2, amount: 1299.00 },
+    ], groupAmount: 1299.00 },
+    { id: 'g2', storeCode: '31441', storeName: '赵晋杰', products: [
+      { id: 'p2', productCode: 'SKU002', productName: '恒温花洒B款', jdePrice: 899.00, isDiscount: false, discount: 1, maxQuantity: 15, quantity: 3, amount: 2697.00 },
+    ], groupAmount: 2697.00 },
+  ],
+  totalAmount: 3996.00,
+  attachments: [{ id: 'a1', name: '归并生成示例.pdf', url: '#', type: 'pdf', size: 1024 * 512 }],
+  approvalNodes: mockCompletedMergedNodes,
+  groupResults: mockCompletedMergedGroupResults,
+};
+
+// CR-20260706-002: 场景8 — 已结束（多次失败重试，最终成功 + 放弃案例）
+// 业务背景：业务同事根据实际情况多次重试订单生成，部分最终成功，部分放弃
+const mockCompletedRetryNodes: ApprovalNode[] = [
+  { id: 'cr_start', nodeType: 'start', nodeName: '发起工单', handlerName: '黄二十二', handlerTime: '2024-07-05 09:00:00', functionOrderNos: ['FO20240705001', 'FO20240705002'] },
+  { id: 'cr_n1', nodeType: 'approval', nodeName: '一级审批', handlerName: '陈经理', handlerTime: '2024-07-05 10:00:00', result: '通过', remark: '同意' },
+  { id: 'cr_n2', nodeType: 'approval', nodeName: '二级审批', handlerName: '林总监', handlerTime: '2024-07-05 11:30:00', result: '通过', remark: '审批通过，业务根据实际情况可多次重试生成订单' },
+];
+
+// CR-20260706-002: 多次失败重试 + 折叠收起
+// 业务说明：
+// - 31441: 内部申请表订单失败2次，第3次成功（最终态：已生成）
+// - 31375: 内部申请表订单失败1次，业务放弃（最终态：生成失败，保留失败记录）
+const mockCompletedRetryGroupResults: GroupResult[] = [
+  {
+    groupId: 'g1',
+    storeCode: '31692',
+    storeName: '赵晋安 宋晓华',
+    functionOrderNos: ['FO20240705001'],
+    relatedOrders: [{ orderNo: 'O20240705001', orderType: '产品申请表订单', orderStatus: '已生成' }],
+  },
+  {
+    groupId: 'g2',
+    storeCode: '31441',
+    storeName: '赵晋杰',
+    functionOrderNos: ['FO20240705002'],
+    relatedOrders: [{ orderNo: 'O20240705002', orderType: '内部申请表订单', orderStatus: '已生成' }],
+    failReasons: ['客户资质信息缺失，第三次重试前已完成补录'],
+    // CR-20260706-002: 多次失败重试历史（按订单号聚合）
+    retryHistory: {
+      'O20240705002': [
+        { attemptAt: '2024-07-05 14:00:00', status: '生成失败', failReason: '客户资质信息缺失' },
+        { attemptAt: '2024-07-05 16:30:00', status: '生成失败', failReason: '客户资质审核未通过' },
+        { attemptAt: '2024-07-06 09:15:00', status: '已生成' },
+      ],
+    },
+  },
+  {
+    groupId: 'g3',
+    storeCode: '31375',
+    storeName: '大连瑞轩商贸有限公司',
+    functionOrderNos: ['FO20240705003'],
+    relatedOrders: [{ orderNo: 'O20240705003', orderType: '内部申请表订单', orderStatus: '生成失败' }],
+    failReasons: ['客户层级为3，不满足内部申请表订单生成条件', '业务同事与财务沟通后决定调整到下一季度，本工单不再重试'],
+    retryHistory: {
+      'O20240705003': [
+        { attemptAt: '2024-07-05 14:30:00', status: '生成失败', failReason: '客户层级不满足条件' },
+        { attemptAt: '2024-07-05 17:00:00', status: '生成失败', failReason: '客户层级不满足条件' },
+      ],
+    },
+  },
+];
+
+export const mockWorkOrderCompletedRetry: ProductWorkOrder = {
+  id: '9', workOrderNo: 'PA202407050001', displayStatus: '已结束', applicantName: '黄二十二', applicantOrg: '华南 / 福建', createTime: '2024-07-05 09:00:00',
+  budget: mockBudgets[0],
+  storeGroups: [
+    { id: 'g1', storeCode: '31692', storeName: '赵晋安 宋晓华', products: [
+      { id: 'p1', productCode: 'SKU001', productName: '智能马桶盖A款', jdePrice: 1299.00, isDiscount: true, discount: 0.5, maxQuantity: 20, quantity: 2, amount: 1299.00 },
+    ], groupAmount: 1299.00 },
+    { id: 'g2', storeCode: '31441', storeName: '赵晋杰', products: [
+      { id: 'p2', productCode: 'SKU002', productName: '恒温花洒B款', jdePrice: 899.00, isDiscount: false, discount: 1, maxQuantity: 15, quantity: 3, amount: 2697.00 },
+    ], groupAmount: 2697.00 },
+    { id: 'g3', storeCode: '31375', storeName: '大连瑞轩商贸有限公司', products: [
+      { id: 'p3', productCode: 'SKU003', productName: '浴室柜C款', jdePrice: 2599.00, isDiscount: true, discount: 0.5, maxQuantity: 10, quantity: 1, amount: 1299.50 },
+    ], groupAmount: 1299.50 },
+  ],
+  totalAmount: 5295.50,
+  attachments: [{ id: 'a1', name: '多次重试业务说明.pdf', url: '#', type: 'pdf', size: 1024 * 768 }],
+  approvalNodes: mockCompletedRetryNodes,
+  groupResults: mockCompletedRetryGroupResults,
+};
+
 /** 根据场景ID获取对应的 mock 详情数据 */
 export function getMockWorkOrderDetail(scene?: string): ProductWorkOrder {
   switch (scene) {
@@ -360,6 +492,9 @@ export function getMockWorkOrderDetail(scene?: string): ProductWorkOrder {
     case 'rejected-expired': return mockWorkOrderRejectedExpired;
     case 'rejected-nonfreeze': return mockWorkOrderRejectedNonFreeze;
     case 'completed': return mockWorkOrderCompleted;
+    case 'completed-full': return mockWorkOrderCompletedFull;
+    case 'completed-merged': return mockWorkOrderCompletedMerged;
+    case 'completed-retry': return mockWorkOrderCompletedRetry;
     default: return mockWorkOrderDetail;
   }
 }

@@ -217,4 +217,13 @@ npm run build:react-legacy  # 构建历史 React 项目
   - 变更清单：`docs/change-logs/2026-07-06/CR-20260706-001 变更清单.md`
   - 开发总结：`docs/development-summary/2026-07-06/CR-20260706-001-开发总结.md`
   - 分支：`feature/CR-20260706-001-detail-page-structure`（已提交）
+- **已完成（2026-07-06）：CR-20260706-002 产品申请工单详情页审批流、订单结果展示优化与白功能项收口**
+  - 审批流区节点名称字段化（`nodeName`），节点类型视觉区分（当前/通过/驳回/发起）
+  - 订单结果区预占库存订单只展示编号，降为辅助字段
+  - Mock 合理性修复：多笔预占订单 chip 展示、失败原因去重、多次重试折叠历史、新增场景 9（多次重试+业务放弃）
+  - 白功能项：`uuid` moderate 风险复核结论整理
+  - 构建验证通过：主包 202.39 kB
+  - 变更清单：`docs/change-logs/2026-07-06/CR-20260706-002 变更清单.md`
+  - 开发总结：`docs/development-summary/2026-07-06/CR-20260706-002-开发总结.md`
+  - 分支：`feature/CR-20260706-002-approval-result-display`（待 PR 合并）
 - 后续：正式开发进入 Vue / Vue2 工程，不在当前仓库直接推进生产实现
