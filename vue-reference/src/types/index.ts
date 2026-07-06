@@ -35,20 +35,36 @@ export interface StoreGroup {
 }
 export interface RelatedOrder {
   orderNo: string; orderType: '产品申请表订单' | '内部申请表订单';
-  orderStatus: string; remark?: string;
+  orderStatus: string;
 }
+
+// CR-20260706-002: 单次订单尝试记录（用于多次失败重试时间线）
+export interface OrderAttempt {
+  attemptAt: string;             // 尝试时间
+  status: '已生成' | '生成失败';
+  failReason?: string;           // 失败原因（仅生成失败时有值）
+}
+
 export interface ApprovalNode {
   id: string; nodeType: 'start' | 'approval';
-  nodeName?: string;           // 节点名称（如"一级审批""二级审批"）
+  nodeName?: string;             // 节点名称（如"一级审批""二级审批"）
   handlerName: string; handlerTime?: string;
   result?: '通过' | '驳回' | '待处理';
-  remark?: string; functionOrderNo?: string;
-  functionOrderStatus?: string; relatedOrders?: RelatedOrder[];
+  remark?: string;
+  // CR-20260706-002: 改为数组，发起阶段可能多笔预占订单
+  functionOrderNos?: string[];
+  relatedOrders?: RelatedOrder[];
 }
+
 export interface GroupResult {
   groupId: string; storeCode: string; storeName: string;
-  functionOrderNo: string; functionOrderStatus?: string;
-  relatedOrders: RelatedOrder[]; failReason?: string;
+  // CR-20260706-002: 预占订单改为数组；UI 只展示编号，不展示状态
+  functionOrderNos: string[];
+  relatedOrders: RelatedOrder[];
+  // CR-20260706-002: 失败原因列表（多条订单失败时按数组展示，去重避免单条 remark 重复）
+  failReasons?: string[];
+  // CR-20260706-002: 多次失败重试历史（按订单号聚合）
+  retryHistory?: Record<string, OrderAttempt[]>;
 }
 export interface Attachment {
   id: string; name: string; url: string; type: string; size: number;
