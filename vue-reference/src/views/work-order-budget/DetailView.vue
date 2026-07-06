@@ -10,11 +10,11 @@ const router = useRouter()
 
 // CR-20260703-003: 支持通过 ?scene=xxx 切换 mock 场景，也支持通过 id 路由匹配场景
 const idSceneMap: Record<string, string> = {
-  '2': 'processing',        // 多明细 + 多附件 + 待处理审批
-  '3': 'rejected-freeze',   // 冻结期原单重提
-  '4': 'rejected-expired',  // 原预算已到期
-  '5': 'rejected-nonfreeze',// 非冻结期普通新建
-  '6': 'completed',         // 已结束 + 部分订单失败
+  '2': 'processing',
+  '3': 'rejected-freeze',
+  '4': 'rejected-expired',
+  '5': 'rejected-nonfreeze',
+  '6': 'completed',
 }
 const routeId = route.params.id as string
 const scene = (route.query.scene as string | undefined) || idSceneMap[routeId] || undefined
@@ -23,6 +23,11 @@ const order = getMockWorkOrderDetail(scene)
 const remark = ref('')
 const toast = ref('')
 const showReapplyConfirm = ref(false)
+
+// ===== 状态判断 =====
+const isRejected = computed(() => order.displayStatus === '已驳回')
+const isProcessing = computed(() => order.displayStatus === '处理中')
+const isCompleted = computed(() => order.displayStatus === '已结束')
 
 // ===== 产品明细折叠状态 =====
 const expandedGroups = ref<Set<string>>(new Set())
@@ -47,34 +52,27 @@ const isHandled = ref(false)
 
 // 审批操作区是否展示
 const canApprove = computed(() =>
-  isCurrentApprover && !isHandled.value && order.displayStatus === '处理中'
+  isCurrentApprover && !isHandled.value && isProcessing.value
 )
-
-// 是否已驳回
-const isRejected = computed(() => order.displayStatus === '已驳回')
 
 // ===== 重新发起五维度显式判断 (P0-1整改) =====
 const reapplyCond = computed(() => order.reapplyCondition)
 
-// 1. 是否展示重新发起入口
 const canShowReapply = computed(() => {
   return isRejected.value && !!reapplyCond.value
 })
 
-// 2. 是否允许点击（白名单显式判断，禁止反向排除）
 const canClickReapply = computed(() => {
   if (!isRejected.value || !reapplyCond.value) return false
   const allowed: ReapplyAvailability[] = ['available', 'freeze_period_locked', 'non_freeze_new']
   return allowed.includes(reapplyCond.value.availability)
 })
 
-// 3. 是否禁用
 const isReapplyDisabled = computed(() => {
   if (!isRejected.value || !reapplyCond.value) return true
   return reapplyCond.value.availability === 'budget_expired'
 })
 
-// 4. 按钮文案（显式映射，禁止隐式推导）
 const reapplyBtnText = computed(() => {
   const cond = reapplyCond.value
   if (!cond) return '重新发起'
@@ -87,19 +85,31 @@ const reapplyBtnText = computed(() => {
   }
 })
 
-// 5. 提示文案（显式映射）
 const reapplyHintText = computed(() => {
   const cond = reapplyCond.value
   if (!cond) return ''
   return cond.message
 })
 
-// P0-2: 显式消费 canSwitchBudget，禁止仅靠 availability 隐式推导
 const canSwitchBudgetWhenReapply = computed(() => {
   return !!reapplyCond.value?.canSwitchBudget
 })
 
-// 状态颜色映射
+// 当前审批进度（处理中状态）
+const currentApprovalNode = computed(() => {
+  if (!isProcessing.value) return null
+  return order.approvalNodes.find(n => n.result === '待处理') || null
+})
+
+const pendingNodeName = computed(() => {
+  const node = currentApprovalNode.value
+  if (!node) return ''
+  // 找到节点序号
+  const idx = order.approvalNodes.indexOf(node)
+  return idx > 0 ? `审批节点 ${idx}` : '发起工单'
+})
+
+// ===== 状态颜色映射 =====
 function getStatusColor(s: string) {
   switch (s) {
     case '处理中': return { bg: '#E6F8F8', color: '#22BDB8' }
@@ -109,7 +119,6 @@ function getStatusColor(s: string) {
   }
 }
 
-// 节点结果颜色
 function getNodeResultColor(result?: string) {
   switch (result) {
     case '通过': return { bg: '#E8F5E9', color: '#4CAF50' }
@@ -119,7 +128,6 @@ function getNodeResultColor(result?: string) {
   }
 }
 
-// 审批节点圆点颜色
 function getNodeDotColor(n: { nodeType: string; result?: string }) {
   if (n.nodeType === 'start') return '#22BDB8'
   switch (n.result) {
@@ -130,7 +138,6 @@ function getNodeDotColor(n: { nodeType: string; result?: string }) {
   }
 }
 
-// 订单状态颜色
 function getOrderStatusColor(status: string) {
   switch (status) {
     case '已生成': return { bg: '#E8F5E9', color: '#4CAF50' }
@@ -173,21 +180,18 @@ function handleReject() {
 
 // 重新发起
 function handleReapply() {
-  if (!canClickReapply.value) return   // P0-1: 使用显式白名单判断，禁止反向排除
+  if (!canClickReapply.value) return
   showReapplyConfirm.value = true
 }
 
 function confirmReapply() {
   showReapplyConfirm.value = false
-  // P0-2: 显式消费 canSwitchBudget，禁止仅靠 availability 隐式推导
   if (!canSwitchBudgetWhenReapply.value && reapplyCond.value?.originalBudgetNo) {
-    // 不允许切换预算号：带入原预算号 + rejectedFrom
     router.push({
       path: '/product-apply/create',
       query: { rejectedFrom: order.workOrderNo, budgetId: order.budget.id }
     })
   } else {
-    // 允许切换预算号：普通新建
     router.push({ path: '/product-apply/create' })
   }
 }
@@ -196,15 +200,12 @@ function cancelReapply() {
   showReapplyConfirm.value = false
 }
 
-// 重新发起确认弹窗文案（P0-2: 显式消费 canSwitchBudget）
 function getReapplyConfirmText(): string {
   const cond = reapplyCond.value
   if (!cond) return '确定要重新发起此工单吗？'
   if (!canSwitchBudgetWhenReapply.value) {
-    // 不允许切换预算号
     return `原预算号「${cond.originalBudgetNo || order.budget.budgetNo}」将沿用，当前场景下不允许重新选择预算号，提交时按剩余额度校验。确定继续？`
   }
-  // 允许切换预算号
   return '将按普通新建发起，当前场景下可自行选择预算号。确定继续？'
 }
 
@@ -227,7 +228,7 @@ function getProductLabelText(pi: number): string {
 
 <template>
   <div class="detail-page" :style="{ paddingBottom: (canApprove || canShowReapply) ? '160px' : '20px' }">
-    <!-- Header -->
+    <!-- ==================== Header ==================== -->
     <div class="detail-header">
       <button class="header-back" @click="router.back()">&#8249;</button>
       <span class="header-title">产品申请工单</span>
@@ -236,71 +237,70 @@ function getProductLabelText(pi: number): string {
       </span>
     </div>
 
-    <!-- ==================== 驳回信息区 (CR-20260703-003 §4) ==================== -->
-    <div v-if="isRejected && order.rejectionInfo" class="rejection-banner">
-      <div class="rejection-icon">&#9888;</div>
-      <div class="rejection-content">
-        <div class="rejection-title">工单已被驳回</div>
-        <div class="rejection-reason">{{ order.rejectionInfo.rejectReason }}</div>
-        <div class="rejection-meta">
+    <!-- ==================== 驳回信息区 (§4.2 首屏优先) ==================== -->
+    <div v-if="isRejected && order.rejectionInfo" class="tip-banner tip-error">
+      <div class="tip-icon">&#9888;</div>
+      <div class="tip-content">
+        <div class="tip-title">工单已被驳回</div>
+        <div class="tip-reason">{{ order.rejectionInfo.rejectReason }}</div>
+        <div class="tip-meta">
           <span>驳回人：{{ order.rejectionInfo.rejectedBy }}</span>
           <span>{{ order.rejectionInfo.rejectedAt }}</span>
         </div>
-        <div v-if="order.rejectionInfo.rejectRemark" class="rejection-remark">
+        <div v-if="order.rejectionInfo.rejectRemark" class="tip-remark">
           {{ order.rejectionInfo.rejectRemark }}
         </div>
       </div>
     </div>
 
-    <!-- 已到期不可重提提示 -->
-    <div v-if="isRejected && order.reapplyCondition?.availability === 'budget_expired'" class="expired-banner">
-      <div class="expired-icon">&#128683;</div>
-      <div class="expired-text">{{ order.reapplyCondition.message }}</div>
+    <!-- 已到期不可重提提示 (§9 统一提示风格) -->
+    <div v-if="isRejected && reapplyCond?.availability === 'budget_expired'" class="tip-banner tip-warning">
+      <div class="tip-icon">&#128683;</div>
+      <div class="tip-text">{{ reapplyCond.message }}</div>
     </div>
 
-    <!-- ==================== 基础信息 ==================== -->
+    <!-- ==================== 处理中：当前审批进度 (§5.1) ==================== -->
+    <div v-if="isProcessing && currentApprovalNode" class="card approval-progress-card">
+      <div class="section-title">当前审批进度</div>
+      <div class="progress-content">
+        <div class="progress-node">
+          <span class="progress-dot pending"></span>
+          <span class="progress-name">{{ pendingNodeName }}</span>
+        </div>
+        <div class="progress-handler">待处理人：{{ currentApprovalNode.handlerName }}</div>
+      </div>
+    </div>
+
+    <!-- ==================== 基础信息 (§6.1 字段层级) ==================== -->
     <div class="card">
       <div class="section-title">基础信息</div>
       <div class="kv-row">
-        <span class="kv-label">工单编号</span>
+        <span class="kv-label">工单号</span>
         <span class="kv-value">{{ order.workOrderNo }}</span>
       </div>
       <div class="kv-row">
-        <span class="kv-label">工单类型</span>
-        <span class="kv-value">产品申请</span>
-      </div>
-      <div class="kv-row">
-        <span class="kv-label">工单状态</span>
+        <span class="kv-label">当前状态</span>
         <span class="kv-value" :style="{ color: getStatusColor(order.displayStatus).color, fontWeight: 500 }">
           {{ order.displayStatus }}
         </span>
       </div>
-    </div>
-
-    <!-- ==================== 发起信息 ==================== -->
-    <div class="card">
-      <div class="section-title">发起信息</div>
       <div class="kv-row">
-        <span class="kv-label">发起人</span>
+        <span class="kv-label">申请人</span>
         <span class="kv-value">{{ order.applicantName }}</span>
       </div>
       <div class="kv-row">
-        <span class="kv-label">发起时间</span>
-        <span class="kv-value">{{ order.createTime }}</span>
+        <span class="kv-label">申请组织</span>
+        <span class="kv-value">{{ order.applicantOrg }}</span>
       </div>
       <div class="kv-row">
-        <span class="kv-label">发起人组织</span>
-        <span class="kv-value">{{ order.applicantOrg }}</span>
+        <span class="kv-label">创建时间</span>
+        <span class="kv-value">{{ order.createTime }}</span>
       </div>
     </div>
 
-    <!-- ==================== 预算信息 (CR-20260703-003 §7 口径统一) ==================== -->
+    <!-- ==================== 发起信息 (§6.2 字段层级) ==================== -->
     <div class="card">
-      <div class="section-title">预算与申请信息</div>
-      <div class="kv-row">
-        <span class="kv-label">预算号</span>
-        <span class="kv-value">{{ order.budget.budgetNo }}</span>
-      </div>
+      <div class="section-title">发起信息</div>
       <div class="kv-row">
         <span class="kv-label">申请类型</span>
         <span class="kv-value">{{ order.budget.applyType }}</span>
@@ -309,15 +309,24 @@ function getProductLabelText(pi: number): string {
         <span class="kv-label">申请理由</span>
         <span class="kv-value kv-multiline">{{ order.budget.applyReason }}</span>
       </div>
+    </div>
+
+    <!-- ==================== 预算与申请信息 (§6.3 字段层级) ==================== -->
+    <div class="card">
+      <div class="section-title">预算与申请信息</div>
       <div class="kv-row">
-        <span class="kv-label">预算归属</span>
+        <span class="kv-label">预算号</span>
+        <span class="kv-value">{{ order.budget.budgetNo }}</span>
+      </div>
+      <div class="kv-row">
+        <span class="kv-label">预算归属组织</span>
         <span class="kv-value">{{ order.budget.budgetOrg }}</span>
       </div>
       <div class="kv-row">
-        <span class="kv-label">适用范围</span>
+        <span class="kv-label">预算使用范围</span>
         <span class="kv-value">{{ order.budget.budgetScope }}</span>
       </div>
-      <!-- 预算总额弱化，本次申请额度主色突出 -->
+      <!-- 预算总额弱化，本次申请额度主色突出 (§6.5) -->
       <div class="kv-row">
         <span class="kv-label" style="color:#999;">预算总额（净额）</span>
         <span class="kv-value" style="color:#999; font-weight:400;">¥{{ formatAmount(order.budget.budgetTotalAmount) }}</span>
@@ -328,27 +337,28 @@ function getProductLabelText(pi: number): string {
       </div>
     </div>
 
-    <!-- ==================== 产品申请订单明细（汇总 + 折叠） ==================== -->
+    <!-- ==================== 产品申请订单明细 (§7) ==================== -->
     <div class="card">
-      <!-- 汇总行 -->
+      <!-- 汇总行 (§7.2) -->
       <div class="summary-bar">
         共 <span class="summary-num">{{ summary.groupCount }}</span> 笔产品申请订单，涉及 <span class="summary-num">{{ summary.storeCount }}</span> 个专卖店，共 <span class="summary-num">{{ summary.productCount }}</span> 个产品
       </div>
 
-      <!-- 每个明细卡片默认折叠 -->
+      <!-- 每个明细卡片 (§7.3 卡片头增强) -->
       <div v-for="(g, gi) in order.storeGroups" :key="g.id" class="group-fold-card">
-        <!-- 标题行：可点击展开/折叠 -->
+        <!-- 标题行：可点击展开/折叠 (§7.3 增强) -->
         <div class="group-fold-header" @click="toggleGroup(g.id)">
           <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
             <span style="font-size:15px;font-weight:600;color:#333;line-height:32px;white-space:nowrap;">产品申请订单明细</span>
-            <!-- 胶囊编号（与创建页样式一致） -->
             <span class="capsule-num">{{ gi + 1 }}</span>
             <span class="group-badge">{{ g.products.length }} 个产品</span>
+            <!-- §7.3 新增：分组金额显示在卡片头 -->
+            <span class="group-amount-badge">¥{{ formatAmount(g.groupAmount) }}</span>
           </div>
           <span class="fold-arrow" :class="{ expanded: isGroupExpanded(g.id) }">&#9662;</span>
         </div>
 
-        <!-- 展开内容 -->
+        <!-- 展开内容 (§7.4) -->
         <div v-show="isGroupExpanded(g.id)" class="group-fold-body">
           <div class="kv-row">
             <span class="kv-label">订单归属专卖店</span>
@@ -382,17 +392,11 @@ function getProductLabelText(pi: number): string {
               <span class="kv-value amount">¥{{ formatAmount(p.amount) }}</span>
             </div>
           </div>
-
-          <!-- 分组小计 -->
-          <div class="group-subtotal">
-            <span>分组小计</span>
-            <span class="amount">¥{{ formatAmount(g.groupAmount) }}</span>
-          </div>
         </div>
       </div>
     </div>
 
-    <!-- ==================== 附件区 (CR-20260703-003 §8) ==================== -->
+    <!-- ==================== 附件区 (§10) ==================== -->
     <div v-if="order.attachments.length" class="card">
       <div class="section-title">附件 ({{ order.attachments.length }})</div>
       <div v-for="a in order.attachments" :key="a.id" class="attachment-item">
@@ -402,8 +406,8 @@ function getProductLabelText(pi: number): string {
             <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="#fff" stroke-width="2" fill="none" />
           </svg>
           <div class="attachment-info">
-            <span class="attachment-name">{{ a.name }}</span>
-            <span class="attachment-size">{{ (a.size / 1024).toFixed(0) }} KB</span>
+            <span class="attachment-name" :title="a.name">{{ a.name }}</span>
+            <span class="attachment-size">{{ (a.size / 1024).toFixed(0) }} KB · {{ a.type.toUpperCase() }}</span>
           </div>
         </div>
         <div class="attachment-actions">
@@ -413,69 +417,133 @@ function getProductLabelText(pi: number): string {
       </div>
     </div>
 
-    <!-- ==================== 审批流程 ==================== -->
-    <div class="card">
-      <div class="section-title">审批流程</div>
-      <div class="timeline">
-        <div class="timeline-line" />
-        <div v-for="(n, i) in order.approvalNodes" :key="n.id" class="timeline-node" :style="{ marginBottom: i < order.approvalNodes.length - 1 ? '20px' : '0' }">
-          <div class="timeline-dot" :style="{ backgroundColor: getNodeDotColor(n) }" />
-          <div class="timeline-content">
-            <div class="node-title">
-              {{ n.nodeType === 'start' ? '发起工单' : `审批节点 ${i}` }}
-              <span v-if="n.result" class="node-result" :style="getNodeResultColor(n.result)">{{ n.result }}</span>
-            </div>
-            <div class="node-meta">
-              <span>{{ n.handlerName }}</span>
-              <span v-if="n.handlerTime">{{ n.handlerTime }}</span>
-              <span v-else class="pending-text">待处理</span>
-            </div>
-            <div v-if="n.remark" class="node-remark">{{ n.remark }}</div>
-            <div v-if="n.functionOrderNo" class="node-function-order">
-              功能订单：{{ n.functionOrderNo }}（{{ n.functionOrderStatus }}）
-            </div>
-            <!-- 关联订单 -->
-            <div v-if="n.relatedOrders?.length" class="related-orders">
-              <div v-for="o in n.relatedOrders" :key="o.orderNo" class="related-order-item" :style="{ borderLeftColor: getOrderBorderColor(o.orderStatus) }">
-                <div class="related-order-type">{{ o.orderType }}</div>
-                <div class="related-order-no">{{ o.orderNo }}</div>
-                <span class="related-order-status" :style="getOrderStatusColor(o.orderStatus)">{{ o.orderStatus }}</span>
+    <!-- ==================== 审批流程 / 订单结果 (§5 状态驱动顺序) ==================== -->
+    <!-- 处理中 / 已驳回：审批流 → 订单结果 -->
+    <template v-if="!isCompleted">
+      <!-- 审批流程 -->
+      <div class="card">
+        <div class="section-title">审批流程</div>
+        <div class="timeline">
+          <div class="timeline-line" />
+          <div v-for="(n, i) in order.approvalNodes" :key="n.id" class="timeline-node" :style="{ marginBottom: i < order.approvalNodes.length - 1 ? '20px' : '0' }">
+            <div class="timeline-dot" :style="{ backgroundColor: getNodeDotColor(n) }" />
+            <div class="timeline-content">
+              <div class="node-title">
+                {{ n.nodeType === 'start' ? '发起工单' : `审批节点 ${i}` }}
+                <span v-if="n.result" class="node-result" :style="getNodeResultColor(n.result)">{{ n.result }}</span>
+              </div>
+              <div class="node-meta">
+                <span>{{ n.handlerName }}</span>
+                <span v-if="n.handlerTime">{{ n.handlerTime }}</span>
+                <span v-else class="pending-text">待处理</span>
+              </div>
+              <div v-if="n.remark" class="node-remark">{{ n.remark }}</div>
+              <div v-if="n.functionOrderNo" class="node-function-order">
+                功能订单：{{ n.functionOrderNo }}（{{ n.functionOrderStatus }}）
+              </div>
+              <div v-if="n.relatedOrders?.length" class="related-orders">
+                <div v-for="o in n.relatedOrders" :key="o.orderNo" class="related-order-item" :style="{ borderLeftColor: getOrderBorderColor(o.orderStatus) }">
+                  <div class="related-order-type">{{ o.orderType }}</div>
+                  <div class="related-order-no">{{ o.orderNo }}</div>
+                  <span class="related-order-status" :style="getOrderStatusColor(o.orderStatus)">{{ o.orderStatus }}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- ==================== 订单结果 ==================== -->
-    <div v-if="order.groupResults?.length" class="card">
-      <div class="section-title">订单结果</div>
-      <div v-for="r in order.groupResults" :key="r.groupId" class="result-card">
-        <div class="result-header">
-          <span>{{ r.storeCode }} {{ r.storeName }}</span>
-          <span class="result-count">{{ r.relatedOrders.length }} 个关联订单</span>
-        </div>
-        <div class="result-function-order">
-          <span>功能订单：{{ r.functionOrderNo }}</span>
-          <span>状态：{{ r.functionOrderStatus }}</span>
-        </div>
-        <div v-for="o in r.relatedOrders" :key="o.orderNo" class="result-order-item" :style="{ borderLeftColor: getOrderBorderColor(o.orderStatus) }">
-          <div class="result-order-header">
-            <span class="result-order-type">{{ o.orderType }}</span>
-            <span class="result-order-status" :style="getOrderStatusColor(o.orderStatus)">{{ o.orderStatus }}</span>
+      <!-- 订单结果 -->
+      <div v-if="order.groupResults?.length" class="card">
+        <div class="section-title">订单结果</div>
+        <div v-for="r in order.groupResults" :key="r.groupId" class="result-card">
+          <div class="result-header">
+            <span>{{ r.storeCode }} {{ r.storeName }}</span>
+            <span class="result-count">{{ r.relatedOrders.length }} 个关联订单</span>
           </div>
-          <div class="result-order-detail">
-            <span>订单编号：{{ o.orderNo }}</span>
-            <span v-if="o.remark && o.remark !== '-'">备注：{{ o.remark }}</span>
+          <div class="result-function-order">
+            <span>功能订单：{{ r.functionOrderNo }}</span>
+            <span>状态：{{ r.functionOrderStatus }}</span>
           </div>
-        </div>
-        <!-- 失败原因 -->
-        <div v-if="r.failReason" class="fail-reason">
-          <div class="fail-title">&#9888; 订单生成失败</div>
-          <div class="fail-text">{{ r.failReason }}</div>
+          <div v-for="o in r.relatedOrders" :key="o.orderNo" class="result-order-item" :style="{ borderLeftColor: getOrderBorderColor(o.orderStatus) }">
+            <div class="result-order-header">
+              <span class="result-order-type">{{ o.orderType }}</span>
+              <span class="result-order-status" :style="getOrderStatusColor(o.orderStatus)">{{ o.orderStatus }}</span>
+            </div>
+            <div class="result-order-detail">
+              <span>订单编号：{{ o.orderNo }}</span>
+              <span v-if="o.remark && o.remark !== '-'">备注：{{ o.remark }}</span>
+            </div>
+          </div>
+          <!-- 失败原因 (§9 统一提示风格) -->
+          <div v-if="r.failReason" class="tip-banner tip-error tip-inline">
+            <div class="tip-icon">&#9888;</div>
+            <div class="tip-content">
+              <div class="tip-title">订单生成失败</div>
+              <div class="tip-text">{{ r.failReason }}</div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </template>
+
+    <!-- 已结束：订单结果 → 审批流程 (§5.3) -->
+    <template v-else>
+      <!-- 订单结果（提升层级） -->
+      <div v-if="order.groupResults?.length" class="card result-card-elevated">
+        <div class="section-title">订单结果</div>
+        <div v-for="r in order.groupResults" :key="r.groupId" class="result-card">
+          <div class="result-header">
+            <span>{{ r.storeCode }} {{ r.storeName }}</span>
+            <span class="result-count">{{ r.relatedOrders.length }} 个关联订单</span>
+          </div>
+          <div class="result-function-order">
+            <span>功能订单：{{ r.functionOrderNo }}</span>
+            <span>状态：{{ r.functionOrderStatus }}</span>
+          </div>
+          <div v-for="o in r.relatedOrders" :key="o.orderNo" class="result-order-item" :style="{ borderLeftColor: getOrderBorderColor(o.orderStatus) }">
+            <div class="result-order-header">
+              <span class="result-order-type">{{ o.orderType }}</span>
+              <span class="result-order-status" :style="getOrderStatusColor(o.orderStatus)">{{ o.orderStatus }}</span>
+            </div>
+            <div class="result-order-detail">
+              <span>订单编号：{{ o.orderNo }}</span>
+              <span v-if="o.remark && o.remark !== '-'">备注：{{ o.remark }}</span>
+            </div>
+          </div>
+          <!-- 失败原因 -->
+          <div v-if="r.failReason" class="tip-banner tip-error tip-inline">
+            <div class="tip-icon">&#9888;</div>
+            <div class="tip-content">
+              <div class="tip-title">订单生成失败</div>
+              <div class="tip-text">{{ r.failReason }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 审批流程（已结束场景层级降低） -->
+      <div class="card">
+        <div class="section-title">审批流程</div>
+        <div class="timeline">
+          <div class="timeline-line" />
+          <div v-for="(n, i) in order.approvalNodes" :key="n.id" class="timeline-node" :style="{ marginBottom: i < order.approvalNodes.length - 1 ? '20px' : '0' }">
+            <div class="timeline-dot" :style="{ backgroundColor: getNodeDotColor(n) }" />
+            <div class="timeline-content">
+              <div class="node-title">
+                {{ n.nodeType === 'start' ? '发起工单' : `审批节点 ${i}` }}
+                <span v-if="n.result" class="node-result" :style="getNodeResultColor(n.result)">{{ n.result }}</span>
+              </div>
+              <div class="node-meta">
+                <span>{{ n.handlerName }}</span>
+                <span v-if="n.handlerTime">{{ n.handlerTime }}</span>
+              </div>
+              <div v-if="n.remark" class="node-remark">{{ n.remark }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
 
     <!-- ==================== 审批操作区 (处理中状态) ==================== -->
     <div v-if="canApprove" class="approval-actions">
@@ -491,7 +559,7 @@ function getProductLabelText(pi: number): string {
       </div>
     </div>
 
-    <!-- ==================== 重新发起操作区 (P0-1: 五维度显式判断) ==================== -->
+    <!-- ==================== 重新发起操作区 (已驳回状态) ==================== -->
     <div v-if="canShowReapply" class="reapply-actions">
       <button
         class="btn-reapply"
@@ -592,6 +660,16 @@ function getProductLabelText(pi: number): string {
   padding: 2px 8px;
   border-radius: 8px;
 }
+/* §7.3 新增：分组金额标签 */
+.group-amount-badge {
+  font-size: 12px;
+  font-weight: 500;
+  color: #22BDB8;
+  background: #E0F7F6;
+  padding: 2px 8px;
+  border-radius: 8px;
+  margin-left: 4px;
+}
 
 /* ========== Key-Value Row ========== */
 .kv-row {
@@ -643,46 +721,60 @@ function getProductLabelText(pi: number): string {
   border-radius: 8px;
 }
 
-/* ========== 驳回信息区 (CR-20260703-003) ========== */
-.rejection-banner {
+/* ========== 统一提示风格 (§9) ========== */
+.tip-banner {
   margin: 12px 16px;
-  padding: 16px;
-  background: linear-gradient(135deg, #FFEBEE 0%, #FFF3E0 100%);
-  border: 1px solid #FFCDD2;
+  padding: 14px 16px;
   border-radius: 12px;
   display: flex;
   gap: 12px;
   align-items: flex-start;
 }
-.rejection-icon {
-  font-size: 24px;
+.tip-error {
+  background: linear-gradient(135deg, #FFEBEE 0%, #FFF3E0 100%);
+  border: 1px solid #FFCDD2;
+}
+.tip-warning {
+  background: #FFF3E0;
+  border: 1px solid #FFE0B2;
+}
+.tip-info {
+  background: #E6F8F8;
+  border: 1px solid #B2DFDB;
+}
+.tip-inline {
+  margin: 12px 0 0;
+  padding: 12px;
+}
+.tip-icon {
+  font-size: 20px;
   line-height: 1;
   flex-shrink: 0;
 }
-.rejection-content {
+.tip-content {
   flex: 1;
 }
-.rejection-title {
-  font-size: 15px;
+.tip-title {
+  font-size: 14px;
   font-weight: 600;
   color: #D32F2F;
   margin-bottom: 6px;
 }
-.rejection-reason {
+.tip-reason {
   font-size: 14px;
   color: #333;
   font-weight: 500;
   margin-bottom: 8px;
   line-height: 1.5;
 }
-.rejection-meta {
+.tip-meta {
   display: flex;
   gap: 16px;
   font-size: 12px;
   color: #999;
   margin-bottom: 6px;
 }
-.rejection-remark {
+.tip-remark {
   font-size: 13px;
   color: #666;
   background: rgba(255, 255, 255, 0.7);
@@ -691,25 +783,45 @@ function getProductLabelText(pi: number): string {
   margin-top: 6px;
   line-height: 1.5;
 }
-
-/* ========== 已到期提示 ========== */
-.expired-banner {
-  margin: 0 16px 12px;
-  padding: 14px 16px;
-  background: #FFF3E0;
-  border: 1px solid #FFE0B2;
-  border-radius: 12px;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-.expired-icon {
-  font-size: 20px;
-}
-.expired-text {
+.tip-text {
   font-size: 14px;
   color: #E65100;
   font-weight: 500;
+  line-height: 1.5;
+}
+
+/* ========== 处理中：当前审批进度 (§5.1) ========== */
+.approval-progress-card {
+  border-left: 3px solid #FF9800;
+}
+.progress-content {
+  padding: 8px 0;
+}
+.progress-node {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.progress-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.progress-dot.pending {
+  background: #FF9800;
+  box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.2);
+}
+.progress-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+.progress-handler {
+  font-size: 13px;
+  color: #666;
+  padding-left: 18px;
 }
 
 /* ========== 产品卡片 ========== */
@@ -781,7 +893,7 @@ function getProductLabelText(pi: number): string {
   border-top: 1px solid #f0f0f0;
 }
 
-/* ========== 胶囊编号（与创建页样式一致） ========== */
+/* ========== 胶囊编号 ========== */
 .capsule-num {
   display: inline-flex;
   align-items: center;
@@ -829,7 +941,7 @@ function getProductLabelText(pi: number): string {
   font-size: 15px;
 }
 
-/* ========== 附件区 ========== */
+/* ========== 附件区 (§10) ========== */
 .attachment-item {
   display: flex;
   align-items: center;
@@ -991,6 +1103,10 @@ function getProductLabelText(pi: number): string {
   margin-bottom: 12px;
   border: 1px solid #f0f0f0;
 }
+/* §5.3 已结束状态订单结果层级提升 */
+.result-card-elevated .result-card {
+  border-left: 3px solid #4CAF50;
+}
 .result-header {
   display: flex;
   justify-content: space-between;
@@ -1045,24 +1161,6 @@ function getProductLabelText(pi: number): string {
   gap: 4px;
   font-size: 13px;
   color: #666;
-}
-.fail-reason {
-  margin-top: 12px;
-  padding: 12px;
-  background: #FFEBEE;
-  border-radius: 8px;
-  border: 1px solid #FFCDD2;
-}
-.fail-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #D32F2F;
-  margin-bottom: 4px;
-}
-.fail-text {
-  font-size: 12px;
-  color: #B71C1C;
-  line-height: 1.5;
 }
 
 /* ========== 审批操作区 ========== */
@@ -1129,7 +1227,7 @@ function getProductLabelText(pi: number): string {
   cursor: pointer;
 }
 
-/* ========== 重新发起操作区 (CR-20260703-003 §5) ========== */
+/* ========== 重新发起操作区 ========== */
 .reapply-actions {
   position: fixed;
   bottom: 0;
