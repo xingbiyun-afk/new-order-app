@@ -196,8 +196,21 @@ export const mockWorkOrderProcessing: ProductWorkOrder = {
     { id: 'g3', storeCode: '37235', storeName: '游秋燕', products: [
       { id: 'p4', productCode: 'SKU005', productName: '淋浴房E款', jdePrice: 3299.00, isDiscount: true, discount: 0.5, maxQuantity: 8, quantity: 2, amount: 3299.00 },
     ], groupAmount: 3299.00 },
+    // CR-20260706-001 补强：多款多件明细（验证款/件拆分的卡片头与汇总）
+    { id: 'g4', storeCode: '40001', storeName: '北京朝阳旗舰店', products: [
+      { id: 'q1', productCode: 'SKU010', productName: '智能马桶盖C款', jdePrice: 1899.00, isDiscount: false, discount: 1, maxQuantity: 50, quantity: 12, amount: 22788.00 },
+      { id: 'q2', productCode: 'SKU011', productName: '智能马桶F款', jdePrice: 4599.00, isDiscount: true, discount: 0.6, maxQuantity: 30, quantity: 8, amount: 22075.20 },
+      { id: 'q3', productCode: 'SKU012', productName: '智能花洒G款', jdePrice: 799.00, isDiscount: false, discount: 1, maxQuantity: 100, quantity: 30, amount: 23970.00 },
+      { id: 'q4', productCode: 'SKU013', productName: '智能浴霸H款', jdePrice: 1599.00, isDiscount: true, discount: 0.7, maxQuantity: 40, quantity: 6, amount: 6715.80 },
+      { id: 'q5', productCode: 'SKU014', productName: '智能镜柜I款', jdePrice: 2299.00, isDiscount: false, discount: 1, maxQuantity: 25, quantity: 4, amount: 9196.00 },
+      { id: 'q6', productCode: 'SKU015', productName: '智能门锁J款', jdePrice: 1299.00, isDiscount: false, discount: 1, maxQuantity: 60, quantity: 15, amount: 19485.00 },
+      { id: 'q7', productCode: 'SKU016', productName: '智能窗帘电机K款', jdePrice: 899.00, isDiscount: true, discount: 0.8, maxQuantity: 50, quantity: 10, amount: 7192.00 },
+      { id: 'q8', productCode: 'SKU017', productName: '智能晾衣架L款', jdePrice: 1099.00, isDiscount: false, discount: 1, maxQuantity: 35, quantity: 5, amount: 5495.00 },
+      { id: 'q9', productCode: 'SKU018', productName: '智能开关面板M款', jdePrice: 199.00, isDiscount: false, discount: 1, maxQuantity: 200, quantity: 80, amount: 15920.00 },
+      { id: 'q10', productCode: 'SKU019', productName: '智能插座N款', jdePrice: 89.00, isDiscount: false, discount: 1, maxQuantity: 500, quantity: 200, amount: 17800.00 },
+    ], groupAmount: 150637.00 },
   ],
-  totalAmount: 16233.50,
+  totalAmount: 166870.50,
   attachments: [
     { id: 'a1', name: '促销活动方案.pdf', url: '#', type: 'pdf', size: 1024 * 1024 * 3 },
     { id: 'a2', name: '专卖店资质证明.pdf', url: '#', type: 'pdf', size: 1024 * 1024 * 1.5 },
