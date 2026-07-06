@@ -15,6 +15,8 @@ const idSceneMap: Record<string, string> = {
   '4': 'rejected-expired',
   '5': 'rejected-nonfreeze',
   '6': 'completed',
+  '7': 'completed-full',
+  '8': 'completed-merged',
 }
 const routeId = route.params.id as string
 const scene = (route.query.scene as string | undefined) || idSceneMap[routeId] || undefined
@@ -112,6 +114,14 @@ const currentApprovalNode = computed(() => {
   if (!isProcessing.value) return null
   return order.approvalNodes.find(n => n.result === '待处理') || null
 })
+
+function getNodeClass(n: { nodeType: string; result?: string; id: string }): string {
+  if (n.nodeType === 'start') return 'node-start'
+  if (n.result === '驳回') return 'node-rejected'
+  if (n.result === '待处理' && currentApprovalNode.value?.id === n.id) return 'node-current'
+  if (n.result === '通过') return 'node-passed'
+  return ''
+}
 
 const pendingNodeName = computed(() => {
   const node = currentApprovalNode.value
@@ -456,9 +466,9 @@ function getProductLabelText(pi: number): string {
           <div class="timeline-line" />
           <div v-for="(n, i) in order.approvalNodes" :key="n.id" class="timeline-node" :style="{ marginBottom: i < order.approvalNodes.length - 1 ? '20px' : '0' }">
             <div class="timeline-dot" :style="{ backgroundColor: getNodeDotColor(n) }" />
-            <div class="timeline-content">
+            <div class="timeline-content" :class="getNodeClass(n)">
               <div class="node-title">
-                {{ n.nodeType === 'start' ? '发起工单' : `审批节点 ${i}` }}
+                {{ n.nodeName || (n.nodeType === 'start' ? '发起工单' : `审批节点 ${i}`) }}
                 <span v-if="n.result" class="node-result" :style="getNodeResultColor(n.result)">{{ n.result }}</span>
               </div>
               <div class="node-meta">
@@ -468,7 +478,7 @@ function getProductLabelText(pi: number): string {
               </div>
               <div v-if="n.remark" class="node-remark">{{ n.remark }}</div>
               <div v-if="n.functionOrderNo" class="node-function-order">
-                功能订单：{{ n.functionOrderNo }}（{{ n.functionOrderStatus }}）
+                预占订单：{{ n.functionOrderNo }}
               </div>
               <div v-if="n.relatedOrders?.length" class="related-orders">
                 <div v-for="o in n.relatedOrders" :key="o.orderNo" class="related-order-item" :style="{ borderLeftColor: getOrderBorderColor(o.orderStatus) }">
@@ -490,9 +500,8 @@ function getProductLabelText(pi: number): string {
             <span>{{ r.storeCode }} {{ r.storeName }}</span>
             <span class="result-count">{{ r.relatedOrders.length }} 个关联订单</span>
           </div>
-          <div class="result-function-order">
-            <span>功能订单：{{ r.functionOrderNo }}</span>
-            <span>状态：{{ r.functionOrderStatus }}</span>
+          <div v-if="r.functionOrderNo" class="result-function-order">
+            预占订单：{{ r.functionOrderNo }}
           </div>
           <div v-for="o in r.relatedOrders" :key="o.orderNo" class="result-order-item" :style="{ borderLeftColor: getOrderBorderColor(o.orderStatus) }">
             <div class="result-order-header">
@@ -526,9 +535,8 @@ function getProductLabelText(pi: number): string {
             <span>{{ r.storeCode }} {{ r.storeName }}</span>
             <span class="result-count">{{ r.relatedOrders.length }} 个关联订单</span>
           </div>
-          <div class="result-function-order">
-            <span>功能订单：{{ r.functionOrderNo }}</span>
-            <span>状态：{{ r.functionOrderStatus }}</span>
+          <div v-if="r.functionOrderNo" class="result-function-order">
+            预占订单：{{ r.functionOrderNo }}
           </div>
           <div v-for="o in r.relatedOrders" :key="o.orderNo" class="result-order-item" :style="{ borderLeftColor: getOrderBorderColor(o.orderStatus) }">
             <div class="result-order-header">
@@ -1073,7 +1081,21 @@ function getProductLabelText(pi: number): string {
   text-decoration: underline;
 }
 
-/* ========== 审批流程时间线 ========== */
+/* ========== 审批节点类型视觉区分 (§4) ========== */
+.node-start .node-title { color: #22BDB8; font-weight: 600; }
+.node-passed .node-title { color: #333; }
+.node-current { background: #FFF8E1; border-radius: 8px; padding: 8px; margin: -8px -4px; }
+.node-current .node-title { color: #FF9800; font-weight: 600; }
+.node-current .pending-text { font-weight: 600; }
+.node-rejected { background: #FFEBEE; border-radius: 8px; padding: 8px; margin: -8px -4px; }
+.node-rejected .node-title { color: #F44336; font-weight: 600; }
+.node-rejected .node-remark { background: rgba(244, 67, 54, 0.08); border-left: 3px solid #F44336; }
+/* 审批意见贴近节点 */
+.node-remark { margin-top: 6px; padding: 8px 10px; background: #FAFAFA; border-radius: 8px; font-size: 13px; color: #666; line-height: 1.5; }
+
+/* ========== 预占订单辅助字段降层级 (§6) ========== */
+.node-function-order { margin-top: 6px; font-size: 12px; color: #999; padding: 4px 0; }
+.result-function-order { font-size: 12px; color: #999; padding: 6px 0; margin-bottom: 8px; }
 .timeline {
   position: relative;
   padding-left: 20px;

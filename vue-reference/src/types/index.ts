@@ -39,6 +39,7 @@ export interface RelatedOrder {
 }
 export interface ApprovalNode {
   id: string; nodeType: 'start' | 'approval';
+  nodeName?: string;           // 节点名称（如"一级审批""二级审批"）
   handlerName: string; handlerTime?: string;
   result?: '通过' | '驳回' | '待处理';
   remark?: string; functionOrderNo?: string;
@@ -46,7 +47,7 @@ export interface ApprovalNode {
 }
 export interface GroupResult {
   groupId: string; storeCode: string; storeName: string;
-  functionOrderNo: string; functionOrderStatus: string;
+  functionOrderNo: string; functionOrderStatus?: string;
   relatedOrders: RelatedOrder[]; failReason?: string;
 }
 export interface Attachment {
