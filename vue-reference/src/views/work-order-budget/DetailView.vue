@@ -226,7 +226,7 @@ function getProductLabelText(pi: number): string {
 </script>
 
 <template>
-  <div class="detail-page" :style="{ paddingBottom: canApprove ? '160px' : '20px' }">
+  <div class="detail-page" :style="{ paddingBottom: (canApprove || canShowReapply) ? '160px' : '20px' }">
     <!-- Header -->
     <div class="detail-header">
       <button class="header-back" @click="router.back()">&#8249;</button>
