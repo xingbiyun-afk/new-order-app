@@ -53,20 +53,50 @@ const canApprove = computed(() =>
 // 是否已驳回
 const isRejected = computed(() => order.displayStatus === '已驳回')
 
-// 是否可以重新发起
-const canReapply = computed(() => {
-  if (!isRejected.value) return false
-  const cond = order.reapplyCondition
-  if (!cond) return false
-  return cond.availability !== 'budget_expired'
+// ===== 重新发起五维度显式判断 (P0-1整改) =====
+const reapplyCond = computed(() => order.reapplyCondition)
+
+// 1. 是否展示重新发起入口
+const canShowReapply = computed(() => {
+  return isRejected.value && !!reapplyCond.value
 })
 
-// 重新发起按钮文案
+// 2. 是否允许点击（白名单显式判断，禁止反向排除）
+const canClickReapply = computed(() => {
+  if (!isRejected.value || !reapplyCond.value) return false
+  const allowed: ReapplyAvailability[] = ['available', 'freeze_period_locked', 'non_freeze_new']
+  return allowed.includes(reapplyCond.value.availability)
+})
+
+// 3. 是否禁用
+const isReapplyDisabled = computed(() => {
+  if (!isRejected.value || !reapplyCond.value) return true
+  return reapplyCond.value.availability === 'budget_expired'
+})
+
+// 4. 按钮文案（显式映射，禁止隐式推导）
 const reapplyBtnText = computed(() => {
-  if (!order.reapplyCondition) return '重新发起'
-  const cond = order.reapplyCondition
-  if (cond.availability === 'freeze_period_locked') return '基于原单重新发起'
-  return '重新发起'
+  const cond = reapplyCond.value
+  if (!cond) return '重新发起'
+  switch (cond.availability) {
+    case 'freeze_period_locked': return '基于原单重新发起'
+    case 'budget_expired': return '重新发起'
+    case 'non_freeze_new': return '重新发起'
+    case 'available': return '重新发起'
+    default: return '重新发起'
+  }
+})
+
+// 5. 提示文案（显式映射）
+const reapplyHintText = computed(() => {
+  const cond = reapplyCond.value
+  if (!cond) return ''
+  return cond.message
+})
+
+// P0-2: 显式消费 canSwitchBudget，禁止仅靠 availability 隐式推导
+const canSwitchBudgetWhenReapply = computed(() => {
+  return !!reapplyCond.value?.canSwitchBudget
 })
 
 // 状态颜色映射
@@ -143,21 +173,21 @@ function handleReject() {
 
 // 重新发起
 function handleReapply() {
-  if (!canReapply.value) return
+  if (!canClickReapply.value) return   // P0-1: 使用显式白名单判断，禁止反向排除
   showReapplyConfirm.value = true
 }
 
 function confirmReapply() {
   showReapplyConfirm.value = false
-  const cond = order.reapplyCondition
-  if (cond?.availability === 'freeze_period_locked' && cond.originalBudgetNo) {
-    // 冻结期：带入原预算号 + rejectedFrom
+  // P0-2: 显式消费 canSwitchBudget，禁止仅靠 availability 隐式推导
+  if (!canSwitchBudgetWhenReapply.value && reapplyCond.value?.originalBudgetNo) {
+    // 不允许切换预算号：带入原预算号 + rejectedFrom
     router.push({
       path: '/product-apply/create',
       query: { rejectedFrom: order.workOrderNo, budgetId: order.budget.id }
     })
   } else {
-    // 非冻结期：普通新建
+    // 允许切换预算号：普通新建
     router.push({ path: '/product-apply/create' })
   }
 }
@@ -166,14 +196,16 @@ function cancelReapply() {
   showReapplyConfirm.value = false
 }
 
-// 重新发起提示文案
+// 重新发起确认弹窗文案（P0-2: 显式消费 canSwitchBudget）
 function getReapplyConfirmText(): string {
-  const cond = order.reapplyCondition
+  const cond = reapplyCond.value
   if (!cond) return '确定要重新发起此工单吗？'
-  if (cond.availability === 'freeze_period_locked') {
-    return `当前预算处于冻结期，原预算号「${cond.originalBudgetNo || order.budget.budgetNo}」将沿用，不允许切换预算号，提交时按剩余额度校验。确定继续？`
+  if (!canSwitchBudgetWhenReapply.value) {
+    // 不允许切换预算号
+    return `原预算号「${cond.originalBudgetNo || order.budget.budgetNo}」将沿用，当前场景下不允许重新选择预算号，提交时按剩余额度校验。确定继续？`
   }
-  return '将按普通新建发起，可自行选择预算号。确定继续？'
+  // 允许切换预算号
+  return '将按普通新建发起，当前场景下可自行选择预算号。确定继续？'
 }
 
 // 附件图标颜色
@@ -459,18 +491,18 @@ function getProductLabelText(pi: number): string {
       </div>
     </div>
 
-    <!-- ==================== 重新发起操作区 (已驳回状态) (CR-20260703-003 §5) ==================== -->
-    <div v-if="isRejected" class="reapply-actions">
+    <!-- ==================== 重新发起操作区 (P0-1: 五维度显式判断) ==================== -->
+    <div v-if="canShowReapply" class="reapply-actions">
       <button
         class="btn-reapply"
-        :class="{ disabled: !canReapply }"
-        :disabled="!canReapply"
+        :class="{ disabled: isReapplyDisabled }"
+        :disabled="isReapplyDisabled"
         @click="handleReapply"
       >
         {{ reapplyBtnText }}
       </button>
-      <div v-if="order.reapplyCondition" class="reapply-hint">
-        {{ order.reapplyCondition.message }}
+      <div v-if="reapplyHintText" class="reapply-hint">
+        {{ reapplyHintText }}
       </div>
     </div>
 
