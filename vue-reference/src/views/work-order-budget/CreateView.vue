@@ -102,7 +102,7 @@ onMounted(() => {
         const isFreezing = TODAY >= new Date(originalBudget.freezeStartDate) && TODAY < new Date(originalBudget.budgetExpiryDate)
         const isExpired = TODAY >= new Date(originalBudget.budgetExpiryDate)
         if (isFreezing) {
-          // 冻结期：带入原预算并锁定，用户不能切换
+          // 冻结期：带入原预算且不允许切换预算号
           store.selectBudget(originalBudget.id)
         } else if (isExpired) {
           // 已到期：带入原预算让用户看到"已到期"提示，但不允许提交
@@ -188,7 +188,7 @@ function hasGroupOrProduct(): boolean {
 // CR-20260702-001 收尾：原单重提场景直接拦截
 function goBudgetSelect() {
   if (isRejectedRetrigger.value) {
-    showToast('当前为原单重提场景，预算已锁定，不可更换')
+    showToast('当前为原单重提场景，预算号不允许切换')
     return
   }
   if (hasGroupOrProduct()) {
@@ -330,7 +330,7 @@ function hasImportWarnings() {
       <span style="font-size: 15px; font-weight: 600; color: #22BDB8;">¥{{ fmtMoney(store.selectedBudget.availableAmount) }}</span>
     </div>
 
-    <!-- Budget (CR-20260702-001 整改: 补齐预算摘要区 + 驳回后重提锁定) -->
+    <!-- Budget (CR-20260702-001 整改: 补齐预算摘要区 + 驳回后重提不允许切换预算号) -->
     <!-- CR-20260702-002: 进一步压缩预算信息区高度 -->
     <div class="card" style="margin: 12px 16px; padding: 12px 16px;">
       <div style="font-size: 15px; font-weight: 600; color: #333; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0;">预算信息</div>
@@ -346,7 +346,7 @@ function hasImportWarnings() {
         <div style="display: flex; align-items: center; gap: 4px;">
           <span style="font-size: 14px;" :style="{ color: store.selectedBudget ? '#333' : '#bbb' }">{{ store.selectedBudget?.budgetNo || '选择预算' }}</span>
           <span v-if="!isRejectedRetrigger" style="color: #999; font-size: 16px;">&#8250;</span>
-          <span v-else style="font-size: 12px; color: #999;">已锁定</span>
+          <span v-else style="font-size: 12px; color: #999;">不允许切换</span>
         </div>
       </div>
 
