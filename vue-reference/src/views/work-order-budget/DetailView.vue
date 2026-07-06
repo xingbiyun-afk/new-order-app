@@ -39,12 +39,24 @@ function toggleGroup(gid: string) {
 }
 
 // ===== 汇总计算 =====
+// 款 = SKU 种类数 (products.length 合计)
+// 件 = 数量合计 (products[].quantity 合计)
 const summary = computed(() => {
   const groupCount = order.storeGroups.length
   const storeCount = new Set(order.storeGroups.map(g => g.storeCode)).size
-  const productCount = order.storeGroups.reduce((sum, g) => sum + g.products.length, 0)
-  return { groupCount, storeCount, productCount }
+  const skuCount = order.storeGroups.reduce((sum, g) => sum + g.products.length, 0)
+  const itemCount = order.storeGroups.reduce(
+    (sum, g) => sum + g.products.reduce((s, p) => s + p.quantity, 0), 0
+  )
+  return { groupCount, storeCount, skuCount, itemCount }
 })
+
+// 单个明细的款/件汇总
+function groupSummary(g: { products: { quantity: number }[] }) {
+  const skuCount = g.products.length
+  const itemCount = g.products.reduce((s, p) => s + p.quantity, 0)
+  return { skuCount, itemCount }
+}
 
 // 当前用户是否为处理人（mock固定为true）
 const isCurrentApprover = true
@@ -339,23 +351,40 @@ function getProductLabelText(pi: number): string {
 
     <!-- ==================== 产品申请订单明细 (§7) ==================== -->
     <div class="card">
-      <!-- 汇总行 (§7.2) -->
+      <!-- 汇总行 (§7.2 四列网格，数字独立成列应对位数膨胀) -->
       <div class="summary-bar">
-        共 <span class="summary-num">{{ summary.groupCount }}</span> 笔产品申请订单，涉及 <span class="summary-num">{{ summary.storeCount }}</span> 个专卖店，共 <span class="summary-num">{{ summary.productCount }}</span> 个产品
+        <div class="summary-cell">
+          <div class="summary-num">{{ summary.groupCount }}</div>
+          <div class="summary-label">笔订单</div>
+        </div>
+        <div class="summary-cell">
+          <div class="summary-num">{{ summary.storeCount }}</div>
+          <div class="summary-label">专卖店</div>
+        </div>
+        <div class="summary-cell">
+          <div class="summary-num">{{ summary.skuCount }}</div>
+          <div class="summary-label">款</div>
+        </div>
+        <div class="summary-cell">
+          <div class="summary-num">{{ summary.itemCount }}</div>
+          <div class="summary-label">件</div>
+        </div>
       </div>
 
       <!-- 每个明细卡片 (§7.3 卡片头增强) -->
       <div v-for="(g, gi) in order.storeGroups" :key="g.id" class="group-fold-card">
-        <!-- 标题行：可点击展开/折叠 (§7.3 增强) -->
+        <!-- 标题行：可点击展开/折叠 (§7.3 两行布局：上行标题+编号+箭头；下行产品数+金额) -->
         <div class="group-fold-header" @click="toggleGroup(g.id)">
-          <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
-            <span style="font-size:15px;font-weight:600;color:#333;line-height:32px;white-space:nowrap;">产品申请订单明细</span>
+          <div class="group-fold-row1">
+            <span class="group-fold-title">产品申请订单明细</span>
             <span class="capsule-num">{{ gi + 1 }}</span>
-            <span class="group-badge">{{ g.products.length }} 个产品</span>
+            <span class="fold-arrow" :class="{ expanded: isGroupExpanded(g.id) }">&#9662;</span>
+          </div>
+          <div class="group-fold-row2">
+            <span class="group-badge">{{ groupSummary(g).skuCount }} 款 · {{ groupSummary(g).itemCount }} 件</span>
             <!-- §7.3 新增：分组金额显示在卡片头 -->
             <span class="group-amount-badge">¥{{ formatAmount(g.groupAmount) }}</span>
           </div>
-          <span class="fold-arrow" :class="{ expanded: isGroupExpanded(g.id) }">&#9662;</span>
         </div>
 
         <!-- 展开内容 (§7.4) -->
@@ -669,6 +698,10 @@ function getProductLabelText(pi: number): string {
   padding: 2px 8px;
   border-radius: 8px;
   margin-left: 4px;
+  white-space: nowrap;
+  max-width: 50%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ========== Key-Value Row ========== */
@@ -773,6 +806,8 @@ function getProductLabelText(pi: number): string {
   font-size: 12px;
   color: #999;
   margin-bottom: 6px;
+  align-items: center;
+  line-height: 1.5;
 }
 .tip-remark {
   font-size: 13px;
@@ -858,16 +893,33 @@ function getProductLabelText(pi: number): string {
 
 /* ========== 汇总行 ========== */
 .summary-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
   padding: 12px 0;
   margin-bottom: 12px;
   border-bottom: 1px solid #f0f0f0;
-  font-size: 14px;
-  color: #666;
-  line-height: 1.6;
+  text-align: center;
+}
+.summary-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
 }
 .summary-num {
   color: #22BDB8;
   font-weight: 600;
+  font-size: 18px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.summary-label {
+  color: #999;
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 /* ========== 折叠卡片 ========== */
@@ -882,10 +934,38 @@ function getProductLabelText(pi: number): string {
 }
 .group-fold-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 6px;
   cursor: pointer;
   user-select: none;
+  padding: 4px 0;
+}
+.group-fold-row1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.group-fold-row1 .fold-arrow {
+  margin-left: auto;
+}
+.group-fold-row2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+.group-fold-row2 .group-amount-badge {
+  margin-left: auto;
+  white-space: nowrap;
+}
+.group-fold-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  line-height: 24px;
+  white-space: nowrap;
 }
 .group-fold-body {
   margin-top: 10px;

@@ -421,12 +421,11 @@ function hasImportWarnings() {
       </div>
       <!-- Collapsed (CR-20260702-002: 新增分组小计金额) -->
       <div v-if="isCol(group.id)" style="padding: 8px 0;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-          <span style="font-size: 14px; color: #666;">{{ group.storeCode ? `${group.storeCode} ${group.storeName}` : '未选择专卖店' }}</span>
-          <span style="font-size: 13px; color: #22BDB8; font-weight: 500;">{{ group.products.length }} 件产品</span>
+        <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+          <span style="font-size: 14px; color: #666; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;">{{ group.storeCode ? `${group.storeCode} ${group.storeName}` : '未选择专卖店' }}</span>
+          <span style="font-size: 13px; color: #22BDB8; font-weight: 500; white-space: nowrap; flex-shrink: 0;">{{ group.products.length }} 件产品</span>
         </div>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span></span>
+        <div style="display: flex; align-items: center; justify-content: flex-end; margin-top: 4px;">
           <span style="font-size: 13px; color: #666;">小计 <span style="font-size: 15px; font-weight: 600; color: #22BDB8;">¥{{ fmtMoney(group.products.reduce((s, p) => s + p.amount, 0)) }}</span></span>
         </div>
       </div>
@@ -500,15 +499,17 @@ function hasImportWarnings() {
     </div>
     <!-- Total (CR-20260702-002: 增加预算关系提示) -->
     <div v-if="store.totalAmount > 0" style="padding: 14px 16px; background-color: #fff; margin: 0 16px 12px; border-radius: 12px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-        <span style="font-size: 15px; font-weight: 500; color: #333;">金额合计</span>
-        <span style="font-size: 20px; font-weight: 600; color: #22BDB8;">¥{{ fmtMoney(store.totalAmount) }}</span>
+      <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px;">
+        <span style="font-size: 15px; font-weight: 500; color: #333; white-space: nowrap;">金额合计</span>
+        <span style="font-size: 20px; font-weight: 600; color: #22BDB8; white-space: nowrap; margin-left: auto;">¥{{ fmtMoney(store.totalAmount) }}</span>
       </div>
-      <!-- 轻量级预算关系提示 -->
-      <div v-if="store.selectedBudget" style="display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
-        <span style="color: #999;">剩余额度（净额）¥{{ fmtMoney(store.selectedBudget.availableAmount) }}</span>
-        <span v-if="store.totalAmount > store.selectedBudget.availableAmount" style="color: #F44336; font-weight: 500;">已超过剩余额度（净额）</span>
-        <span v-else style="color: #4CAF50;">还可使用 ¥{{ fmtMoney(store.selectedBudget.availableAmount - store.totalAmount) }}</span>
+      <!-- 轻量级预算关系提示：两行布局应对数字膨胀 -->
+      <div v-if="store.selectedBudget" style="font-size: 12px; color: #999; line-height: 1.6;">
+        <div style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
+          <span>剩余额度（净额）¥{{ fmtMoney(store.selectedBudget.availableAmount) }}</span>
+          <span v-if="store.totalAmount > store.selectedBudget.availableAmount" style="color: #F44336; font-weight: 500;">已超过剩余额度</span>
+          <span v-else style="color: #4CAF50;">还可使用 ¥{{ fmtMoney(store.selectedBudget.availableAmount - store.totalAmount) }}</span>
+        </div>
       </div>
     </div>
     <!-- Attachments (CR-20260702-002: 必传感知增强) -->
