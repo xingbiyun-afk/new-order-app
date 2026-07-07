@@ -578,7 +578,7 @@ function getProductLabelText(pi: number): string {
           <div v-else-if="getLatestOrderStatus(r).status === '草稿' && dedupFailReasons(r.failReasons).length > 0" class="tip-banner tip-error tip-inline">
             <div class="tip-icon">&#9888;</div>
             <div class="tip-content">
-              <div class="tip-title">订单生成失败</div>
+              <div class="tip-title">订单当前为草稿状态</div>
               <div class="tip-text">{{ dedupFailReasons(r.failReasons)[dedupFailReasons(r.failReasons).length - 1] }}</div>
             </div>
           </div>
@@ -638,7 +638,7 @@ function getProductLabelText(pi: number): string {
           <div v-else-if="getLatestOrderStatus(r).status === '草稿' && dedupFailReasons(r.failReasons).length > 0" class="tip-banner tip-error tip-inline">
             <div class="tip-icon">&#9888;</div>
             <div class="tip-content">
-              <div class="tip-title">订单生成失败</div>
+              <div class="tip-title">订单当前为草稿状态</div>
               <div class="tip-text">{{ dedupFailReasons(r.failReasons)[dedupFailReasons(r.failReasons).length - 1] }}</div>
             </div>
           </div>
