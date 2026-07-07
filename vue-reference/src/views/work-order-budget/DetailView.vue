@@ -18,6 +18,8 @@ const idSceneMap: Record<string, string> = {
   '7': 'completed-full',
   '8': 'completed-merged',
   '9': 'completed-retry',
+  '10': 'completed-all-failed',
+  '11': 'completed-store-change',
 }
 const routeId = route.params.id as string
 const scene = (route.query.scene as string | undefined) || idSceneMap[routeId] || undefined
@@ -510,10 +512,6 @@ function getProductLabelText(pi: number): string {
             <span>{{ r.storeCode }} {{ r.storeName }}</span>
             <span class="result-count">{{ r.relatedOrders.length }} 个关联订单</span>
           </div>
-          <!-- CR-20260706-002: 预占订单编号只展示编号，不展示状态 -->
-          <div v-if="r.functionOrderNos?.length" class="result-function-order">
-            预占订单：{{ r.functionOrderNos.join('、') }}
-          </div>
           <div v-for="o in r.relatedOrders" :key="o.orderNo" class="result-order-item" :style="{ borderLeftColor: getOrderBorderColor(o.orderStatus) }">
             <div class="result-order-header">
               <span class="result-order-type">{{ o.orderType }}</span>
@@ -567,9 +565,6 @@ function getProductLabelText(pi: number): string {
           <div class="result-header">
             <span>{{ r.storeCode }} {{ r.storeName }}</span>
             <span class="result-count">{{ r.relatedOrders.length }} 个关联订单</span>
-          </div>
-          <div v-if="r.functionOrderNos?.length" class="result-function-order">
-            预占订单：{{ r.functionOrderNos.join('、') }}
           </div>
           <div v-for="o in r.relatedOrders" :key="o.orderNo" class="result-order-item" :style="{ borderLeftColor: getOrderBorderColor(o.orderStatus) }">
             <div class="result-order-header">
@@ -1163,7 +1158,7 @@ function getProductLabelText(pi: number): string {
   font-family: 'SF Mono', 'Monaco', monospace;
   letter-spacing: 0.3px;
 }
-.result-function-order { font-size: 12px; color: #999; padding: 6px 0; margin-bottom: 8px; }
+
 .timeline {
   position: relative;
   padding-left: 20px;
@@ -1370,14 +1365,6 @@ function getProductLabelText(pi: number): string {
   font-size: 12px;
   color: #999;
   font-weight: 400;
-}
-.result-function-order {
-  display: flex;
-  justify-content: space-between;
-  padding: 6px 0;
-  font-size: 13px;
-  color: #666;
-  margin-bottom: 8px;
 }
 .result-order-item {
   margin-top: 10px;
