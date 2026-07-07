@@ -1,10 +1,18 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 const route = useRoute()
 const router = useRouter()
 const showTab = computed(() => route.meta.showTab === true)
 const showHeader = computed(() => route.meta.showHeader === true)
+
+// CR-20260707-002-fix: .page-content 是实际滚动容器（flex 布局），
+// scrollBehavior 只控制 window 滚动对其无效。
+// 监听路由变化，在切换页面时自动将 .page-content 滚动到顶部，
+// 避免从"我的"页滚动位置进入详情页时继承滚动位置。
+watch(() => route.path, () => {
+  document.querySelector('.page-content')?.scrollTo(0, 0)
+})
 const tabs = [
   { label: '发起工单', path: '/create', icon: 'create' },
   { label: '我的', path: '/my', icon: 'my' },
