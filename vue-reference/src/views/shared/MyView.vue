@@ -38,9 +38,11 @@ const emptyText = computed(() => {
 </script>
 
 <template>
-  <div>
+  <!-- CR-20260707-002-fix1: 统一外层 padding 为 0 16px，与 CreateView/TeamView 保持一致 -->
+  <div style="padding: 0 16px;">
     <!-- 搜索区 -->
-    <div style="background-color: #fff; padding-bottom: 8px;">
+    <!-- 使用负margin让白色背景延伸到屏幕边缘，保持视觉统一 -->
+    <div style="background-color: #fff; padding-bottom: 8px; margin: 0 -16px;">
       <div style="padding: 12px 16px 8px;">
         <div style="display: flex; align-items: center; background-color: #EFEFEF; border-radius: 8px; padding: 10px 12px; gap: 8px;">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="#999"><path d="M11.74 10.34a6.49 6.49 0 1 0-1.4 1.4l3.8 3.81a1 1 0 0 0 1.42-1.4l-3.82-3.81zM6.5 11a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9z" /></svg>
@@ -78,7 +80,8 @@ const emptyText = computed(() => {
     </div>
 
     <!-- 卡片列表 -->
-    <div style="padding: 8px 16px 100px;">
+    <!-- CR-20260707-002-fix1: 移除左右padding（由外层统一控制），保留上下padding -->
+    <div style="padding: 8px 0 100px;">
       <!-- 空态（CR-20260630-003 4.5/4.6） -->
       <div v-if="isEmpty" style="text-align: center; padding: 80px 24px;">
         <div style="font-size: 14px; color: #999;">{{ emptyText }}</div>
