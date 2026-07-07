@@ -53,7 +53,9 @@
 .page-content {
   padding: 0;
   padding-bottom: calc(var(--tab-height, 56px) + var(--spacing-lg, 16px));
-  overflow-y: auto;
+  /* CR-20260707-002-fix: overflow-y: scroll 确保滚动条始终显示，避免切换页面时
+     因滚动条出现/消失导致内容区域宽度变化而产生"页面左移"错觉 */
+  overflow-y: scroll;
   -webkit-overflow-scrolling: touch;
 }
 .card {
