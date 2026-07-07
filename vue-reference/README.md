@@ -1,6 +1,6 @@
 # new-order-app Vue 参考实现
 
-本目录为 `new-order-app` 项目的 **Vue3 + TypeScript + Vite 参考实现**，初始迁移自 React 参考实现（`src/features/work-order-budget/`，CR-20260629-001），后续经多轮迭代优化（截至 CR-20260706-004）。
+本目录为 `new-order-app` 项目的 **Vue3 + TypeScript + Vite 参考实现**，初始迁移自 React 参考实现（`src/features/work-order-budget/`，CR-20260629-001），后续经多轮迭代优化（截至 CR-20260707-001）。
 
 ## 定位
 
