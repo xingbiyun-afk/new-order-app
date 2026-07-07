@@ -8,18 +8,26 @@ import type { ReapplyAvailability, GroupResult } from '../../types'
 const route = useRoute()
 const router = useRouter()
 
-// CR-20260703-003: 支持通过 ?scene=xxx 切换 mock 场景，也支持通过 id 路由匹配场景
+// CR-20260707-003: idSceneMap — 详情页场景映射表
+//
+// 本映射表维护「路由 id → scene key」的对应关系，与规则文档中的场景验收样本总表一一对应。
+// 详情页支持两种场景切换方式：
+//   1. Query Scene 优先：?scene=xxx 直接指定场景 key（最高优先级）
+//   2. ID 映射兜底：无 query 时按本表映射，未命中则回退到默认场景
+//
+// 完整映射关系参见：docs/product/work-order-budget/产品申请工单详情页面规则明细.md §12 场景验收样本总表
+// 也参见：vue-reference/src/mocks/index.ts 中的「详情页场景映射总表」
 const idSceneMap: Record<string, string> = {
-  '2': 'processing',
-  '3': 'rejected-freeze',
-  '4': 'rejected-expired',
-  '5': 'rejected-nonfreeze',
-  '6': 'completed',
-  '7': 'completed-full',
-  '8': 'completed-merged',
-  '9': 'completed-retry',
-  '10': 'completed-all-failed',
-  '11': 'completed-store-change',
+  '2': 'processing',           // 场景1：处理中 — PA202407010001
+  '3': 'rejected-freeze',      // 场景2：已驳回-冻结期 — PA202406280003
+  '4': 'rejected-expired',     // 场景3：已驳回-已到期 — PA202406150001
+  '5': 'rejected-nonfreeze',   // 场景4：已驳回-非冻结期 — PA202406200001
+  '6': 'completed',            // 场景5：已结束-部分成功 — PA202406100001
+  '7': 'completed-full',       // 场景6：已结束-全部成功 — PA202407020001
+  '8': 'completed-merged',     // 场景7：已结束-归并生成 — PA202407030001
+  '9': 'completed-retry',      // 场景8：已结束-多次重试 — PA202407050001
+  '10': 'completed-all-failed', // 场景9：已结束-全部失败 — PA202407060001
+  '11': 'completed-store-change', // 场景10：已结束-专卖店变更 — PA202407070001
 }
 const routeId = route.params.id as string
 const scene = (route.query.scene as string | undefined) || idSceneMap[routeId] || undefined
