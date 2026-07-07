@@ -191,8 +191,8 @@ const mockApprovalNodes: ApprovalNode[] = [
 ];
 
 const mockGroupResults: GroupResult[] = [
-  { groupId: 'group_1', storeCode: '31692', storeName: '赵晋安 宋晓华', functionOrderNos: ['FO20240626001'], relatedOrders: [{ orderNo: 'O20240626001', orderType: '产品申请表订单', orderStatus: '已生成', storeCode: '31692', storeName: '赵晋安 宋晓华' }] },
-  { groupId: 'group_2', storeCode: '31441', storeName: '赵晋杰', functionOrderNos: ['FO20240626002'], relatedOrders: [{ orderNo: 'O20240626002', orderType: '内部申请表订单', orderStatus: '生成失败', storeCode: '31441', storeName: '赵晋杰' }], failReasons: ['产品库存不足无法生成对应订单'] },
+  { groupId: 'group_1', storeCode: '31692', storeName: '赵晋安 宋晓华', functionOrderNos: ['FO20240626001'], relatedOrders: [{ orderNo: 'O20240626001', orderType: '产品申请表订单', orderStatus: '已创建', storeCode: '31692', storeName: '赵晋安 宋晓华' }] },
+  { groupId: 'group_2', storeCode: '31441', storeName: '赵晋杰', functionOrderNos: ['FO20240626002'], relatedOrders: [{ orderNo: 'O20240626002', orderType: '内部申请表订单', orderStatus: '草稿', storeCode: '31441', storeName: '赵晋杰' }], failReasons: ['产品库存不足，订单提交后自动回退到草稿'] },
 ];
 
 export const mockWorkOrderDetail: ProductWorkOrder = {
@@ -368,9 +368,10 @@ const mockCompletedNodes: ApprovalNode[] = [
 ];
 
 // CR-20260706-002: 去除 RelatedOrder.remark，去除 GroupResult.failReason 单一字段改为 failReasons[]
+// CR-20260707-002: 状态统一为"已创建/草稿"
 const mockCompletedGroupResults: GroupResult[] = [
-  { groupId: 'g1', storeCode: '31692', storeName: '赵晋安 宋晓华', functionOrderNos: ['FO20240610001'], relatedOrders: [{ orderNo: 'O20240610001', orderType: '产品申请表订单', orderStatus: '已生成', storeCode: '31692', storeName: '赵晋安 宋晓华' }] },
-  { groupId: 'g2', storeCode: '31441', storeName: '赵晋杰', functionOrderNos: ['FO20240610002'], relatedOrders: [{ orderNo: 'O20240626002', orderType: '内部申请表订单', orderStatus: '生成失败', storeCode: '31441', storeName: '赵晋杰' }], failReasons: ['专卖店编号在系统的启用下单标识关闭'] },
+  { groupId: 'g1', storeCode: '31692', storeName: '赵晋安 宋晓华', functionOrderNos: ['FO20240610001'], relatedOrders: [{ orderNo: 'O20240610001', orderType: '产品申请表订单', orderStatus: '已创建', storeCode: '31692', storeName: '赵晋安 宋晓华' }] },
+  { groupId: 'g2', storeCode: '31441', storeName: '赵晋杰', functionOrderNos: ['FO20240610002'], relatedOrders: [{ orderNo: 'O20240626002', orderType: '内部申请表订单', orderStatus: '草稿', storeCode: '31441', storeName: '赵晋杰' }], failReasons: ['专卖店下单标识关闭，订单自动提交失败回退到草稿'] },
 ];
 
 export const mockWorkOrderCompleted: ProductWorkOrder = {
@@ -401,9 +402,10 @@ const mockCompletedFullNodes: ApprovalNode[] = [
   { id: 'cf_n2', nodeType: 'approval', nodeName: '二级审批', handlerName: '吴总监', handlerTime: '2024-07-02 11:00:00', result: '通过', remark: '审批通过' },
 ];
 
+// CR-20260707-002: 状态统一为"已创建"
 const mockCompletedFullGroupResults: GroupResult[] = [
-  { groupId: 'g1', storeCode: '31692', storeName: '赵晋安 宋晓华', functionOrderNos: ['FO20240702001'], relatedOrders: [{ orderNo: 'O20240702001', orderType: '产品申请表订单', orderStatus: '已生成', storeCode: '31692', storeName: '赵晋安 宋晓华' }] },
-  { groupId: 'g2', storeCode: '31375', storeName: '大连瑞轩商贸有限公司', functionOrderNos: ['FO20240702002'], relatedOrders: [{ orderNo: 'O20240702002', orderType: '内部申请表订单', orderStatus: '已生成', storeCode: '31375', storeName: '大连瑞轩商贸有限公司' }] },
+  { groupId: 'g1', storeCode: '31692', storeName: '赵晋安 宋晓华', functionOrderNos: ['FO20240702001'], relatedOrders: [{ orderNo: 'O20240702001', orderType: '产品申请表订单', orderStatus: '已创建', storeCode: '31692', storeName: '赵晋安 宋晓华' }] },
+  { groupId: 'g2', storeCode: '31375', storeName: '大连瑞轩商贸有限公司', functionOrderNos: ['FO20240702002'], relatedOrders: [{ orderNo: 'O20240702002', orderType: '内部申请表订单', orderStatus: '已创建', storeCode: '31375', storeName: '大连瑞轩商贸有限公司' }] },
 ];
 
 export const mockWorkOrderCompletedFull: ProductWorkOrder = {
@@ -430,10 +432,11 @@ const mockCompletedMergedNodes: ApprovalNode[] = [
   { id: 'cm_n2', nodeType: 'approval', nodeName: '二级审批', handlerName: '李总监', handlerTime: '2024-07-03 11:30:00', result: '通过', remark: '审批通过，归并生成正式订单' },
 ];
 
+// CR-20260707-002: 状态统一为"已创建"
 const mockCompletedMergedGroupResults: GroupResult[] = [
   // 两笔明细归并到同一正式订单
-  { groupId: 'g1', storeCode: '31692', storeName: '赵晋安 宋晓华', functionOrderNos: ['FO20240703001'], relatedOrders: [{ orderNo: 'O20240703001', orderType: '产品申请表订单', orderStatus: '已生成', storeCode: '31692', storeName: '赵晋安 宋晓华' }] },
-  { groupId: 'g2', storeCode: '31441', storeName: '赵晋杰', functionOrderNos: ['FO20240703002'], relatedOrders: [{ orderNo: 'O20240703001', orderType: '产品申请表订单', orderStatus: '已生成', storeCode: '31441', storeName: '赵晋杰' }] },
+  { groupId: 'g1', storeCode: '31692', storeName: '赵晋安 宋晓华', functionOrderNos: ['FO20240703001'], relatedOrders: [{ orderNo: 'O20240703001', orderType: '产品申请表订单', orderStatus: '已创建', storeCode: '31692', storeName: '赵晋安 宋晓华' }] },
+  { groupId: 'g2', storeCode: '31441', storeName: '赵晋杰', functionOrderNos: ['FO20240703002'], relatedOrders: [{ orderNo: 'O20240703001', orderType: '产品申请表订单', orderStatus: '已创建', storeCode: '31441', storeName: '赵晋杰' }] },
 ];
 
 export const mockWorkOrderCompletedMerged: ProductWorkOrder = {
@@ -462,30 +465,32 @@ const mockCompletedRetryNodes: ApprovalNode[] = [
 ];
 
   // CR-20260706-002: 多次失败重试历史（按订单号聚合）
+  // CR-20260707-002: 状态统一为"已创建/草稿"；外层只承接最新结果摘要
   // 业务说明：
-  // - 31441: 内部申请表订单失败2次，第3次成功（每次重试系统生成不同订单号）
-  // - 31375: 内部申请表订单失败2次，业务放弃（每次重试系统生成不同订单号）
+  // - 31692(g1): 产品申请表订单，一次成功
+  // - 31441(g2): 内部申请表订单，失败2次后第3次成功 → 外层状态"已创建"，历史放入折叠区
+  // - 31375(g3): 内部申请表订单，失败2次后业务放弃 → 外层状态"草稿"，最新备注说明原因
   const mockCompletedRetryGroupResults: GroupResult[] = [
     {
       groupId: 'g1',
       storeCode: '31692',
       storeName: '赵晋安 宋晓华',
       functionOrderNos: ['FO20240705001'],
-      relatedOrders: [{ orderNo: 'O20240705001', orderType: '产品申请表订单', orderStatus: '已生成', storeCode: '31692', storeName: '赵晋安 宋晓华' }],
+      relatedOrders: [{ orderNo: 'O20240705001', orderType: '产品申请表订单', orderStatus: '已创建', storeCode: '31692', storeName: '赵晋安 宋晓华' }],
     },
     {
       groupId: 'g2',
       storeCode: '31441',
       storeName: '赵晋杰',
       functionOrderNos: ['FO20240705002'],
-      relatedOrders: [{ orderNo: 'O20240705002', orderType: '内部申请表订单', orderStatus: '已生成', storeCode: '31441', storeName: '赵晋杰' }],
-      failReasons: ['产品库存不足无法生成对应订单（重试2次后库存补齐，订单生成成功）'],
+      // CR-20260707-002: 最终成功时外层状态"已创建"，不展示历史失败原因（历史在折叠区）
+      relatedOrders: [{ orderNo: 'O20240705002', orderType: '内部申请表订单', orderStatus: '已创建', storeCode: '31441', storeName: '赵晋杰' }],
       // 每次重试系统生成不同订单号，retryHistory 记录每次尝试的订单号
       retryHistory: {
         'O20240705002': [
-          { attemptAt: '2024-07-05 14:00:00', orderNo: 'O20240705002-1', status: '生成失败', failReason: '产品库存不足无法生成对应订单' },
-          { attemptAt: '2024-07-05 16:30:00', orderNo: 'O20240705002-2', status: '生成失败', failReason: '专卖店编号在系统的启用下单标识关闭' },
-          { attemptAt: '2024-07-06 09:15:00', orderNo: 'O20240705002', status: '已生成' },
+          { attemptAt: '2024-07-05 14:00:00', orderNo: 'O20240705002-1', status: '草稿', failReason: '产品库存不足，订单自动提交失败回退到草稿' },
+          { attemptAt: '2024-07-05 16:30:00', orderNo: 'O20240705002-2', status: '草稿', failReason: '专卖店下单标识关闭，订单自动提交失败回退到草稿' },
+          { attemptAt: '2024-07-06 09:15:00', orderNo: 'O20240705002', status: '已创建' },
         ],
       },
     },
@@ -494,13 +499,12 @@ const mockCompletedRetryNodes: ApprovalNode[] = [
       storeCode: '31375',
       storeName: '大连瑞轩商贸有限公司',
       functionOrderNos: ['FO20240705003'],
-      relatedOrders: [{ orderNo: 'O20240705003', orderType: '内部申请表订单', orderStatus: '生成失败', storeCode: '31375', storeName: '大连瑞轩商贸有限公司' }],
-      failReasons: ['产品库存不足无法生成对应订单', '业务同事与财务沟通后决定调整到下一季度，本工单不再重试'],
-      // 每次重试系统生成不同订单号，最终业务放弃
+      // CR-20260707-002: 多次失败后业务放弃 → 外层状态"草稿"，只展示最新失败备注
+      relatedOrders: [{ orderNo: 'O20240705003', orderType: '内部申请表订单', orderStatus: '草稿', storeCode: '31375', storeName: '大连瑞轩商贸有限公司', remark: '业务同事与财务沟通后决定调整到下一季度，本工单不再重试' }],
       retryHistory: {
         'O20240705003': [
-          { attemptAt: '2024-07-05 14:30:00', orderNo: 'O20240705003-1', status: '生成失败', failReason: '产品库存不足无法生成对应订单' },
-          { attemptAt: '2024-07-05 17:00:00', orderNo: 'O20240705003-2', status: '生成失败', failReason: '订单审核被驳回到草稿状态' },
+          { attemptAt: '2024-07-05 14:30:00', orderNo: 'O20240705003-1', status: '草稿', failReason: '产品库存不足，订单自动提交失败回退到草稿' },
+          { attemptAt: '2024-07-05 17:00:00', orderNo: 'O20240705003-2', status: '草稿', failReason: '订单审核被驳回，原订单号已删除并回退到草稿' },
         ],
       },
     },
@@ -533,21 +537,20 @@ const mockCompletedAllFailedNodes: ApprovalNode[] = [
   { id: 'ca_n2', nodeType: 'approval', nodeName: '二级审批', handlerName: '钱总监', handlerTime: '2024-07-06 11:30:00', result: '通过', remark: '审批通过，订单生成根据实际情况处理' },
 ];
 
+// CR-20260707-002: 状态统一为"草稿"，外层只展示最新失败备注
 const mockCompletedAllFailedGroupResults: GroupResult[] = [
-  { groupId: 'g1', storeCode: '31375', storeName: '大连瑞轩商贸有限公司', functionOrderNos: ['FO20240706001'], relatedOrders: [{ orderNo: 'O20240706001', orderType: '内部申请表订单', orderStatus: '生成失败', storeCode: '31375', storeName: '大连瑞轩商贸有限公司' }],
-    failReasons: ['产品库存不足无法生成对应订单', '已重试2次均失败，业务决定调整到下一季度再申请'],
+  { groupId: 'g1', storeCode: '31375', storeName: '大连瑞轩商贸有限公司', functionOrderNos: ['FO20240706001'], relatedOrders: [{ orderNo: 'O20240706001', orderType: '内部申请表订单', orderStatus: '草稿', storeCode: '31375', storeName: '大连瑞轩商贸有限公司', remark: '已重试2次均失败，业务决定调整到下一季度再申请' }],
     retryHistory: {
       'O20240706001': [
-        { attemptAt: '2024-07-06 14:00:00', orderNo: 'O20240706001-1', status: '生成失败', failReason: '产品库存不足无法生成对应订单' },
-        { attemptAt: '2024-07-07 09:30:00', orderNo: 'O20240706001-2', status: '生成失败', failReason: '订单审核被驳回到草稿状态' },
+        { attemptAt: '2024-07-06 14:00:00', orderNo: 'O20240706001-1', status: '草稿', failReason: '产品库存不足，订单自动提交失败回退到草稿' },
+        { attemptAt: '2024-07-07 09:30:00', orderNo: 'O20240706001-2', status: '草稿', failReason: '订单审核被驳回，原订单号已删除并回退到草稿' },
       ],
     },
   },
-  { groupId: 'g2', storeCode: '50001', storeName: '层级5测试专卖店', functionOrderNos: ['FO20240706002'], relatedOrders: [{ orderNo: 'O20240706002', orderType: '产品申请表订单', orderStatus: '生成失败', storeCode: '50001', storeName: '层级5测试专卖店' }],
-    failReasons: ['专卖店编号在系统的启用下单标识关闭', '已重试1次仍失败，业务放弃'],
+  { groupId: 'g2', storeCode: '50001', storeName: '层级5测试专卖店', functionOrderNos: ['FO20240706002'], relatedOrders: [{ orderNo: 'O20240706002', orderType: '产品申请表订单', orderStatus: '草稿', storeCode: '50001', storeName: '层级5测试专卖店', remark: '已重试1次仍失败，业务放弃' }],
     retryHistory: {
       'O20240706002': [
-        { attemptAt: '2024-07-06 15:00:00', orderNo: 'O20240706002-1', status: '生成失败', failReason: '专卖店编号在系统的启用下单标识关闭' },
+        { attemptAt: '2024-07-06 15:00:00', orderNo: 'O20240706002-1', status: '草稿', failReason: '专卖店下单标识关闭，订单自动提交失败回退到草稿' },
       ],
     },
   },
@@ -579,6 +582,7 @@ const mockStoreChangeNodes: ApprovalNode[] = [
   { id: 'sc_n2', nodeType: 'approval', nodeName: '二级审批', handlerName: '吴总监', handlerTime: '2024-07-07 11:30:00', result: '通过', remark: '审批通过，订单生成时由原专卖店 A 调整为专卖店 B（库存不足）' },
 ];
 
+// CR-20260707-002: 状态统一为"已创建"
 const mockStoreChangeGroupResults: GroupResult[] = [
   {
     groupId: 'g1',
@@ -588,7 +592,7 @@ const mockStoreChangeGroupResults: GroupResult[] = [
     relatedOrders: [{
       orderNo: 'O20240707001',
       orderType: '产品申请表订单',
-      orderStatus: '已生成',
+      orderStatus: '已创建',    // CR-20260707-002: 统一为"已创建"
       storeCode: '31441',      // 实际承接专卖店 B（与原始不一致）
       storeName: '赵晋杰',
       remark: '原专卖店 31692 库存不足，无法生成对应订单，经业务确认由专卖店 31441 承接此笔订单',

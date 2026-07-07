@@ -44,11 +44,12 @@ export interface RelatedOrder {
 }
 
 // CR-20260706-002: 单次订单尝试记录（用于多次失败重试时间线）
+// CR-20260707-002: 状态统一为"已创建/客服已审核/财务已审核/草稿"四种
 export interface OrderAttempt {
   attemptAt: string;             // 尝试时间
-  orderNo?: string;            // 本次尝试的订单编号（每次重试可能不同）
-  status: '已生成' | '生成失败';
-  failReason?: string;           // 失败原因（仅生成失败时有值）
+  orderNo?: string;              // 本次尝试的订单编号（每次重试可能不同）
+  status: '已创建' | '客服已审核' | '财务已审核' | '草稿';
+  failReason?: string;           // 失败原因或备注（仅失败/草稿时有值）
 }
 
 export interface ApprovalNode {

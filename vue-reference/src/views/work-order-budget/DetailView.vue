@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getMockWorkOrderDetail } from '../../mocks'
 import { formatAmount } from '../../utils/format'
-import type { ReapplyAvailability } from '../../types'
+import type { ReapplyAvailability, GroupResult } from '../../types'
 
 const route = useRoute()
 const router = useRouter()
@@ -53,9 +53,20 @@ function toggleRetry(orderNo: string) {
 }
 
 // CR-20260706-002: 失败原因去重
+// CR-20260707-002: 注意：外层卡片只展示最新结果摘要，历史失败原因仅在折叠区展示
 function dedupFailReasons(reasons?: string[]): string[] {
   if (!reasons || reasons.length === 0) return []
   return Array.from(new Set(reasons))
+}
+
+// CR-20260707-002: 获取订单最新状态（用于外层卡片摘要）
+function getLatestOrderStatus(r: GroupResult): { status: string; isSuccess: boolean; remark?: string } {
+  // 优先取 relatedOrders 最后一个订单的状态
+  const lastOrder = r.relatedOrders[r.relatedOrders.length - 1]
+  if (!lastOrder) return { status: '草稿', isSuccess: false }
+  const status = lastOrder.orderStatus
+  const isSuccess = status === '已创建' || status === '客服已审核' || status === '财务已审核'
+  return { status, isSuccess, remark: lastOrder.remark }
 }
 
 // ===== 汇总计算 =====
@@ -178,8 +189,14 @@ function getNodeDotColor(n: { nodeType: string; result?: string }) {
   }
 }
 
+// CR-20260707-002: 订单结果状态统一为"已创建/客服已审核/财务已审核/草稿"四种
 function getOrderStatusColor(status: string) {
   switch (status) {
+    case '已创建': return { bg: '#E8F5E9', color: '#4CAF50' }
+    case '客服已审核': return { bg: '#E3F2FD', color: '#2196F3' }
+    case '财务已审核': return { bg: '#E8F5E9', color: '#2E7D32' }
+    case '草稿': return { bg: '#FFEBEE', color: '#F44336' }
+    // 兼容旧数据
     case '已生成': return { bg: '#E8F5E9', color: '#4CAF50' }
     case '生成失败': return { bg: '#FFEBEE', color: '#F44336' }
     default: return { bg: '#FFF3E0', color: '#FF9800' }
@@ -188,6 +205,11 @@ function getOrderStatusColor(status: string) {
 
 function getOrderBorderColor(status: string) {
   switch (status) {
+    case '已创建': return '#4CAF50'
+    case '客服已审核': return '#2196F3'
+    case '财务已审核': return '#2E7D32'
+    case '草稿': return '#F44336'
+    // 兼容旧数据
     case '已生成': return '#4CAF50'
     case '生成失败': return '#F44336'
     default: return '#FF9800'
@@ -526,7 +548,7 @@ function getProductLabelText(pi: number): string {
               <!-- CR-20260706-004: 订单备注（多次重试说明、更换专卖店说明） -->
               <span v-if="o.remark" class="result-order-remark">备注：{{ o.remark }}</span>
             </div>
-            <!-- CR-20260706-002: 多次失败重试 - 折叠收起 + 最终态展示 -->
+            <!-- CR-20260707-002: 多次失败重试 - 折叠收起 + 外层只展示最新结果摘要 -->
             <div v-if="r.retryHistory?.[o.orderNo]?.length" class="result-retry-section">
               <div class="result-retry-toggle" @click="toggleRetry(o.orderNo)">
                 <span class="result-retry-toggle-text">
@@ -534,22 +556,34 @@ function getProductLabelText(pi: number): string {
                 </span>
                 <span class="fold-arrow-mini" :class="{ expanded: isRetryExpanded(o.orderNo) }">&#9662;</span>
               </div>
+              <!-- CR-20260707-002: 重试历史展开区长文本排版优化 -->
               <div v-show="isRetryExpanded(o.orderNo)" class="result-retry-list">
-                <div v-for="(att, ai) in r.retryHistory[o.orderNo]" :key="ai" class="result-retry-item" :class="{ 'is-fail': att.status === '生成失败', 'is-success': att.status === '已生成' }">
-                  <span class="result-retry-time">{{ att.attemptAt }}</span>
-                  <span v-if="att.orderNo" class="result-retry-orderno">订单编号：{{ att.orderNo }}</span>
-                  <span class="result-retry-status" :style="getOrderStatusColor(att.status)">{{ att.status }}</span>
-                  <span v-if="att.failReason" class="result-retry-reason">{{ att.failReason }}</span>
+                <div v-for="(att, ai) in r.retryHistory[o.orderNo]" :key="ai" class="result-retry-item" :class="{ 'is-fail': att.status === '草稿', 'is-success': att.status === '已创建' }">
+                  <div class="result-retry-row1">
+                    <span class="result-retry-time">{{ att.attemptAt }}</span>
+                    <span v-if="att.orderNo" class="result-retry-orderno">{{ att.orderNo }}</span>
+                    <span class="result-retry-status" :style="getOrderStatusColor(att.status)">{{ att.status }}</span>
+                  </div>
+                  <div v-if="att.failReason" class="result-retry-reason">{{ att.failReason }}</div>
                 </div>
               </div>
             </div>
           </div>
-          <!-- CR-20260706-002: 失败原因 (§9 统一提示风格, failReasons[] 数组去重展示) -->
-          <div v-for="(fr, fi) in dedupFailReasons(r.failReasons)" :key="fi" class="tip-banner tip-error tip-inline">
+          <!-- CR-20260707-002: 外层失败提示只在最新结果为"草稿"时展示，且只展示最新一条摘要 -->
+          <!-- 最终已创建/客服已审核/财务已审核时，外层不显示历史失败提示 -->
+          <div v-if="getLatestOrderStatus(r).status === '草稿' && getLatestOrderStatus(r).remark" class="tip-banner tip-warning tip-inline">
+            <div class="tip-icon">&#9888;</div>
+            <div class="tip-content">
+              <div class="tip-title">当前为草稿状态</div>
+              <div class="tip-text">{{ getLatestOrderStatus(r).remark }}</div>
+            </div>
+          </div>
+          <!-- 一直失败且没有remark时，展示最后一条失败原因（仅一条，不堆叠） -->
+          <div v-else-if="getLatestOrderStatus(r).status === '草稿' && dedupFailReasons(r.failReasons).length > 0" class="tip-banner tip-error tip-inline">
             <div class="tip-icon">&#9888;</div>
             <div class="tip-content">
               <div class="tip-title">订单生成失败</div>
-              <div class="tip-text">{{ fr }}</div>
+              <div class="tip-text">{{ dedupFailReasons(r.failReasons)[dedupFailReasons(r.failReasons).length - 1] }}</div>
             </div>
           </div>
         </div>
@@ -580,7 +614,7 @@ function getProductLabelText(pi: number): string {
               <!-- CR-20260706-004: 订单备注（多次重试说明、更换专卖店说明） -->
               <span v-if="o.remark" class="result-order-remark">备注：{{ o.remark }}</span>
             </div>
-            <!-- CR-20260706-002: 多次失败重试 - 折叠收起 + 最终态展示 -->
+            <!-- CR-20260707-002: 多次失败重试 - 折叠收起 + 外层只展示最新结果摘要 -->
             <div v-if="r.retryHistory?.[o.orderNo]?.length" class="result-retry-section">
               <div class="result-retry-toggle" @click="toggleRetry(o.orderNo)">
                 <span class="result-retry-toggle-text">
@@ -588,22 +622,32 @@ function getProductLabelText(pi: number): string {
                 </span>
                 <span class="fold-arrow-mini" :class="{ expanded: isRetryExpanded(o.orderNo) }">&#9662;</span>
               </div>
+              <!-- CR-20260707-002: 重试历史展开区长文本排版优化 -->
               <div v-show="isRetryExpanded(o.orderNo)" class="result-retry-list">
-                <div v-for="(att, ai) in r.retryHistory[o.orderNo]" :key="ai" class="result-retry-item" :class="{ 'is-fail': att.status === '生成失败', 'is-success': att.status === '已生成' }">
-                  <span class="result-retry-time">{{ att.attemptAt }}</span>
-                  <span v-if="att.orderNo" class="result-retry-orderno">订单编号：{{ att.orderNo }}</span>
-                  <span class="result-retry-status" :style="getOrderStatusColor(att.status)">{{ att.status }}</span>
-                  <span v-if="att.failReason" class="result-retry-reason">{{ att.failReason }}</span>
+                <div v-for="(att, ai) in r.retryHistory[o.orderNo]" :key="ai" class="result-retry-item" :class="{ 'is-fail': att.status === '草稿', 'is-success': att.status === '已创建' }">
+                  <div class="result-retry-row1">
+                    <span class="result-retry-time">{{ att.attemptAt }}</span>
+                    <span v-if="att.orderNo" class="result-retry-orderno">{{ att.orderNo }}</span>
+                    <span class="result-retry-status" :style="getOrderStatusColor(att.status)">{{ att.status }}</span>
+                  </div>
+                  <div v-if="att.failReason" class="result-retry-reason">{{ att.failReason }}</div>
                 </div>
               </div>
             </div>
           </div>
-          <!-- CR-20260706-002: 失败原因（数组去重） -->
-          <div v-for="(fr, fi) in dedupFailReasons(r.failReasons)" :key="fi" class="tip-banner tip-error tip-inline">
+          <!-- CR-20260707-002: 外层失败提示只在最新结果为"草稿"时展示，且只展示最新一条摘要 -->
+          <div v-if="getLatestOrderStatus(r).status === '草稿' && getLatestOrderStatus(r).remark" class="tip-banner tip-warning tip-inline">
+            <div class="tip-icon">&#9888;</div>
+            <div class="tip-content">
+              <div class="tip-title">当前为草稿状态</div>
+              <div class="tip-text">{{ getLatestOrderStatus(r).remark }}</div>
+            </div>
+          </div>
+          <div v-else-if="getLatestOrderStatus(r).status === '草稿' && dedupFailReasons(r.failReasons).length > 0" class="tip-banner tip-error tip-inline">
             <div class="tip-icon">&#9888;</div>
             <div class="tip-content">
               <div class="tip-title">订单生成失败</div>
-              <div class="tip-text">{{ fr }}</div>
+              <div class="tip-text">{{ dedupFailReasons(r.failReasons)[dedupFailReasons(r.failReasons).length - 1] }}</div>
             </div>
           </div>
         </div>
@@ -1260,7 +1304,7 @@ function getProductLabelText(pi: number): string {
   font-weight: 500;
 }
 
-/* ========== CR-20260706-002: 多次失败重试（折叠收起 + 最终态） ========== */
+/* ========== CR-20260706-002 / CR-20260707-002: 多次失败重试（折叠收起 + 长文本排版优化） ========== */
 .result-retry-section {
   margin-top: 10px;
   padding-top: 10px;
@@ -1300,10 +1344,9 @@ function getProductLabelText(pi: number): string {
 }
 .result-retry-item {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 6px 8px;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
   background: #f5f5f5;
   border-radius: 6px;
   font-size: 12px;
@@ -1311,6 +1354,13 @@ function getProductLabelText(pi: number): string {
 }
 .result-retry-item.is-fail { background: #FFEBEE; }
 .result-retry-item.is-success { background: #E8F5E9; }
+/* CR-20260707-002: 重试历史展开区长文本排版优化 - 时间/订单号+状态/失败原因分行 */
+.result-retry-row1 {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
 .result-retry-time {
   color: #666;
   font-family: 'SF Mono', 'Monaco', monospace;
@@ -1332,10 +1382,13 @@ function getProductLabelText(pi: number): string {
   padding: 1px 4px;
   flex-shrink: 0;
 }
+/* CR-20260707-002: 失败原因/备注独立换行，避免挤压在最右窄列 */
 .result-retry-reason {
   color: #666;
-  flex: 1;
-  min-width: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  padding-top: 2px;
+  border-top: 1px dashed rgba(0,0,0,0.06);
 }
 
 /* ========== 订单结果 ========== */
