@@ -253,4 +253,13 @@ npm run build:react-legacy  # 构建历史 React 项目
   - 处理中场景不含正式订单结果；预占订单仅在审批流发起节点展示；导航栏右上角状态字已移除
   - 变更清单：`docs/change-logs/2026-07-07/CR-20260707-001 变更清单.md`
   - 开发总结：`docs/development-summary/2026-07-07/CR-20260707-001-开发总结.md`
+- **已完成（2026-07-07）：CR-20260707-002 订单结果区重试历史展示规则、订单状态术语统一与 Mock 一致性修正**
+  - `types/index.ts`：`OrderAttempt.status` 统一为"已创建/客服已审核/财务已审核/草稿"，不再使用"已生成/生成失败"
+  - `mocks/index.ts`：全局状态术语统一（16处）；场景8(PA202407050001)移除外层 failReasons；场景9(PA202407060001)改用 remark 承载业务放弃备注
+  - `DetailView.vue`：新增 `getLatestOrderStatus()` 辅助函数；更新状态颜色映射；外层卡片只展示最新结果摘要（最终成功不显示失败提示、业务放弃只展示灰色斜体备注）；"生成尝试历史"→"订单创建历史"；重试历史展开区长文本排版优化
+  - `产品申请工单详情页面规则明细.md`：v0.2→v0.3，新增状态固定口径、链路承接规则、重试历史规则、排版建议、错误示例6-8
+  - `MyView.vue`：统一外层 padding 与 CreateView/TeamView 一致
+  - `mobile.css` + `App.vue`：flex column 100vh 布局修复双重滚动条 + 页面切换左移问题
+  - 变更清单：`docs/change-logs/2026-07-07/CR-20260707-002 变更清单.md`
+  - 开发总结：`docs/development-summary/2026-07-07/CR-20260707-002-开发总结.md`
 - 后续：正式开发进入 Vue / Vue2 工程，不在当前仓库直接推进生产实现

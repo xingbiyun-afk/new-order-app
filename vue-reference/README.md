@@ -45,5 +45,5 @@ npm run preview  # 预览构建
 - 变更清单：`../docs/change-logs/`
 - 开发总结：`../docs/development-summary/`
 - 页面规则文档：`../docs/product/work-order-budget/产品申请工单创建页面规则明细.md`（创建页正式规则明细）、`../docs/product/work-order-budget/产品申请工单选择预算页面规则明细.md`（预算选择页正式规则明细）、`../docs/product/work-order-budget/产品申请工单详情页面规则明细.md`（详情页正式规则明细）
-- 最新迭代：CR-20260707-002（订单结果区重试历史规则、状态术语统一、Mock 一致性修正），详见 `../docs/development-summary/2026-07-07/`
+- 最新迭代：CR-20260707-002（订单结果区重试历史规则、状态术语统一、Mock 一致性修正、布局修复），详见 `../docs/development-summary/2026-07-07/`
 - 前序迭代：CR-20260707-001（详情页现行规则口径统一、协作文档收口）+ CR-20260706-004（订单结果区专卖店变更、失败原因类型、备注显示）
