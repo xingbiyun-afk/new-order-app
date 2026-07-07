@@ -54,12 +54,17 @@
 .tab-item.active {
   color: var(--tab-active-color, #22BDB8);
 }
+/* CR-20260707-003: .page-content 是移动端页面唯一主滚动容器
+   布局层级：.page-container(flex column 100vh) > .page-content(flex:1 overflow-y:auto) > router-view
+   约束规则：
+     1. 必须是唯一主滚动容器，外层 .page-container 不得设置 overflow-y: auto
+     2. flex:1 占据剩余空间，min-height:0 允许 flex 子项收缩
+     3. overflow-y:auto 只在内容溢出时显示滚动条，-webkit-overflow-scrolling:touch 启用 iOS 惯性滚动
+     4. 不得在外层再叠加第二个主滚动层（如 body、.page-container 等）
+     5. 滚动复位由 App.vue watch(route.path) 显式处理，scrollBehavior 对此容器无效 */
 .page-content {
   padding: 0;
   padding-bottom: calc(var(--tab-height, 56px) + var(--spacing-lg, 16px));
-  /* CR-20260707-002-fix: flex:1 让 .page-content 占据 .page-container 的剩余空间，
-     min-height:0 允许 flex 子项在垂直方向收缩，overflow-y: auto 只在内容溢出时显示滚动条。
-     这样 .page-content 成为唯一的滚动容器，body 不再出现滚动条，彻底避免双重滚动条和页面左移问题 */
   flex: 1;
   min-height: 0;
   overflow-y: auto;

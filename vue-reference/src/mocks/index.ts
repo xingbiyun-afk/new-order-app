@@ -213,10 +213,11 @@ export const mockWorkOrderDetail: ProductWorkOrder = {
 };
 
 // ============================================================
-// CR-20260703-003: 详情页多场景 Mock 数据
+// CR-20260703-003 / CR-20260707-003: 详情页多场景 Mock 数据
 // ============================================================
-
 // 场景1：处理中（多明细 + 多附件 + 完整审批流 + 多节点 + 发起阶段多笔预占订单）
+// 工单号 PA202407010001 — 用于验证：
+//   ① 当前审批进度区展示 ② 审批流发起节点展示预占订单 ③ 无正式订单结果 ④ 无订单结果区
 const mockProcessingNodes: ApprovalNode[] = [
   // CR-20260706-002: 发起阶段展示所有预占订单编号（4笔明细 → 4笔预占订单）
   { id: 'p1_start', nodeType: 'start', nodeName: '发起工单', handlerName: '陈十六', handlerTime: '2024-07-01 09:30:00', functionOrderNos: ['FO20240701001', 'FO20240701002', 'FO20240701003', 'FO20240701004'] },
@@ -263,6 +264,8 @@ export const mockWorkOrderProcessing: ProductWorkOrder = {
 };
 
 // 场景2：已驳回 — 冻结期原单重提（预算号沿用，不可切换）
+// 工单号 PA202406280003 — 用于验证：
+//   ① 驳回信息区前置展示 ② 重新发起按钮可点击 ③ 提示"基于原单重新发起" ④ 不可切换预算号
 const mockRejectedFreezeNodes: ApprovalNode[] = [
   { id: 'rf_start', nodeType: 'start', nodeName: '发起工单', handlerName: '王五', handlerTime: '2024-06-28 14:20:00', functionOrderNos: ['FO20240628003'] },
   { id: 'rf_n1', nodeType: 'approval', nodeName: '一级审批', handlerName: '李经理', handlerTime: '2024-06-28 15:00:00', result: '通过', remark: '初审通过' },
@@ -296,6 +299,8 @@ export const mockWorkOrderRejectedFreeze: ProductWorkOrder = {
 };
 
 // 场景3：已驳回 — 原预算已到期，不可继续基于原单重提
+// 工单号 PA202406150001 — 用于验证：
+//   ① 驳回信息区展示 ② 已到期警告提示 ③ 重新发起按钮禁用 ④ 提示选择新预算
 const mockRejectedExpiredNodes: ApprovalNode[] = [
   { id: 're_start', nodeType: 'start', nodeName: '发起工单', handlerName: '周八', handlerTime: '2024-06-15 10:00:00', functionOrderNos: ['FO20240615001'] },
   { id: 're_n1', nodeType: 'approval', nodeName: '一级审批', handlerName: '吴经理', handlerTime: '2024-06-15 11:30:00', result: '驳回', remark: '该预算已到期，无法继续申请' },
@@ -327,6 +332,8 @@ export const mockWorkOrderRejectedExpired: ProductWorkOrder = {
 };
 
 // 场景4：已驳回 — 非冻结期，按普通新建重新发起
+// 工单号 PA202406200001 — 用于验证：
+//   ① 驳回信息区展示 ② 重新发起按钮可点击 ③ 提示"可按普通新建发起" ④ 可切换预算号
 const mockRejectedNonFreezeNodes: ApprovalNode[] = [
   { id: 'rn_start', nodeType: 'start', nodeName: '发起工单', handlerName: '郑十', handlerTime: '2024-06-20 09:00:00', functionOrderNos: ['FO20240620001'] },
   { id: 'rn_n1', nodeType: 'approval', nodeName: '一级审批', handlerName: '孙经理', handlerTime: '2024-06-20 10:30:00', result: '通过', remark: '资料齐全' },
@@ -456,7 +463,10 @@ export const mockWorkOrderCompletedMerged: ProductWorkOrder = {
   groupResults: mockCompletedMergedGroupResults,
 };
 
-// CR-20260706-002: 场景8 — 已结束（多次失败重试，最终成功 + 放弃案例）
+// CR-20260706-002 / CR-20260707-003 场景8：
+// 已结束（多次失败重试，最终成功 + 放弃案例）
+// 工单号 PA202407050001 — 用于验证：
+//   ① 重试历史默认折叠 ② 最终成功时外层不显示失败提示 ③ 业务放弃时外层只展示备注（灰色斜体）
 // 业务背景：业务同事根据实际情况多次重试订单生成，部分最终成功，部分放弃
 const mockCompletedRetryNodes: ApprovalNode[] = [
   { id: 'cr_start', nodeType: 'start', nodeName: '发起工单', handlerName: '黄二十二', handlerTime: '2024-07-05 09:00:00', functionOrderNos: ['FO20240705001', 'FO20240705002'] },
@@ -530,7 +540,10 @@ export const mockWorkOrderCompletedRetry: ProductWorkOrder = {
   groupResults: mockCompletedRetryGroupResults,
 };
 
-// 场景10：已结束 — 全部失败，业务放弃（所有重试均失败，业务决定不再重试）
+// CR-20260707-003 场景9：
+// 已结束 — 全部失败，业务放弃（所有重试均失败，业务决定不再重试）
+// 工单号 PA202407060001 — 用于验证：
+//   ① 全部失败业务放弃 ② 外层只展示最新失败备注 ③ 订单创建历史可展开查看
 const mockCompletedAllFailedNodes: ApprovalNode[] = [
   { id: 'ca_start', nodeType: 'start', nodeName: '发起工单', handlerName: '魏二十三', handlerTime: '2024-07-06 09:00:00', functionOrderNos: ['FO20240706001', 'FO20240706002'] },
   { id: 'ca_n1', nodeType: 'approval', nodeName: '一级审批', handlerName: '赵经理', handlerTime: '2024-07-06 10:00:00', result: '通过', remark: '同意' },
@@ -573,7 +586,10 @@ export const mockWorkOrderCompletedAllFailed: ProductWorkOrder = {
   groupResults: mockCompletedAllFailedGroupResults,
 };
 
-// 场景11：已结束 — 专卖店变更（订单实际所属专卖店与工单明细专卖店不一致）
+// CR-20260707-003 场景10：
+// 已结束 — 专卖店变更（订单实际所属专卖店与工单明细专卖店不一致）
+// 工单号 PA202407070001 — 用于验证：
+//   ① 实际专卖店与工单明细不一致时展示橙色警告 ② 备注说明变更原因 ③ 原始专卖店保留在卡片头
 // 业务背景：工单通过时记录的专卖店是 A（31692 赵晋安 宋晓华），
 // 但 A 库存不足无法生成订单，最终由 B 专卖店（31441 赵晋杰）承接此笔订单
 const mockStoreChangeNodes: ApprovalNode[] = [
@@ -614,19 +630,42 @@ export const mockWorkOrderStoreChange: ProductWorkOrder = {
   groupResults: mockStoreChangeGroupResults,
 };
 
+// ============================================================
+// CR-20260707-003: 详情页场景映射总表
+// ============================================================
+// 本表集中维护 scene key ↔ id ↔ 工单号 ↔ 主状态 的映射关系，
+// 用于支撑详情页场景验收、测试走查、AI 自检快速定位。
+//
+// | 场景序号 | scene key              | id  | 工单号         | 主状态   |
+// |---------|------------------------|-----|---------------|---------|
+// | 1       | processing             | 2   | PA202407010001 | 处理中   |
+// | 2       | rejected-freeze        | 3   | PA202406280003 | 已驳回   |
+// | 3       | rejected-expired       | 4   | PA202406150001 | 已驳回   |
+// | 4       | rejected-nonfreeze     | 5   | PA202406200001 | 已驳回   |
+// | 5       | completed              | 6   | PA202406100001 | 已结束   |
+// | 6       | completed-full         | 7   | PA202407020001 | 已结束   |
+// | 7       | completed-merged       | 8   | PA202407030001 | 已结束   |
+// | 8       | completed-retry        | 9   | PA202407050001 | 已结束   |
+// | 9       | completed-all-failed   | 10  | PA202407060001 | 已结束   |
+// | 10      | completed-store-change | 11  | PA202407070001 | 已结束   |
+//
+// 访问方式：
+//   - ID 路由：/product-apply/detail/:id → 按上表 id 列映射
+//   - Query Scene：?scene=xxx → 直接指定 scene key（优先级高于 id 路由）
+
 /** 根据场景ID获取对应的 mock 详情数据 */
 export function getMockWorkOrderDetail(scene?: string): ProductWorkOrder {
   switch (scene) {
-    case 'processing': return mockWorkOrderProcessing;
-    case 'rejected-freeze': return mockWorkOrderRejectedFreeze;
-    case 'rejected-expired': return mockWorkOrderRejectedExpired;
-    case 'rejected-nonfreeze': return mockWorkOrderRejectedNonFreeze;
-    case 'completed': return mockWorkOrderCompleted;
-    case 'completed-full': return mockWorkOrderCompletedFull;
-    case 'completed-merged': return mockWorkOrderCompletedMerged;
-    case 'completed-retry': return mockWorkOrderCompletedRetry;
-    case 'completed-all-failed': return mockWorkOrderCompletedAllFailed;
-    case 'completed-store-change': return mockWorkOrderStoreChange;
+    case 'processing': return mockWorkOrderProcessing;           // 场景1：处理中（多审批节点+预占订单）
+    case 'rejected-freeze': return mockWorkOrderRejectedFreeze;   // 场景2：已驳回-冻结期原单重提
+    case 'rejected-expired': return mockWorkOrderRejectedExpired; // 场景3：已驳回-原预算已到期
+    case 'rejected-nonfreeze': return mockWorkOrderRejectedNonFreeze; // 场景4：已驳回-非冻结期普通新建
+    case 'completed': return mockWorkOrderCompleted;              // 场景5：已结束-部分成功部分失败
+    case 'completed-full': return mockWorkOrderCompletedFull;     // 场景6：已结束-全部成功
+    case 'completed-merged': return mockWorkOrderCompletedMerged; // 场景7：已结束-多明细归并同一订单
+    case 'completed-retry': return mockWorkOrderCompletedRetry;   // 场景8：已结束-多次重试（最终成功+业务放弃）
+    case 'completed-all-failed': return mockWorkOrderCompletedAllFailed; // 场景9：已结束-全部失败业务放弃
+    case 'completed-store-change': return mockWorkOrderStoreChange; // 场景10：已结束-专卖店变更（A→B）
     default: return mockWorkOrderDetail;
   }
 }

@@ -6,10 +6,26 @@ const router = useRouter()
 const showTab = computed(() => route.meta.showTab === true)
 const showHeader = computed(() => route.meta.showHeader === true)
 
-// CR-20260707-002-fix: .page-content 是实际滚动容器（flex 布局），
-// scrollBehavior 只控制 window 滚动对其无效。
-// 监听路由变化，在切换页面时自动将 .page-content 滚动到顶部，
-// 避免从"我的"页滚动位置进入详情页时继承滚动位置。
+// CR-20260707-002-fix / CR-20260707-003: 页面容器滚动复位
+//
+// 问题背景：
+//   .page-container 使用 flex column + 100vh 布局，.page-content（main 元素）才是真正的滚动容器。
+//   router.scrollBehavior 只控制 window.scrollTop，对 .page-content 的滚动位置无效。
+//   因此路由切换时（如 列表→详情、详情→列表、Tab 切换），.page-content 会继承上一页的滚动位置，
+//   导致进入新页面时首屏位置不正确、出现双重滚动条、页面左右偏移等问题。
+//
+// 解决方案：
+//   监听 route.path 变化，在每次路由切换后显式调用 .page-content.scrollTo(0,0)，
+//   将实际滚动容器复位到顶部。使用可选链 ?. 避免容器不存在时报错。
+//
+// 适用边界：
+//   - 列表 → 详情：详情页从顶部开始
+//   - 详情 → 列表：列表页从顶部开始（列表自身应独立维护滚动状态）
+//   - Tab 切换：各 Tab 页从顶部开始
+//   - 常规页面切换：目标页面默认回到顶部
+//
+// 相关文档：
+//   docs/product/work-order-budget/产品申请工单详情页面规则明细.md §14 页面容器与滚动承接说明
 watch(() => route.path, () => {
   document.querySelector('.page-content')?.scrollTo(0, 0)
 })
