@@ -19,4 +19,10 @@ const routes = [
   { path: '/product-apply/product-select', name: 'ProductSelect', component: ProductSelectView, meta: { showTab: false, showHeader: false } },
   { path: '/product-apply/detail/:id', name: 'ProductApplyDetail', component: DetailView, meta: { showTab: false, showHeader: false } },
 ]
-export default createRouter({ history: createWebHashHistory(), routes })
+export default createRouter({
+  history: createWebHashHistory(),
+  routes,
+  scrollBehavior() {
+    return { top: 0 }
+  },
+})
