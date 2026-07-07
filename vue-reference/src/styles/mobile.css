@@ -1,11 +1,15 @@
 /* 移动端基础样式 */
 .page-container {
-  min-height: 100vh;
   background-color: var(--bg-page, #F5F5F5);
   max-width: 430px;
   margin: 0 auto;
   position: relative;
   overflow-x: hidden;
+  /* CR-20260707-002-fix: flex 布局确保 .page-content 占据剩余空间，
+     成为唯一的滚动容器，避免内容溢出到 body 产生双重滚动条 */
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
 }
 .app-header {
   height: var(--header-height, 48px);
@@ -53,9 +57,12 @@
 .page-content {
   padding: 0;
   padding-bottom: calc(var(--tab-height, 56px) + var(--spacing-lg, 16px));
-  /* CR-20260707-002-fix: overflow-y: scroll 确保滚动条始终显示，避免切换页面时
-     因滚动条出现/消失导致内容区域宽度变化而产生"页面左移"错觉 */
-  overflow-y: scroll;
+  /* CR-20260707-002-fix: flex:1 让 .page-content 占据 .page-container 的剩余空间，
+     min-height:0 允许 flex 子项在垂直方向收缩，overflow-y: auto 只在内容溢出时显示滚动条。
+     这样 .page-content 成为唯一的滚动容器，body 不再出现滚动条，彻底避免双重滚动条和页面左移问题 */
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
 .card {

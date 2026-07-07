@@ -16,7 +16,9 @@ function iconColor(a: boolean) { return a ? '#22BDB8' : '#888' }
 <template>
   <div class="page-container">
     <header v-if="showHeader" class="app-header"><span>工单处理中心</span></header>
-    <main class="page-content" :style="{ padding: showHeader ? '0' : undefined }">
+    <!-- CR-20260707-002-fix: 去掉内联 padding 覆盖，让 .page-content 的 padding-bottom 
+         始终生效，确保底部 tab 不会遮挡滚动内容 -->
+    <main class="page-content">
       <router-view />
     </main>
     <nav v-if="showTab" class="bottom-tab">
