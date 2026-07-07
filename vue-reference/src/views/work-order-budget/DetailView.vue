@@ -270,9 +270,6 @@ function getProductLabelText(pi: number): string {
     <div class="detail-header">
       <button class="header-back" @click="router.back()">&#8249;</button>
       <span class="header-title">产品申请工单</span>
-      <span class="header-status" :style="getStatusColor(order.displayStatus)">
-        {{ order.displayStatus }}
-      </span>
     </div>
 
     <!-- ==================== 驳回信息区 (§4.2 首屏优先) ==================== -->
@@ -524,6 +521,12 @@ function getProductLabelText(pi: number): string {
             </div>
             <div class="result-order-detail">
               <span>订单编号：{{ o.orderNo }}</span>
+              <!-- CR-20260706-004: 订单实际所属专卖店（可能与工单明细专卖店不一致） -->
+              <span v-if="o.storeCode && o.storeCode !== r.storeCode" class="result-order-store">
+                实际专卖店：{{ o.storeCode }} {{ o.storeName }}
+              </span>
+              <!-- CR-20260706-004: 订单备注（多次重试说明、更换专卖店说明） -->
+              <span v-if="o.remark" class="result-order-remark">备注：{{ o.remark }}</span>
             </div>
             <!-- CR-20260706-002: 多次失败重试 - 折叠收起 + 最终态展示 -->
             <div v-if="r.retryHistory?.[o.orderNo]?.length" class="result-retry-section">
@@ -536,6 +539,7 @@ function getProductLabelText(pi: number): string {
               <div v-show="isRetryExpanded(o.orderNo)" class="result-retry-list">
                 <div v-for="(att, ai) in r.retryHistory[o.orderNo]" :key="ai" class="result-retry-item" :class="{ 'is-fail': att.status === '生成失败', 'is-success': att.status === '已生成' }">
                   <span class="result-retry-time">{{ att.attemptAt }}</span>
+                  <span v-if="att.orderNo" class="result-retry-orderno">订单编号：{{ att.orderNo }}</span>
                   <span class="result-retry-status" :style="getOrderStatusColor(att.status)">{{ att.status }}</span>
                   <span v-if="att.failReason" class="result-retry-reason">{{ att.failReason }}</span>
                 </div>
@@ -574,6 +578,12 @@ function getProductLabelText(pi: number): string {
             </div>
             <div class="result-order-detail">
               <span>订单编号：{{ o.orderNo }}</span>
+              <!-- CR-20260706-004: 订单实际所属专卖店（可能与工单明细专卖店不一致） -->
+              <span v-if="o.storeCode && o.storeCode !== r.storeCode" class="result-order-store">
+                实际专卖店：{{ o.storeCode }} {{ o.storeName }}
+              </span>
+              <!-- CR-20260706-004: 订单备注（多次重试说明、更换专卖店说明） -->
+              <span v-if="o.remark" class="result-order-remark">备注：{{ o.remark }}</span>
             </div>
             <!-- CR-20260706-002: 多次失败重试 - 折叠收起 + 最终态展示 -->
             <div v-if="r.retryHistory?.[o.orderNo]?.length" class="result-retry-section">
@@ -586,6 +596,7 @@ function getProductLabelText(pi: number): string {
               <div v-show="isRetryExpanded(o.orderNo)" class="result-retry-list">
                 <div v-for="(att, ai) in r.retryHistory[o.orderNo]" :key="ai" class="result-retry-item" :class="{ 'is-fail': att.status === '生成失败', 'is-success': att.status === '已生成' }">
                   <span class="result-retry-time">{{ att.attemptAt }}</span>
+                  <span v-if="att.orderNo" class="result-retry-orderno">订单编号：{{ att.orderNo }}</span>
                   <span class="result-retry-status" :style="getOrderStatusColor(att.status)">{{ att.status }}</span>
                   <span v-if="att.failReason" class="result-retry-reason">{{ att.failReason }}</span>
                 </div>
@@ -711,12 +722,6 @@ function getProductLabelText(pi: number): string {
   font-weight: 500;
   flex: 1;
   text-align: center;
-}
-.header-status {
-  font-size: 12px;
-  padding: 2px 10px;
-  border-radius: 10px;
-  font-weight: 500;
 }
 
 /* ========== Card ========== */
@@ -1322,6 +1327,16 @@ function getProductLabelText(pi: number): string {
   font-weight: 500;
   flex-shrink: 0;
 }
+.result-retry-orderno {
+  font-family: 'SF Mono', 'Monaco', monospace;
+  font-size: 12px;
+  color: #333;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  padding: 1px 4px;
+  flex-shrink: 0;
+}
 .result-retry-reason {
   color: #666;
   flex: 1;
@@ -1394,6 +1409,17 @@ function getProductLabelText(pi: number): string {
   gap: 4px;
   font-size: 13px;
   color: #666;
+}
+/* CR-20260706-004: 订单实际所属专卖店（与工单明细不一致时展示） */
+.result-order-store {
+  font-size: 12px;
+  color: #E6A23C;
+}
+/* CR-20260706-004: 订单备注（多次重试说明、更换专卖店说明） */
+.result-order-remark {
+  font-size: 12px;
+  color: #909399;
+  font-style: italic;
 }
 
 /* ========== 审批操作区 ========== */

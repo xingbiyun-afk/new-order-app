@@ -226,4 +226,21 @@ npm run build:react-legacy  # 构建历史 React 项目
   - 变更清单：`docs/change-logs/2026-07-06/CR-20260706-002 变更清单.md`
   - 开发总结：`docs/development-summary/2026-07-06/CR-20260706-002-开发总结.md`
   - 分支：`feature/CR-20260706-002-approval-result-display`（待 PR 合并）
+- **已完成（2026-07-06）：CR-20260706-003 产品申请工单详情页面规则明细建档、Mock 数据纠偏与轻量展示收口**
+  - 新增正式规则明细文档 `docs/product/work-order-budget/产品申请工单详情页面规则明细.md`（v0.2，14 个章节）
+  - 修正 Mock 数据：处理中场景不含 `groupResults`
+  - 页面轻量优化：移除导航栏右上角状态字
+  - 三份产品文档回写更新日志（PRD/页面结构草图/AI 开发任务说明）
+  - 构建验证通过：主包 201.80 kB
+  - 变更清单：`docs/change-logs/2026-07-06/CR-20260706-003 变更清单.md`
+  - 开发总结：`docs/development-summary/2026-07-06/CR-20260706-003-开发总结.md`
+- **已完成（2026-07-06）：CR-20260706-004 订单结果区专卖店变更、失败原因类型、备注显示**
+  - `RelatedOrder` 接口扩展：`storeCode?` `storeName?` `remark?`
+  - 所有 `RelatedOrder` 补全 `storeCode`/`storeName`
+  - 新增场景 11（专卖店变更）：工单记录专卖店 A → 实际订单专卖店 B
+  - 订单结果区展示实际专卖店（橙色警告）+ 订单备注（灰色斜体）
+  - 规则明细文档更新：§6.10.5 失败原因类型、§6.10.6 专卖店变更规则、§6.10.7 备注显示规则
+  - 构建验证通过：主包 209.44 kB
+  - 变更清单：`docs/change-logs/2026-07-06/CR-20260706-004 变更清单.md`
+  - 开发总结：`docs/development-summary/2026-07-06/CR-20260706-004-开发总结.md`
 - 后续：正式开发进入 Vue / Vue2 工程，不在当前仓库直接推进生产实现

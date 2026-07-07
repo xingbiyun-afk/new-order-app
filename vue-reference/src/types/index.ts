@@ -36,11 +36,17 @@ export interface StoreGroup {
 export interface RelatedOrder {
   orderNo: string; orderType: '产品申请表订单' | '内部申请表订单';
   orderStatus: string;
+  // CR-20260706-004: 订单实际所属专卖店（可能与工单明细专卖店不一致）
+  storeCode?: string;
+  storeName?: string;
+  // CR-20260706-004: 订单备注（多次重试说明、更换专卖店说明）
+  remark?: string;
 }
 
 // CR-20260706-002: 单次订单尝试记录（用于多次失败重试时间线）
 export interface OrderAttempt {
   attemptAt: string;             // 尝试时间
+  orderNo?: string;            // 本次尝试的订单编号（每次重试可能不同）
   status: '已生成' | '生成失败';
   failReason?: string;           // 失败原因（仅生成失败时有值）
 }
