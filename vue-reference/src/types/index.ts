@@ -58,14 +58,14 @@ export interface ApprovalNode {
   handlerName: string; handlerTime?: string;
   result?: '通过' | '驳回' | '待处理';
   remark?: string;
-  // CR-20260706-002: 改为数组，发起阶段可能多笔预占订单
+  // CR-20260706-002: 改为数组，发起阶段可能多笔预占库存订单
   functionOrderNos?: string[];
   relatedOrders?: RelatedOrder[];
 }
 
 export interface GroupResult {
   groupId: string; storeCode: string; storeName: string;
-  // CR-20260706-002: 预占订单改为数组；UI 只展示编号，不展示状态
+  // CR-20260706-002: 预占库存订单改为数组；UI 只展示编号，不展示状态
   functionOrderNos: string[];
   relatedOrders: RelatedOrder[];
   // CR-20260706-002: 失败原因列表（多条订单失败时按数组展示，去重避免单条 remark 重复）

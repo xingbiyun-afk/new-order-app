@@ -522,9 +522,9 @@ function getProductLabelText(pi: number): string {
                 <span v-else class="pending-text">待处理</span>
               </div>
               <div v-if="n.remark" class="node-remark">{{ n.remark }}</div>
-              <!-- CR-20260706-002: 预占订单仅在审批流发起节点展示，订单结果区不承接预占订单 -->
+              <!-- CR-20260706-002: 预占库存订单仅在审批流发起节点展示，订单结果区不承接预占库存订单 -->
               <div v-if="n.nodeType === 'start' && n.functionOrderNos?.length" class="node-function-order">
-                <div class="node-function-order-label">预占订单（{{ n.functionOrderNos.length }}）</div>
+                <div class="node-function-order-label">预占库存订单（{{ n.functionOrderNos.length }}）</div>
                 <div class="node-function-order-list">
                   <span v-for="fo in n.functionOrderNos" :key="fo" class="fo-chip">{{ fo }}</span>
                 </div>
@@ -670,9 +670,9 @@ function getProductLabelText(pi: number): string {
                 <span v-if="n.handlerTime">{{ n.handlerTime }}</span>
               </div>
               <div v-if="n.remark" class="node-remark">{{ n.remark }}</div>
-              <!-- CR-20260706-002: 预占订单仅在审批流发起节点展示，订单结果区不承接预占订单 -->
+              <!-- CR-20260706-002: 预占库存订单仅在审批流发起节点展示，订单结果区不承接预占库存订单 -->
               <div v-if="n.nodeType === 'start' && n.functionOrderNos?.length" class="node-function-order">
-                <div class="node-function-order-label">预占订单（{{ n.functionOrderNos.length }}）</div>
+                <div class="node-function-order-label">预占库存订单（{{ n.functionOrderNos.length }}）</div>
                 <div class="node-function-order-list">
                   <span v-for="fo in n.functionOrderNos" :key="fo" class="fo-chip">{{ fo }}</span>
                 </div>
@@ -1188,7 +1188,7 @@ function getProductLabelText(pi: number): string {
 /* 审批意见贴近节点 */
 .node-remark { margin-top: 6px; padding: 8px 10px; background: #FAFAFA; border-radius: 8px; font-size: 13px; color: #666; line-height: 1.5; }
 
-/* ========== 预占订单仅在审批流发起节点展示 (§6) ========== */
+/* ========== 预占库存订单仅在审批流发起节点展示 (§6) ========== */
 .node-function-order { margin-top: 8px; padding: 6px 0; }
 .node-function-order-label { font-size: 12px; color: #999; margin-bottom: 6px; }
 .node-function-order-list { display: flex; flex-wrap: wrap; gap: 6px; }

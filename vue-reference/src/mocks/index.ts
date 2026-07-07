@@ -215,11 +215,11 @@ export const mockWorkOrderDetail: ProductWorkOrder = {
 // ============================================================
 // CR-20260703-003 / CR-20260707-003: 详情页多场景 Mock 数据
 // ============================================================
-// 场景1：处理中（多明细 + 多附件 + 完整审批流 + 多节点 + 发起阶段多笔预占订单）
+// 场景1：处理中（多明细 + 多附件 + 完整审批流 + 多节点 + 发起阶段多笔预占库存订单）
 // 工单号 PA202407010001 — 用于验证：
-//   ① 当前审批进度区展示 ② 审批流发起节点展示预占订单 ③ 无正式订单结果 ④ 无订单结果区
+//   ① 当前审批进度区展示 ② 审批流发起节点展示预占库存订单 ③ 无正式订单结果 ④ 无订单结果区
 const mockProcessingNodes: ApprovalNode[] = [
-  // CR-20260706-002: 发起阶段展示所有预占订单编号（4笔明细 → 4笔预占订单）
+  // CR-20260706-002: 发起阶段展示所有预占库存订单编号（4笔明细 → 4笔预占库存订单）
   { id: 'p1_start', nodeType: 'start', nodeName: '发起工单', handlerName: '陈十六', handlerTime: '2024-07-01 09:30:00', functionOrderNos: ['FO20240701001', 'FO20240701002', 'FO20240701003', 'FO20240701004'] },
   { id: 'p1_n1', nodeType: 'approval', nodeName: '一级审批', handlerName: '刘经理', handlerTime: '2024-07-01 10:15:00', result: '通过', remark: '预算充足，同意申请' },
   { id: 'p1_n2', nodeType: 'approval', nodeName: '二级审批', handlerName: '赵总监', handlerTime: '', result: '待处理', remark: '' },
@@ -367,7 +367,7 @@ export const mockWorkOrderRejectedNonFreeze: ProductWorkOrder = {
 };
 
 // 场景5：已结束 — 审批通过，部分订单成功部分失败
-// CR-20260706-002: 最终审批通过节点不展示预占订单编号和产品申请订单
+// CR-20260706-002: 最终审批通过节点不展示预占库存订单编号和产品申请订单
 const mockCompletedNodes: ApprovalNode[] = [
   { id: 'c_start', nodeType: 'start', nodeName: '发起工单', handlerName: '钱十一', handlerTime: '2024-06-10 08:30:00', functionOrderNos: ['FO20240610001', 'FO20240610002'] },
   { id: 'c_n1', nodeType: 'approval', nodeName: '一级审批', handlerName: '孙经理', handlerTime: '2024-06-10 09:15:00', result: '通过', remark: '预算内，同意' },
@@ -402,7 +402,7 @@ export const mockWorkOrderCompleted: ProductWorkOrder = {
 };
 
 // 场景6：已结束 — 全部成功（两种订单类型均覆盖）
-// CR-20260706-002: 最终审批通过节点不展示预占订单和产品申请订单
+// CR-20260706-002: 最终审批通过节点不展示预占库存订单和产品申请订单
 const mockCompletedFullNodes: ApprovalNode[] = [
   { id: 'cf_start', nodeType: 'start', nodeName: '发起工单', handlerName: '孙十九', handlerTime: '2024-07-02 08:00:00', functionOrderNos: ['FO20240702001', 'FO20240702002'] },
   { id: 'cf_n1', nodeType: 'approval', nodeName: '一级审批', handlerName: '周经理', handlerTime: '2024-07-02 09:30:00', result: '通过', remark: '通过' },
@@ -656,7 +656,7 @@ export const mockWorkOrderStoreChange: ProductWorkOrder = {
 /** 根据场景ID获取对应的 mock 详情数据 */
 export function getMockWorkOrderDetail(scene?: string): ProductWorkOrder {
   switch (scene) {
-    case 'processing': return mockWorkOrderProcessing;           // 场景1：处理中（多审批节点+预占订单）
+    case 'processing': return mockWorkOrderProcessing;           // 场景1：处理中（多审批节点+预占库存订单）
     case 'rejected-freeze': return mockWorkOrderRejectedFreeze;   // 场景2：已驳回-冻结期原单重提
     case 'rejected-expired': return mockWorkOrderRejectedExpired; // 场景3：已驳回-原预算已到期
     case 'rejected-nonfreeze': return mockWorkOrderRejectedNonFreeze; // 场景4：已驳回-非冻结期普通新建
