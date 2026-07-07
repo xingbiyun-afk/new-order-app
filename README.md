@@ -253,6 +253,13 @@ npm run build:react-legacy  # 构建历史 React 项目
   - 处理中场景不含正式订单结果；预占订单仅在审批流发起节点展示；导航栏右上角状态字已移除
   - 变更清单：`docs/change-logs/2026-07-07/CR-20260707-001 变更清单.md`
   - 开发总结：`docs/development-summary/2026-07-07/CR-20260707-001-开发总结.md`
+- **已完成（2026-07-07）：CR-20260707-003 详情页场景验收样本补强、Mock 入口整理与页面容器承接优化**
+  - 规则明细文档 v0.3→v0.4：新增场景验收样本总表（10个正式场景）、Mock 入口访问说明、页面容器与滚动承接说明
+  - 代码层场景映射增强：mocks/index.ts 场景映射总表注释 + DetailView.vue idSceneMap 双层访问说明 + App.vue 滚动复位注释 + mobile.css 滚动容器约束规则
+  - 协作文档同步：CLAUDE.md / README.md / 产品目录 README / vue-reference README 更新版本引用与能力摘要
+  - 构建验证通过：主包 211.20 kB（gzip 65.56 kB）
+  - 变更清单：`docs/change-logs/2026-07-07/CR-20260707-003 变更清单.md`
+  - 开发总结：`docs/development-summary/2026-07-07/CR-20260707-003-开发总结.md`
 - **已完成（2026-07-07）：CR-20260707-002 订单结果区重试历史展示规则、订单状态术语统一与 Mock 一致性修正**
   - `types/index.ts`：`OrderAttempt.status` 统一为"已创建/客服已审核/财务已审核/草稿"，不再使用"已生成/生成失败"
   - `mocks/index.ts`：全局状态术语统一（16处）；场景8(PA202407050001)移除外层 failReasons；场景9(PA202407060001)改用 remark 承载业务放弃备注
