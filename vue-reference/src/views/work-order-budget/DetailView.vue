@@ -552,7 +552,7 @@ function getProductLabelText(pi: number): string {
             <div v-if="r.retryHistory?.[o.orderNo]?.length" class="result-retry-section">
               <div class="result-retry-toggle" @click="toggleRetry(o.orderNo)">
                 <span class="result-retry-toggle-text">
-                  生成尝试历史（{{ r.retryHistory[o.orderNo].length }} 次）
+                  订单创建历史（{{ r.retryHistory[o.orderNo].length }} 次）
                 </span>
                 <span class="fold-arrow-mini" :class="{ expanded: isRetryExpanded(o.orderNo) }">&#9662;</span>
               </div>
@@ -569,14 +569,10 @@ function getProductLabelText(pi: number): string {
               </div>
             </div>
           </div>
-          <!-- CR-20260707-002: 外层失败提示只在最新结果为"草稿"时展示，且只展示最新一条摘要 -->
-          <!-- 最终已创建/客服已审核/财务已审核时，外层不显示历史失败提示 -->
-          <div v-if="getLatestOrderStatus(r).status === '草稿' && getLatestOrderStatus(r).remark" class="tip-banner tip-warning tip-inline">
-            <div class="tip-icon">&#9888;</div>
-            <div class="tip-content">
-              <div class="tip-title">当前为草稿状态</div>
-              <div class="tip-text">{{ getLatestOrderStatus(r).remark }}</div>
-            </div>
+          <!-- CR-20260707-002-fix3: 外层只保留备注信息，去掉"当前为草稿状态"标题 -->
+          <!-- 有remark时只展示remark（灰色斜体备注样式），不再展示警告标题 -->
+          <div v-if="getLatestOrderStatus(r).status === '草稿' && getLatestOrderStatus(r).remark" class="result-order-remark" style="margin-top: 8px; padding: 8px 12px; background: #f5f5f5; border-radius: 6px;">
+            {{ getLatestOrderStatus(r).remark }}
           </div>
           <!-- 一直失败且没有remark时，展示最后一条失败原因（仅一条，不堆叠） -->
           <div v-else-if="getLatestOrderStatus(r).status === '草稿' && dedupFailReasons(r.failReasons).length > 0" class="tip-banner tip-error tip-inline">
@@ -618,7 +614,7 @@ function getProductLabelText(pi: number): string {
             <div v-if="r.retryHistory?.[o.orderNo]?.length" class="result-retry-section">
               <div class="result-retry-toggle" @click="toggleRetry(o.orderNo)">
                 <span class="result-retry-toggle-text">
-                  生成尝试历史（{{ r.retryHistory[o.orderNo].length }} 次）
+                  订单创建历史（{{ r.retryHistory[o.orderNo].length }} 次）
                 </span>
                 <span class="fold-arrow-mini" :class="{ expanded: isRetryExpanded(o.orderNo) }">&#9662;</span>
               </div>
@@ -635,13 +631,9 @@ function getProductLabelText(pi: number): string {
               </div>
             </div>
           </div>
-          <!-- CR-20260707-002: 外层失败提示只在最新结果为"草稿"时展示，且只展示最新一条摘要 -->
-          <div v-if="getLatestOrderStatus(r).status === '草稿' && getLatestOrderStatus(r).remark" class="tip-banner tip-warning tip-inline">
-            <div class="tip-icon">&#9888;</div>
-            <div class="tip-content">
-              <div class="tip-title">当前为草稿状态</div>
-              <div class="tip-text">{{ getLatestOrderStatus(r).remark }}</div>
-            </div>
+          <!-- CR-20260707-002-fix3: 外层只保留备注信息，去掉"当前为草稿状态"标题 -->
+          <div v-if="getLatestOrderStatus(r).status === '草稿' && getLatestOrderStatus(r).remark" class="result-order-remark" style="margin-top: 8px; padding: 8px 12px; background: #f5f5f5; border-radius: 6px;">
+            {{ getLatestOrderStatus(r).remark }}
           </div>
           <div v-else-if="getLatestOrderStatus(r).status === '草稿' && dedupFailReasons(r.failReasons).length > 0" class="tip-banner tip-error tip-inline">
             <div class="tip-icon">&#9888;</div>
