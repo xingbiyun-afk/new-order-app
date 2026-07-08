@@ -269,4 +269,12 @@ npm run build:react-legacy  # 构建历史 React 项目
   - `mobile.css` + `App.vue`：flex column 100vh 布局修复双重滚动条 + 页面切换左移问题
   - 变更清单：`docs/change-logs/2026-07-07/CR-20260707-002 变更清单.md`
   - 开发总结：`docs/development-summary/2026-07-07/CR-20260707-002-开发总结.md`
+- **已完成（2026-07-08）：订单生成历史记录规则收口、预占库存订单命名统一与 Mock 补强（CR-20260708-001）**
+  - 订单生成历史记录规则正式收口（§6.10.13）：一单一录、审核≠生成、draft key、outerRemark 通道
+  - 全仓"预占订单"→"预占库存订单"改名（代码+文档 20+ 处）
+  - `RelatedOrder.orderNo` 可选、`GroupResult.outerRemark` 新增
+  - Mock 场景 8/9 数据重构对齐新规则；场景 11 专卖店变更 UI 优化
+  - 详情页规则文档 v0.4→v0.5；mocks/index.ts 注释同步更新
+  - 构建验证通过：TypeScript 类型检查通过，主包 ~202 kB
+  - 开发总结：`docs/development-summary/2026-07-08/CR-20260708-001-开发总结.md`
 - 后续：正式开发进入 Vue / Vue2 工程，不在当前仓库直接推进生产实现

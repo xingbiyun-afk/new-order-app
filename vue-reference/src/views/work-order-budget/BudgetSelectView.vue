@@ -283,6 +283,12 @@ function confirmSelect() {
           </div>
         </div>
 
+        <!-- CR-20260708-001: 组织异常提示（isAbnormal=true 但不阻断选择） -->
+        <div v-if="b.isAbnormal && b.abnormalMessage" class="abnormal-strip">
+          <span class="abnormal-icon">&#9888;</span>
+          <span class="abnormal-text">{{ b.abnormalMessage }}</span>
+        </div>
+
         <!-- 到期日信息 -->
         <div class="expiry-line">
           <span>到期日：{{ b.budgetExpiryDate }}</span>
@@ -520,6 +526,30 @@ function confirmSelect() {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* CR-20260708-001: 组织异常提示条 — isAbnormal=true 但不阻断选择 */
+.abnormal-strip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  margin-bottom: 8px;
+  background: #FFF3E0;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.abnormal-icon {
+  color: #F57C00;
+  flex-shrink: 0;
+  font-size: 14px;
+}
+.abnormal-text {
+  color: #E65100;
+  flex: 1;
+  white-space: normal;
+  word-break: break-word;
 }
 
 /* 到期日 */
