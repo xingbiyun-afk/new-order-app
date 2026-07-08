@@ -857,10 +857,11 @@ function getProductLabelText(pi: number): string {
                       </span>
                       <span v-if="link.isDeleted" class="draft-link-deleted">已删除</span>
                     </div>
-                    <div class="draft-link-meta">
-                      <span class="draft-link-time">{{ getDraftLinkLatestTime(link) }}</span>
-                      <span class="fold-arrow-mini" :class="{ expanded: isDraftExpanded(r.groupId, link.draftId) }">&#9662;</span>
-                    </div>
+                    <span class="fold-arrow-mini" :class="{ expanded: isDraftExpanded(r.groupId, link.draftId) }">&#9662;</span>
+                  </div>
+                  <!-- CR-20260708-003-fix: 时间放到第二行，避免与标签重叠 -->
+                  <div class="draft-link-sub">
+                    <span class="draft-link-time">{{ getDraftLinkLatestTime(link) }}</span>
                   </div>
                   <!-- 详情层：需二次点击展开 -->
                   <div v-show="isDraftExpanded(r.groupId, link.draftId)" class="draft-link-body">
@@ -886,9 +887,7 @@ function getProductLabelText(pi: number): string {
                     <div class="draft-link-summary">
                       <span class="draft-link-label">{{ key === 'draft' ? '草稿提交' : key }}</span>
                     </div>
-                    <div class="draft-link-meta">
-                      <span class="fold-arrow-mini" :class="{ expanded: isDraftExpanded(r.groupId, key) }">&#9662;</span>
-                    </div>
+                    <span class="fold-arrow-mini" :class="{ expanded: isDraftExpanded(r.groupId, key) }">&#9662;</span>
                   </div>
                   <div v-show="isDraftExpanded(r.groupId, key)" class="draft-link-body">
                     <div v-for="(att, ai) in getRetryHistoryAttempts(r, key)" :key="ai" class="result-retry-item" :class="{ 'is-fail': att.status === '草稿', 'is-success': att.status === '已创建' }">
@@ -965,10 +964,11 @@ function getProductLabelText(pi: number): string {
                       </span>
                       <span v-if="link.isDeleted" class="draft-link-deleted">已删除</span>
                     </div>
-                    <div class="draft-link-meta">
-                      <span class="draft-link-time">{{ getDraftLinkLatestTime(link) }}</span>
-                      <span class="fold-arrow-mini" :class="{ expanded: isDraftExpanded(r.groupId, link.draftId) }">&#9662;</span>
-                    </div>
+                    <span class="fold-arrow-mini" :class="{ expanded: isDraftExpanded(r.groupId, link.draftId) }">&#9662;</span>
+                  </div>
+                  <!-- CR-20260708-003-fix: 时间放到第二行，避免与标签重叠 -->
+                  <div class="draft-link-sub">
+                    <span class="draft-link-time">{{ getDraftLinkLatestTime(link) }}</span>
                   </div>
                   <!-- 详情层：需二次点击展开 -->
                   <div v-show="isDraftExpanded(r.groupId, link.draftId)" class="draft-link-body">
@@ -994,9 +994,7 @@ function getProductLabelText(pi: number): string {
                     <div class="draft-link-summary">
                       <span class="draft-link-label">{{ key === 'draft' ? '草稿提交' : key }}</span>
                     </div>
-                    <div class="draft-link-meta">
-                      <span class="fold-arrow-mini" :class="{ expanded: isDraftExpanded(r.groupId, key) }">&#9662;</span>
-                    </div>
+                    <span class="fold-arrow-mini" :class="{ expanded: isDraftExpanded(r.groupId, key) }">&#9662;</span>
                   </div>
                   <div v-show="isDraftExpanded(r.groupId, key)" class="draft-link-body">
                     <div v-for="(att, ai) in getRetryHistoryAttempts(r, key)" :key="ai" class="result-retry-item" :class="{ 'is-fail': att.status === '草稿', 'is-success': att.status === '已创建' }">
@@ -2238,20 +2236,22 @@ function getProductLabelText(pi: number): string {
   color: #999;
 }
 
-/* 摘要区右部（时间 + 展开箭头） */
-.draft-link-meta {
+/* 第二行：时间（CR-20260708-003-fix: 从同行移到独立行） */
+.draft-link-sub {
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  margin-left: 8px;
+  padding: 4px 12px 6px;
+  background: #f9f9f9;
+  border-top: 1px solid #f0f0f0;
+}
+.draft-link-old .draft-link-sub {
+  background: #f5f5f5;
+  border-top-color: #eee;
 }
 .draft-link-time {
   font-size: 11px;
   color: #bbb;
   font-family: 'SF Mono', 'Monaco', monospace;
-  margin-left: 8px;             /* fix: 时间与前面标签加间距 */
-  flex-shrink: 0;               /* 时间不被压缩 */
 }
 
 .draft-link-deleted {
