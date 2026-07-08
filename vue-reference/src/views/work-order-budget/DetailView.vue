@@ -2250,6 +2250,8 @@ function getProductLabelText(pi: number): string {
   font-size: 11px;
   color: #bbb;
   font-family: 'SF Mono', 'Monaco', monospace;
+  margin-left: 8px;             /* fix: 时间与前面标签加间距 */
+  flex-shrink: 0;               /* 时间不被压缩 */
 }
 
 .draft-link-deleted {
