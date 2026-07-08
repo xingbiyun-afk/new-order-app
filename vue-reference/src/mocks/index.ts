@@ -150,6 +150,10 @@ export const mockDoneCards: WorkOrderCard[] = [
   { id: '10', workOrderType: '产品申请', displayStatus: '已结束', applicantName: '魏二十三', applyType: '补货申请', applyReason: '所有订单生成失败，业务决定放弃重试', createTime: '06-23 10:00' },
   // 已结束 - 专卖店变更（对应详情页场景11）
   { id: '11', workOrderType: '产品申请', displayStatus: '已结束', applicantName: '冯二十四', applyType: '新品申请', applyReason: '原专卖店库存不足，订单由其他专卖店承接', createTime: '06-22 09:00' },
+  // 已结束 - 产品变更（对应详情页场景12）CR-20260708-002
+  { id: '12', workOrderType: '产品申请', displayStatus: '已结束', applicantName: '周二十五', applyType: '新品申请', applyReason: '订单生成时部分产品库存不足，产品信息已调整', createTime: '07-08 09:00' },
+  // 已结束 - 专卖店+产品双重变更（对应详情页场景13）CR-20260708-002
+  { id: '13', workOrderType: '产品申请', displayStatus: '已结束', applicantName: '吴二十六', applyType: '新品申请', applyReason: '专卖店和产品均根据实际情况调整', createTime: '07-09 09:00' },
   // 已驳回 - 冻结期（对应详情页场景3）
   { id: '3', workOrderType: '产品申请', displayStatus: '已驳回', applicantName: '周八', applyType: '活动申请', applyReason: '双十一预售活动产品备货，需提前一个月准备库存', createTime: '06-23 15:30' },
   // 已驳回 - 已到期（对应详情页场景4）
@@ -180,6 +184,10 @@ export const mockInitiatedCards: WorkOrderCard[] = [
   { id: '4', workOrderType: '产品申请', displayStatus: '已驳回', applicantName: '郑十', applyType: '新品申请', applyReason: '原预算已到期，无法继续申请', createTime: '06-23 11:00' },
   // 已结束 - 专卖店变更（对应详情页场景11）
   { id: '11', workOrderType: '产品申请', displayStatus: '已结束', applicantName: '冯二十四', applyType: '新品申请', applyReason: '原专卖店库存不足，订单由其他专卖店承接', createTime: '06-22 09:00' },
+  // 已结束 - 产品变更（对应详情页场景12）CR-20260708-002
+  { id: '12', workOrderType: '产品申请', displayStatus: '已结束', applicantName: '周二十五', applyType: '新品申请', applyReason: '订单生成时部分产品库存不足，产品信息已调整', createTime: '07-08 09:00' },
+  // 已结束 - 专卖店+产品双重变更（对应详情页场景13）CR-20260708-002
+  { id: '13', workOrderType: '产品申请', displayStatus: '已结束', applicantName: '吴二十六', applyType: '新品申请', applyReason: '专卖店和产品均根据实际情况调整', createTime: '07-09 09:00' },
   // 已结束 - 全部失败，业务放弃（对应详情页场景10）
   { id: '10', workOrderType: '产品申请', displayStatus: '已结束', applicantName: '魏二十三', applyType: '补货申请', applyReason: '所有订单生成失败，业务决定放弃重试', createTime: '06-21 08:00' },
 ];

@@ -282,6 +282,19 @@ function getRetryHistoryAttempts(r: GroupResult, key: string): import('../../typ
   return r.retryHistory[key] || []
 }
 
+// CR-20260708-002-fix: 获取最新的订单编号
+// 只取 relatedOrders 中最后一个有 orderNo 的，如果没有则返回 null
+function getLatestOrderNo(r: GroupResult): string | null {
+  if (!r.relatedOrders || r.relatedOrders.length === 0) return null
+  // 从后往前找第一个有 orderNo 的
+  for (let i = r.relatedOrders.length - 1; i >= 0; i--) {
+    if (r.relatedOrders[i].orderNo) {
+      return r.relatedOrders[i].orderNo!
+    }
+  }
+  return null
+}
+
 // ===== 汇总计算 =====
 // 款 = SKU 种类数 (products.length 合计)
 // 件 = 数量合计 (products[].quantity 合计)
@@ -760,10 +773,10 @@ function getProductLabelText(pi: number): string {
             <div v-if="r.relatedOrders.length > 0" class="result-unit-order-type">
               {{ r.relatedOrders[0].orderType }}
             </div>
-            <!-- 最新有效订单号 -->
-            <div v-for="o in r.relatedOrders" :key="o.orderNo || 'draft'" class="result-unit-order-no">
-              <span v-if="o.orderNo">订单编号：{{ o.orderNo }}</span>
-              <span v-else class="result-unit-draft">草稿（尚未生成订单号）</span>
+            <!-- 最新有效订单号（只显示最新一条） -->
+            <div class="result-unit-order-no">
+              <span v-if="getLatestOrderNo(r)">订单编号：{{ getLatestOrderNo(r) }}</span>
+              <span v-else class="result-unit-draft">草稿</span>
             </div>
             <!-- 当前主原因（仅一条） -->
             <div v-if="getCurrentMainReason(r)" class="result-unit-main-reason" :class="{ 'reason-fail': getCurrentResultDescription(r) === '草稿提交失败' || getCurrentResultDescription(r) === '审核驳回' || getCurrentResultDescription(r) === '草稿已删除', 'reason-change': getCurrentResultDescription(r) === '订单已创建（信息变更）' }">
@@ -784,7 +797,7 @@ function getProductLabelText(pi: number): string {
               <template v-if="r.draftLinks && r.draftLinks.length > 0">
                 <div v-for="link in r.draftLinks" :key="link.draftId" class="draft-link-block">
                   <div class="draft-link-header" @click="toggleDraft(link.draftId)">
-                    <span class="draft-link-label">草稿链路</span>
+                    <span class="draft-link-label">草稿ID：{{ link.draftId }}</span>
                     <span v-if="link.isDeleted" class="draft-link-deleted">已删除</span>
                     <span class="fold-arrow-mini" :class="{ expanded: isDraftExpanded(link.draftId) }">&#9662;</span>
                   </div>
@@ -851,10 +864,10 @@ function getProductLabelText(pi: number): string {
             <div v-if="r.relatedOrders.length > 0" class="result-unit-order-type">
               {{ r.relatedOrders[0].orderType }}
             </div>
-            <!-- 最新有效订单号 -->
-            <div v-for="o in r.relatedOrders" :key="o.orderNo || 'draft'" class="result-unit-order-no">
-              <span v-if="o.orderNo">订单编号：{{ o.orderNo }}</span>
-              <span v-else class="result-unit-draft">草稿（尚未生成订单号）</span>
+            <!-- 最新有效订单号（只显示最新一条） -->
+            <div class="result-unit-order-no">
+              <span v-if="getLatestOrderNo(r)">订单编号：{{ getLatestOrderNo(r) }}</span>
+              <span v-else class="result-unit-draft">草稿</span>
             </div>
             <!-- 当前主原因（仅一条） -->
             <div v-if="getCurrentMainReason(r)" class="result-unit-main-reason" :class="{ 'reason-fail': getCurrentResultDescription(r) === '草稿提交失败' || getCurrentResultDescription(r) === '审核驳回' || getCurrentResultDescription(r) === '草稿已删除', 'reason-change': getCurrentResultDescription(r) === '订单已创建（信息变更）' }">
@@ -875,7 +888,7 @@ function getProductLabelText(pi: number): string {
               <template v-if="r.draftLinks && r.draftLinks.length > 0">
                 <div v-for="link in r.draftLinks" :key="link.draftId" class="draft-link-block">
                   <div class="draft-link-header" @click="toggleDraft(link.draftId)">
-                    <span class="draft-link-label">草稿链路</span>
+                    <span class="draft-link-label">草稿ID：{{ link.draftId }}</span>
                     <span v-if="link.isDeleted" class="draft-link-deleted">已删除</span>
                     <span class="fold-arrow-mini" :class="{ expanded: isDraftExpanded(link.draftId) }">&#9662;</span>
                   </div>
