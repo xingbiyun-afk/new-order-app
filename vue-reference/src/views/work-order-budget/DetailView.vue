@@ -2186,6 +2186,7 @@ function getProductLabelText(pi: number): string {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;                    /* fix: 摘要区和元数据区之间加间距 */
   padding: 10px 12px;
   cursor: pointer;
   background: #f9f9f9;
@@ -2196,7 +2197,7 @@ function getProductLabelText(pi: number): string {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex: 1;
+  flex: 0 1 auto;               /* fix: 不强制占据所有空间，避免与meta重叠 */
   min-width: 0;
 }
 .draft-link-label {
@@ -2212,6 +2213,7 @@ function getProductLabelText(pi: number): string {
   border-radius: 6px;
   font-weight: 500;
   flex-shrink: 0;
+  margin-right: 4px;            /* fix: 标签和时间之间加间距 */
 }
 /* 订单已创建 - 绿色 */
 .link-result-订单已创建 {

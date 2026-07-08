@@ -829,6 +829,17 @@ const mockStoreChangeGroupResults: GroupResult[] = [
     currentResultDescription: '订单已创建（信息变更）',
     actualStoreCode: '31441',
     actualStoreName: '赵晋杰',
+    // CR-20260708-003-fix: 补全草稿链路历史
+    // 业务过程：先提交到原专卖店31692因库存不足失败 → 退回草稿后修改专卖店为31441 → 重新提交成功
+    draftLinks: [
+      {
+        draftId: 'draft-1', orderType: '产品申请表订单', isDeleted: false,
+        attempts: [
+          { attemptAt: '2024-07-07 12:00:00', draftId: 'draft-1', status: '草稿', failReason: '原专卖店（31692 赵晋安 宋晓华）库存不足，订单自动提交失败回退到草稿' },
+          { attemptAt: '2024-07-07 14:30:00', draftId: 'draft-1', orderNo: 'O20240707001', status: '已创建' },
+        ],
+      },
+    ],
   },
 ];
 
@@ -868,9 +879,15 @@ const mockProductChangeGroupResults: GroupResult[] = [
     // CR-20260708-002: 产品变更场景
     currentResultDescription: '订单已创建（信息变更）',
     productChangeSummary: { changedSkuCount: 2, totalQuantityDiff: 5 },
+    // CR-20260708-003-fix: 补全草稿链路历史
+    // 业务过程：先提交成功但因部分产品库存不足导致产品信息自动调整 → 订单已创建但产品变更
     draftLinks: [
-      { draftId: 'draft-1', orderType: '产品申请表订单', isDeleted: false,
-        attempts: [{ attemptAt: '2024-07-08 12:00:00', draftId: 'draft-1', orderNo: 'O20240708001', status: '已创建' }],
+      {
+        draftId: 'draft-1', orderType: '产品申请表订单', isDeleted: false,
+        attempts: [
+          { attemptAt: '2024-07-08 12:00:00', draftId: 'draft-1', status: '草稿', failReason: '部分产品库存不足，订单自动提交失败回退到草稿' },
+          { attemptAt: '2024-07-08 14:00:00', draftId: 'draft-1', orderNo: 'O20240708001', status: '已创建' },
+        ],
       },
     ],
   },
@@ -913,9 +930,15 @@ const mockStoreAndProductChangeGroupResults: GroupResult[] = [
     actualStoreCode: '31441',
     actualStoreName: '赵晋杰',
     productChangeSummary: { changedSkuCount: 1, totalQuantityDiff: 2 },
+    // CR-20260708-003-fix: 补全草稿链路历史
+    // 业务过程：先提交到原专卖店31692因库存不足失败 → 退回草稿后同时更换专卖店为31441并调整产品 → 重新提交成功
     draftLinks: [
-      { draftId: 'draft-1', orderType: '产品申请表订单', isDeleted: false,
-        attempts: [{ attemptAt: '2024-07-09 12:00:00', draftId: 'draft-1', orderNo: 'O20240709001', status: '已创建' }],
+      {
+        draftId: 'draft-1', orderType: '产品申请表订单', isDeleted: false,
+        attempts: [
+          { attemptAt: '2024-07-09 12:00:00', draftId: 'draft-1', status: '草稿', failReason: '原专卖店（31692 赵晋安 宋晓华）库存不足，订单自动提交失败回退到草稿' },
+          { attemptAt: '2024-07-09 14:30:00', draftId: 'draft-1', orderNo: 'O20240709001', status: '已创建' },
+        ],
       },
     ],
   },
