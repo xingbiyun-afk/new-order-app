@@ -255,12 +255,15 @@ function getTotalAttemptCount(r: GroupResult): number {
 }
 
 // 草稿链路折叠状态（CR-20260708-002：按 draftId 管理）
+// BUG FIX: 使用复合键 ${groupId}_${draftId} 避免不同卡片间 draftId 冲突
 const expandedDrafts = ref<Set<string>>(new Set())
-function isDraftExpanded(draftId: string) { return expandedDrafts.value.has(draftId) }
-function toggleDraft(draftId: string) {
+function makeDraftKey(groupId: string, draftId: string) { return `${groupId}_${draftId}` }
+function isDraftExpanded(groupId: string, draftId: string) { return expandedDrafts.value.has(makeDraftKey(groupId, draftId)) }
+function toggleDraft(groupId: string, draftId: string) {
+  const key = makeDraftKey(groupId, draftId)
   const s = expandedDrafts.value
-  if (s.has(draftId)) s.delete(draftId)
-  else s.add(draftId)
+  if (s.has(key)) s.delete(key)
+  else s.add(key)
 }
 
 // 兼容：订单创建历史整体折叠状态（卡片级统一入口）
@@ -796,12 +799,12 @@ function getProductLabelText(pi: number): string {
               <!-- 新结构：按 draftId 聚合展示草稿链路 -->
               <template v-if="r.draftLinks && r.draftLinks.length > 0">
                 <div v-for="link in r.draftLinks" :key="link.draftId" class="draft-link-block">
-                  <div class="draft-link-header" @click="toggleDraft(link.draftId)">
+                  <div class="draft-link-header" @click="toggleDraft(r.groupId, link.draftId)">
                     <span class="draft-link-label">草稿ID：{{ link.draftId }}</span>
                     <span v-if="link.isDeleted" class="draft-link-deleted">已删除</span>
-                    <span class="fold-arrow-mini" :class="{ expanded: isDraftExpanded(link.draftId) }">&#9662;</span>
+                    <span class="fold-arrow-mini" :class="{ expanded: isDraftExpanded(r.groupId, link.draftId) }">&#9662;</span>
                   </div>
-                  <div v-show="isDraftExpanded(link.draftId)" class="draft-link-body">
+                  <div v-show="isDraftExpanded(r.groupId, link.draftId)" class="draft-link-body">
                     <div v-for="(att, ai) in link.attempts" :key="ai" class="result-retry-item" :class="{ 'is-fail': att.status === '草稿', 'is-success': att.status === '已创建' }">
                       <div class="result-retry-row1">
                         <span class="result-retry-time">{{ att.attemptAt }}</span>
@@ -819,11 +822,11 @@ function getProductLabelText(pi: number): string {
               <!-- 兼容旧结构：按 retryHistory 展示 -->
               <template v-else-if="getRetryHistoryKeys(r).length > 0">
                 <div v-for="key in getRetryHistoryKeys(r)" :key="key" class="draft-link-block">
-                  <div class="draft-link-header" @click="toggleDraft(key)">
+                  <div class="draft-link-header" @click="toggleDraft(r.groupId, key)">
                     <span class="draft-link-label">{{ key === 'draft' ? '草稿提交' : key }}</span>
-                    <span class="fold-arrow-mini" :class="{ expanded: isDraftExpanded(key) }">&#9662;</span>
+                    <span class="fold-arrow-mini" :class="{ expanded: isDraftExpanded(r.groupId, key) }">&#9662;</span>
                   </div>
-                  <div v-show="isDraftExpanded(key)" class="draft-link-body">
+                  <div v-show="isDraftExpanded(r.groupId, key)" class="draft-link-body">
                     <div v-for="(att, ai) in getRetryHistoryAttempts(r, key)" :key="ai" class="result-retry-item" :class="{ 'is-fail': att.status === '草稿', 'is-success': att.status === '已创建' }">
                       <div class="result-retry-row1">
                         <span class="result-retry-time">{{ att.attemptAt }}</span>
@@ -887,12 +890,12 @@ function getProductLabelText(pi: number): string {
               <!-- 新结构：按 draftId 聚合展示草稿链路 -->
               <template v-if="r.draftLinks && r.draftLinks.length > 0">
                 <div v-for="link in r.draftLinks" :key="link.draftId" class="draft-link-block">
-                  <div class="draft-link-header" @click="toggleDraft(link.draftId)">
+                  <div class="draft-link-header" @click="toggleDraft(r.groupId, link.draftId)">
                     <span class="draft-link-label">草稿ID：{{ link.draftId }}</span>
                     <span v-if="link.isDeleted" class="draft-link-deleted">已删除</span>
-                    <span class="fold-arrow-mini" :class="{ expanded: isDraftExpanded(link.draftId) }">&#9662;</span>
+                    <span class="fold-arrow-mini" :class="{ expanded: isDraftExpanded(r.groupId, link.draftId) }">&#9662;</span>
                   </div>
-                  <div v-show="isDraftExpanded(link.draftId)" class="draft-link-body">
+                  <div v-show="isDraftExpanded(r.groupId, link.draftId)" class="draft-link-body">
                     <div v-for="(att, ai) in link.attempts" :key="ai" class="result-retry-item" :class="{ 'is-fail': att.status === '草稿', 'is-success': att.status === '已创建' }">
                       <div class="result-retry-row1">
                         <span class="result-retry-time">{{ att.attemptAt }}</span>
@@ -910,11 +913,11 @@ function getProductLabelText(pi: number): string {
               <!-- 兼容旧结构：按 retryHistory 展示 -->
               <template v-else-if="getRetryHistoryKeys(r).length > 0">
                 <div v-for="key in getRetryHistoryKeys(r)" :key="key" class="draft-link-block">
-                  <div class="draft-link-header" @click="toggleDraft(key)">
+                  <div class="draft-link-header" @click="toggleDraft(r.groupId, key)">
                     <span class="draft-link-label">{{ key === 'draft' ? '草稿提交' : key }}</span>
-                    <span class="fold-arrow-mini" :class="{ expanded: isDraftExpanded(key) }">&#9662;</span>
+                    <span class="fold-arrow-mini" :class="{ expanded: isDraftExpanded(r.groupId, key) }">&#9662;</span>
                   </div>
-                  <div v-show="isDraftExpanded(key)" class="draft-link-body">
+                  <div v-show="isDraftExpanded(r.groupId, key)" class="draft-link-body">
                     <div v-for="(att, ai) in getRetryHistoryAttempts(r, key)" :key="ai" class="result-retry-item" :class="{ 'is-fail': att.status === '草稿', 'is-success': att.status === '已创建' }">
                       <div class="result-retry-row1">
                         <span class="result-retry-time">{{ att.attemptAt }}</span>
