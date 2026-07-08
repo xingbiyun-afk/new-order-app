@@ -26,9 +26,3 @@ dist-ssr
 # WorkBuddy workspace data
 .workbuddy/
 .playwright-cli/
-
-# GitNexus index data
-.gitnexus/
-
-# TRAE project-level config
-.trae/
