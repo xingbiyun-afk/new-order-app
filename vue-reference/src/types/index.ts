@@ -34,7 +34,7 @@ export interface StoreGroup {
   products: ProductItem[]; groupAmount: number;
 }
 export interface RelatedOrder {
-  orderNo: string; orderType: '产品申请表订单' | '内部申请表订单';
+  orderNo?: string; orderType: '产品申请表订单' | '内部申请表订单';
   orderStatus: string;
   // CR-20260706-004: 订单实际所属专卖店（可能与工单明细专卖店不一致）
   storeCode?: string;
@@ -45,11 +45,13 @@ export interface RelatedOrder {
 
 // CR-20260706-002: 单次订单尝试记录（用于多次失败重试时间线）
 // CR-20260707-002: 状态统一为"已创建/客服已审核/财务已审核/草稿"四种
+// CR-20260708-001: 新增 deleteReason，实现备注承接优先级（删除理由 > 驳回说明 > 失败原因）
 export interface OrderAttempt {
   attemptAt: string;             // 尝试时间
   orderNo?: string;              // 本次尝试的订单编号（每次重试可能不同）
   status: '已创建' | '客服已审核' | '财务已审核' | '草稿';
-  failReason?: string;           // 失败原因或备注（仅失败/草稿时有值）
+  failReason?: string;           // 失败原因（自动提交失败 / 审核驳回回草稿说明）
+  deleteReason?: string;         // CR-20260708-001: 删除理由（草稿已被业务主动删除时，优先级高于 failReason）
 }
 
 export interface ApprovalNode {
@@ -58,19 +60,21 @@ export interface ApprovalNode {
   handlerName: string; handlerTime?: string;
   result?: '通过' | '驳回' | '待处理';
   remark?: string;
-  // CR-20260706-002: 改为数组，发起阶段可能多笔预占订单
+  // CR-20260706-002: 改为数组，发起阶段可能多笔预占库存订单
   functionOrderNos?: string[];
   relatedOrders?: RelatedOrder[];
 }
 
 export interface GroupResult {
   groupId: string; storeCode: string; storeName: string;
-  // CR-20260706-002: 预占订单改为数组；UI 只展示编号，不展示状态
+  // CR-20260706-002: 预占库存订单改为数组；UI 只展示编号，不展示状态
   functionOrderNos: string[];
   relatedOrders: RelatedOrder[];
   // CR-20260706-002: 失败原因列表（多条订单失败时按数组展示，去重避免单条 remark 重复）
   failReasons?: string[];
-  // CR-20260706-002: 多次失败重试历史（按订单号聚合）
+  // CR-20260708-001: 外层备注（删除/放弃理由，与 retryHistory 独立）
+  outerRemark?: string;
+  // CR-20260706-002: 多次失败重试历史（按订单号或 draft 标识聚合）
   retryHistory?: Record<string, OrderAttempt[]>;
 }
 export interface Attachment {
