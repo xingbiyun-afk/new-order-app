@@ -150,6 +150,10 @@ export const mockDoneCards: WorkOrderCard[] = [
   { id: '10', workOrderType: '产品申请', displayStatus: '已结束', applicantName: '魏二十三', applyType: '补货申请', applyReason: '所有订单生成失败，业务决定放弃重试', createTime: '06-23 10:00' },
   // 已结束 - 专卖店变更（对应详情页场景11）
   { id: '11', workOrderType: '产品申请', displayStatus: '已结束', applicantName: '冯二十四', applyType: '新品申请', applyReason: '原专卖店库存不足，订单由其他专卖店承接', createTime: '06-22 09:00' },
+  // 已结束 - 产品变更（对应详情页场景12）CR-20260708-002
+  { id: '12', workOrderType: '产品申请', displayStatus: '已结束', applicantName: '周二十五', applyType: '新品申请', applyReason: '订单生成时部分产品库存不足，产品信息已调整', createTime: '07-08 09:00' },
+  // 已结束 - 专卖店+产品双重变更（对应详情页场景13）CR-20260708-002
+  { id: '13', workOrderType: '产品申请', displayStatus: '已结束', applicantName: '吴二十六', applyType: '新品申请', applyReason: '专卖店和产品均根据实际情况调整', createTime: '07-09 09:00' },
   // 已驳回 - 冻结期（对应详情页场景3）
   { id: '3', workOrderType: '产品申请', displayStatus: '已驳回', applicantName: '周八', applyType: '活动申请', applyReason: '双十一预售活动产品备货，需提前一个月准备库存', createTime: '06-23 15:30' },
   // 已驳回 - 已到期（对应详情页场景4）
@@ -180,6 +184,10 @@ export const mockInitiatedCards: WorkOrderCard[] = [
   { id: '4', workOrderType: '产品申请', displayStatus: '已驳回', applicantName: '郑十', applyType: '新品申请', applyReason: '原预算已到期，无法继续申请', createTime: '06-23 11:00' },
   // 已结束 - 专卖店变更（对应详情页场景11）
   { id: '11', workOrderType: '产品申请', displayStatus: '已结束', applicantName: '冯二十四', applyType: '新品申请', applyReason: '原专卖店库存不足，订单由其他专卖店承接', createTime: '06-22 09:00' },
+  // 已结束 - 产品变更（对应详情页场景12）CR-20260708-002
+  { id: '12', workOrderType: '产品申请', displayStatus: '已结束', applicantName: '周二十五', applyType: '新品申请', applyReason: '订单生成时部分产品库存不足，产品信息已调整', createTime: '07-08 09:00' },
+  // 已结束 - 专卖店+产品双重变更（对应详情页场景13）CR-20260708-002
+  { id: '13', workOrderType: '产品申请', displayStatus: '已结束', applicantName: '吴二十六', applyType: '新品申请', applyReason: '专卖店和产品均根据实际情况调整', createTime: '07-09 09:00' },
   // 已结束 - 全部失败，业务放弃（对应详情页场景10）
   { id: '10', workOrderType: '产品申请', displayStatus: '已结束', applicantName: '魏二十三', applyType: '补货申请', applyReason: '所有订单生成失败，业务决定放弃重试', createTime: '06-21 08:00' },
 ];
@@ -505,12 +513,22 @@ const mockCompletedRetryNodes: ApprovalNode[] = [
       ],
       retryHistory: {
         'draft': [
-          { attemptAt: '2024-07-05 10:00:00', status: '草稿', failReason: '产品库存不足，订单自动提交失败回退到草稿' },
+          { attemptAt: '2024-07-05 10:00:00', draftId: 'draft-1', status: '草稿', failReason: '产品库存不足，订单自动提交失败回退到草稿' },
         ],
         'O20240705001': [
-          { attemptAt: '2024-07-06 09:00:00', orderNo: 'O20240705001', status: '已创建' },
+          { attemptAt: '2024-07-06 09:00:00', draftId: 'draft-1', orderNo: 'O20240705001', status: '已创建' },
         ],
       },
+      // CR-20260708-002: 按 draftId 聚合的草稿链路
+      draftLinks: [
+        {
+          draftId: 'draft-1', orderType: '产品申请表订单', isDeleted: false,
+          attempts: [
+            { attemptAt: '2024-07-05 10:00:00', draftId: 'draft-1', status: '草稿', failReason: '产品库存不足，订单自动提交失败回退到草稿' },
+            { attemptAt: '2024-07-06 09:00:00', draftId: 'draft-1', orderNo: 'O20240705001', status: '已创建' },
+          ],
+        },
+      ],
     },
     // 子场景①: 原草稿继续编辑重试2次 → 第3次成功（g2: 31441 赵晋杰）
     // 第1次提交失败（无订单号）→ 第2次提交失败（无订单号）→ 第3次提交成功
@@ -525,13 +543,24 @@ const mockCompletedRetryNodes: ApprovalNode[] = [
       ],
       retryHistory: {
         'draft': [
-          { attemptAt: '2024-07-05 14:00:00', status: '草稿', failReason: '产品库存不足，订单自动提交失败回退到草稿' },
-          { attemptAt: '2024-07-05 16:30:00', status: '草稿', failReason: '专卖店下单标识关闭，订单自动提交失败回退到草稿' },
+          { attemptAt: '2024-07-05 14:00:00', draftId: 'draft-1', status: '草稿', failReason: '产品库存不足，订单自动提交失败回退到草稿' },
+          { attemptAt: '2024-07-05 16:30:00', draftId: 'draft-1', status: '草稿', failReason: '专卖店下单标识关闭，订单自动提交失败回退到草稿' },
         ],
         'O20240705002': [
-          { attemptAt: '2024-07-06 09:15:00', orderNo: 'O20240705002', status: '已创建' },
+          { attemptAt: '2024-07-06 09:15:00', draftId: 'draft-1', orderNo: 'O20240705002', status: '已创建' },
         ],
       },
+      // CR-20260708-002: 按 draftId 聚合的草稿链路（同一 draftId 下多次失败最终成功）
+      draftLinks: [
+        {
+          draftId: 'draft-1', orderType: '内部申请表订单', isDeleted: false,
+          attempts: [
+            { attemptAt: '2024-07-05 14:00:00', draftId: 'draft-1', status: '草稿', failReason: '产品库存不足，订单自动提交失败回退到草稿' },
+            { attemptAt: '2024-07-05 16:30:00', draftId: 'draft-1', status: '草稿', failReason: '专卖店下单标识关闭，订单自动提交失败回退到草稿' },
+            { attemptAt: '2024-07-06 09:15:00', draftId: 'draft-1', orderNo: 'O20240705002', status: '已创建' },
+          ],
+        },
+      ],
     },
     // 子场景③: 删除原草稿后新建草稿 → 成功（g3: 31375 大连瑞轩）
     // 第1次提交失败（无订单号）→ 删除原草稿 → 新建草稿 → 第2次提交成功
@@ -546,12 +575,28 @@ const mockCompletedRetryNodes: ApprovalNode[] = [
       ],
       retryHistory: {
         'draft': [
-          { attemptAt: '2024-07-05 14:30:00', status: '草稿', failReason: '产品库存不足，订单自动提交失败回退到草稿' },
+          { attemptAt: '2024-07-05 14:30:00', draftId: 'draft-1', status: '草稿', failReason: '产品库存不足，订单自动提交失败回退到草稿' },
         ],
         'O20240705003': [
-          { attemptAt: '2024-07-06 09:30:00', orderNo: 'O20240705003', status: '已创建' },
+          { attemptAt: '2024-07-06 09:30:00', draftId: 'draft-2', orderNo: 'O20240705003', status: '已创建' },
         ],
       },
+      // CR-20260708-002: 按 draftId 聚合（删除原草稿后新建草稿 = 2条草稿链路）
+      draftLinks: [
+        {
+          draftId: 'draft-1', orderType: '内部申请表订单', isDeleted: true,
+          deleteReason: '库存持续不足，删除后重新新建草稿申请',
+          attempts: [
+            { attemptAt: '2024-07-05 14:30:00', draftId: 'draft-1', status: '草稿', failReason: '产品库存不足，订单自动提交失败回退到草稿' },
+          ],
+        },
+        {
+          draftId: 'draft-2', orderType: '内部申请表订单', isDeleted: false,
+          attempts: [
+            { attemptAt: '2024-07-06 09:30:00', draftId: 'draft-2', orderNo: 'O20240705003', status: '已创建' },
+          ],
+        },
+      ],
     },
     // 子场景④: 审核驳回回草稿 → 原草稿继续编辑重试 → 成功（g4: 50002 测试专卖店B）
     // 订单号A生成成功 → 财务审核驳回回草稿 → 原草稿继续编辑 → 重新提交生成新订单号B
@@ -566,12 +611,22 @@ const mockCompletedRetryNodes: ApprovalNode[] = [
       ],
       retryHistory: {
         'O20240705004': [
-          { attemptAt: '2024-07-06 11:00:00', orderNo: 'O20240705004', status: '草稿', failReason: '订单审核被驳回到草稿状态，请重新检查产品信息与专卖店资质' },
+          { attemptAt: '2024-07-06 11:00:00', draftId: 'draft-1', orderNo: 'O20240705004', status: '草稿', failReason: '订单审核被驳回到草稿状态，请重新检查产品信息与专卖店资质' },
         ],
         'O20240705005': [
-          { attemptAt: '2024-07-07 09:30:00', orderNo: 'O20240705005', status: '已创建' },
+          { attemptAt: '2024-07-07 09:30:00', draftId: 'draft-1', orderNo: 'O20240705005', status: '已创建' },
         ],
       },
+      // CR-20260708-002: 审核驳回回草稿后继续编辑（同一 draftId）
+      draftLinks: [
+        {
+          draftId: 'draft-1', orderType: '产品申请表订单', isDeleted: false,
+          attempts: [
+            { attemptAt: '2024-07-06 11:00:00', draftId: 'draft-1', orderNo: 'O20240705004', status: '草稿', failReason: '订单审核被驳回到草稿状态，请重新检查产品信息与专卖店资质' },
+            { attemptAt: '2024-07-07 09:30:00', draftId: 'draft-1', orderNo: 'O20240705005', status: '已创建' },
+          ],
+        },
+      ],
     },
     // 子场景⑥: 审核驳回回草稿 → 删除原草稿后新建草稿 → 成功（g5: 50003 测试专卖店C）
     // 订单号A生成成功 → 财务审核驳回回草稿 → 删除原草稿 → 新建草稿 → 重新提交生成新订单号B
@@ -586,12 +641,28 @@ const mockCompletedRetryNodes: ApprovalNode[] = [
       ],
       retryHistory: {
         'O20240705005': [
-          { attemptAt: '2024-07-06 10:30:00', orderNo: 'O20240705005', status: '草稿', failReason: '订单审核被驳回到草稿状态，财务审核不通过' },
+          { attemptAt: '2024-07-06 10:30:00', draftId: 'draft-1', orderNo: 'O20240705005', status: '草稿', failReason: '订单审核被驳回到草稿状态，财务审核不通过' },
         ],
         'O20240705006': [
-          { attemptAt: '2024-07-07 10:00:00', orderNo: 'O20240705006', status: '已创建' },
+          { attemptAt: '2024-07-07 10:00:00', draftId: 'draft-2', orderNo: 'O20240705006', status: '已创建' },
         ],
       },
+      // CR-20260708-002: 审核驳回回草稿后删除原草稿并新建（2条草稿链路）
+      draftLinks: [
+        {
+          draftId: 'draft-1', orderType: '内部申请表订单', isDeleted: true,
+          deleteReason: '财务审核不通过，删除后调整业务方案重新申请',
+          attempts: [
+            { attemptAt: '2024-07-06 10:30:00', draftId: 'draft-1', orderNo: 'O20240705005', status: '草稿', failReason: '订单审核被驳回到草稿状态，财务审核不通过' },
+          ],
+        },
+        {
+          draftId: 'draft-2', orderType: '内部申请表订单', isDeleted: false,
+          attempts: [
+            { attemptAt: '2024-07-07 10:00:00', draftId: 'draft-2', orderNo: 'O20240705006', status: '已创建' },
+          ],
+        },
+      ],
     },
   ];
 
@@ -645,9 +716,21 @@ const mockCompletedAllFailedGroupResults: GroupResult[] = [
     outerRemark: '库存持续不足且短期内无法补齐，经与财务沟通确认删除此草稿，调整到下一季度预算再申请',
     retryHistory: {
       'draft': [
-        { attemptAt: '2024-07-06 14:00:00', status: '草稿', failReason: '产品库存不足，订单自动提交失败回退到草稿' },
+        { attemptAt: '2024-07-06 14:00:00', draftId: 'draft-1', status: '草稿', failReason: '产品库存不足，订单自动提交失败回退到草稿' },
       ],
     },
+    // CR-20260708-002: 删除原草稿后业务放弃（已删除草稿链路）
+    draftLinks: [
+      {
+        draftId: 'draft-1', orderType: '内部申请表订单', isDeleted: true,
+        deleteReason: '库存持续不足且短期内无法补齐，经与财务沟通确认删除此草稿，调整到下一季度预算再申请',
+        attempts: [
+          { attemptAt: '2024-07-06 14:00:00', draftId: 'draft-1', status: '草稿', failReason: '产品库存不足，订单自动提交失败回退到草稿' },
+        ],
+      },
+    ],
+    currentResultDescription: '草稿已删除',
+    currentMainReason: '库存持续不足且短期内无法补齐，经与财务沟通确认删除此草稿，调整到下一季度预算再申请',
   },
   // 场景①: 原草稿继续编辑重试 → 仍失败 → 业务放弃
   // 规则7: 从未生成过订单，1条记录，无订单号，只显示最新失败原因
@@ -655,9 +738,20 @@ const mockCompletedAllFailedGroupResults: GroupResult[] = [
     outerRemark: '已重试1次仍失败，业务放弃',
     retryHistory: {
       'draft': [
-        { attemptAt: '2024-07-07 10:00:00', status: '草稿', failReason: '专卖店下单标识仍关闭，重新提交后自动回退到草稿' },
+        { attemptAt: '2024-07-07 10:00:00', draftId: 'draft-1', status: '草稿', failReason: '专卖店下单标识仍关闭，重新提交后自动回退到草稿' },
       ],
     },
+    // CR-20260708-002: 原草稿继续编辑重试后仍失败（未删除，但业务放弃）
+    draftLinks: [
+      {
+        draftId: 'draft-1', orderType: '产品申请表订单', isDeleted: false,
+        attempts: [
+          { attemptAt: '2024-07-07 10:00:00', draftId: 'draft-1', status: '草稿', failReason: '专卖店下单标识仍关闭，重新提交后自动回退到草稿' },
+        ],
+      },
+    ],
+    currentResultDescription: '草稿提交失败',
+    currentMainReason: '专卖店下单标识仍关闭，重新提交后自动回退到草稿',
   },
   // 子场景⑤: 审核驳回回草稿 → 删除原草稿 → 业务放弃
   // 订单号A生成成功 → 财务审核驳回回草稿 → 业务删除原草稿 → 不再重试
@@ -665,9 +759,21 @@ const mockCompletedAllFailedGroupResults: GroupResult[] = [
     outerRemark: '审核驳回后业务重新评估，经与财务沟通确认删除此草稿，调整业务方案后重新提报',
     retryHistory: {
       'O20240706003': [
-        { attemptAt: '2024-07-07 14:00:00', orderNo: 'O20240706003', status: '草稿', failReason: '订单审核被驳回到草稿状态，财务审核不通过' },
+        { attemptAt: '2024-07-07 14:00:00', draftId: 'draft-1', orderNo: 'O20240706003', status: '草稿', failReason: '订单审核被驳回到草稿状态，财务审核不通过' },
       ],
     },
+    // CR-20260708-002: 审核驳回回草稿后删除原草稿并业务放弃
+    draftLinks: [
+      {
+        draftId: 'draft-1', orderType: '内部申请表订单', isDeleted: true,
+        deleteReason: '审核驳回后业务重新评估，经与财务沟通确认删除此草稿，调整业务方案后重新提报',
+        attempts: [
+          { attemptAt: '2024-07-07 14:00:00', draftId: 'draft-1', orderNo: 'O20240706003', status: '草稿', failReason: '订单审核被驳回到草稿状态，财务审核不通过' },
+        ],
+      },
+    ],
+    currentResultDescription: '草稿已删除',
+    currentMainReason: '审核驳回后业务重新评估，经与财务沟通确认删除此草稿，调整业务方案后重新提报',
   },
 ];
 
@@ -719,6 +825,10 @@ const mockStoreChangeGroupResults: GroupResult[] = [
       storeName: '赵晋杰',
       remark: '原专卖店库存不足，无法生成对应订单，经业务确认更换专卖店承接此笔订单',
     }],
+    // CR-20260708-002: 专卖店变更场景 — 当前结果说明 + 主原因
+    currentResultDescription: '订单已创建（信息变更）',
+    actualStoreCode: '31441',
+    actualStoreName: '赵晋杰',
   },
 ];
 
@@ -736,24 +846,115 @@ export const mockWorkOrderStoreChange: ProductWorkOrder = {
   groupResults: mockStoreChangeGroupResults,
 };
 
+
+
+// CR-20260708-002 场景12：已结束 — 产品变更（订单产品与原申请不一致）
+// 工单号 PA202407080001 — 验证：
+//   ① 产品SKU或数量与原申请不一致 ② 展示"订单已创建（信息变更）" ③ 产品变更摘要
+const mockProductChangeNodes: ApprovalNode[] = [
+  { id: 'pc_start', nodeType: 'start', nodeName: '发起工单', handlerName: '周二十五', handlerTime: '2024-07-08 09:00:00', functionOrderNos: ['FO20240708001'] },
+  { id: 'pc_n1', nodeType: 'approval', nodeName: '一级审批', handlerName: '郑经理', handlerTime: '2024-07-08 10:00:00', result: '通过', remark: '同意' },
+  { id: 'pc_n2', nodeType: 'approval', nodeName: '二级审批', handlerName: '王总监', handlerTime: '2024-07-08 11:30:00', result: '通过', remark: '审批通过，订单生成时部分产品库存不足已调整' },
+];
+
+const mockProductChangeGroupResults: GroupResult[] = [
+  {
+    groupId: 'g1', storeCode: '31692', storeName: '赵晋安 宋晓华',
+    functionOrderNos: ['FO20240708001'],
+    relatedOrders: [{
+      orderNo: 'O20240708001', orderType: '产品申请表订单', orderStatus: '已创建',
+      storeCode: '31692', storeName: '赵晋安 宋晓华',
+    }],
+    // CR-20260708-002: 产品变更场景
+    currentResultDescription: '订单已创建（信息变更）',
+    productChangeSummary: { changedSkuCount: 2, totalQuantityDiff: 5 },
+    draftLinks: [
+      { draftId: 'draft-1', orderType: '产品申请表订单', isDeleted: false,
+        attempts: [{ attemptAt: '2024-07-08 12:00:00', draftId: 'draft-1', orderNo: 'O20240708001', status: '已创建' }],
+      },
+    ],
+  },
+];
+
+export const mockWorkOrderProductChange: ProductWorkOrder = {
+  id: '12', workOrderNo: 'PA202407080001', displayStatus: '已结束', applicantName: '周二十五', applicantOrg: '华南 / 广东', createTime: '2024-07-08 09:00:00',
+  budget: mockBudgets[0],
+  storeGroups: [
+    { id: 'g1', storeCode: '31692', storeName: '赵晋安 宋晓华', products: [
+      { id: 'p1', productCode: 'SKU001', productName: '智能马桶盖A款', jdePrice: 1299.00, isDiscount: true, discount: 0.5, maxQuantity: 20, quantity: 5, amount: 3247.50 },
+      { id: 'p2', productCode: 'SKU002', productName: '恒温花洒B款', jdePrice: 899.00, isDiscount: false, discount: 1, maxQuantity: 15, quantity: 3, amount: 2697.00 },
+    ], groupAmount: 5944.50 },
+  ],
+  totalAmount: 5944.50,
+  attachments: [{ id: 'a1', name: '产品变更说明.pdf', url: '#', type: 'pdf', size: 1024 * 1024 }],
+  approvalNodes: mockProductChangeNodes,
+  groupResults: mockProductChangeGroupResults,
+};
+
+// CR-20260708-002 场景13：已结束 — 专卖店+产品双重变更
+// 工单号 PA202407090001 — 验证：
+//   ① 专卖店和产品同时变更 ② 展示"订单已创建（信息变更）" ③ 双重变更摘要
+const mockStoreAndProductChangeNodes: ApprovalNode[] = [
+  { id: 'spc_start', nodeType: 'start', nodeName: '发起工单', handlerName: '吴二十六', handlerTime: '2024-07-09 09:00:00', functionOrderNos: ['FO20240709001'] },
+  { id: 'spc_n1', nodeType: 'approval', nodeName: '一级审批', handlerName: '冯经理', handlerTime: '2024-07-09 10:00:00', result: '通过', remark: '同意' },
+  { id: 'spc_n2', nodeType: 'approval', nodeName: '二级审批', handlerName: '陈总监', handlerTime: '2024-07-09 11:30:00', result: '通过', remark: '审批通过，专卖店和产品均根据实际情况调整' },
+];
+
+const mockStoreAndProductChangeGroupResults: GroupResult[] = [
+  {
+    groupId: 'g1', storeCode: '31692', storeName: '赵晋安 宋晓华',
+    functionOrderNos: ['FO20240709001'],
+    relatedOrders: [{
+      orderNo: 'O20240709001', orderType: '产品申请表订单', orderStatus: '已创建',
+      storeCode: '31441', storeName: '赵晋杰',
+    }],
+    // CR-20260708-002: 双重变更场景
+    currentResultDescription: '订单已创建（信息变更）',
+    actualStoreCode: '31441',
+    actualStoreName: '赵晋杰',
+    productChangeSummary: { changedSkuCount: 1, totalQuantityDiff: 2 },
+    draftLinks: [
+      { draftId: 'draft-1', orderType: '产品申请表订单', isDeleted: false,
+        attempts: [{ attemptAt: '2024-07-09 12:00:00', draftId: 'draft-1', orderNo: 'O20240709001', status: '已创建' }],
+      },
+    ],
+  },
+];
+
+export const mockWorkOrderStoreAndProductChange: ProductWorkOrder = {
+  id: '13', workOrderNo: 'PA202407090001', displayStatus: '已结束', applicantName: '吴二十六', applicantOrg: '华东 / 浙江', createTime: '2024-07-09 09:00:00',
+  budget: mockBudgets[0],
+  storeGroups: [
+    { id: 'g1', storeCode: '31692', storeName: '赵晋安 宋晓华', products: [
+      { id: 'p1', productCode: 'SKU001', productName: '智能马桶盖A款', jdePrice: 1299.00, isDiscount: true, discount: 0.5, maxQuantity: 20, quantity: 5, amount: 3247.50 },
+    ], groupAmount: 3247.50 },
+  ],
+  totalAmount: 3247.50,
+  attachments: [{ id: 'a1', name: '专卖店与产品双重变更说明.pdf', url: '#', type: 'pdf', size: 1024 * 1024 }],
+  approvalNodes: mockStoreAndProductChangeNodes,
+  groupResults: mockStoreAndProductChangeGroupResults,
+};
+
 // ============================================================
 // CR-20260707-003: 详情页场景映射总表
 // ============================================================
 // 本表集中维护 scene key ↔ id ↔ 工单号 ↔ 主状态 的映射关系，
 // 用于支撑详情页场景验收、测试走查、AI 自检快速定位。
 //
-// | 场景序号 | scene key              | id  | 工单号         | 主状态   | CR-20260708-001 子场景 |
-// |---------|------------------------|-----|---------------|---------|------------------------|
-// | 1       | processing             | 2   | PA202407010001 | 处理中   | —                      |
-// | 2       | rejected-freeze        | 3   | PA202406280003 | 已驳回   | —                      |
-// | 3       | rejected-expired       | 4   | PA202406150001 | 已驳回   | —                      |
-// | 4       | rejected-nonfreeze     | 5   | PA202406200001 | 已驳回   | —                      |
-// | 5       | completed              | 6   | PA202406100001 | 已结束   | —                      |
-// | 6       | completed-full         | 7   | PA202407020001 | 已结束   | —                      |
-// | 7       | completed-merged       | 8   | PA202407030001 | 已结束   | —                      |
-// | 8       | completed-retry        | 9   | PA202407050001 | 已结束   | ①②③④⑥（5个子场景）     |
-// | 9       | completed-all-failed   | 10  | PA202407060001 | 已结束   | ①②⑤（3个子场景）       |
-// | 10      | completed-store-change | 11  | PA202407070001 | 已结束   | —                      |
+// | 场景序号 | scene key                  | id  | 工单号         | 主状态   | CR-20260708-001 子场景 | CR-20260708-002 验证点        |
+// |---------|----------------------------|-----|---------------|---------|------------------------|-------------------------------|
+// | 1       | processing                 | 2   | PA202407010001 | 处理中   | —                      | —                             |
+// | 2       | rejected-freeze            | 3   | PA202406280003 | 已驳回   | —                      | —                             |
+// | 3       | rejected-expired           | 4   | PA202406150001 | 已驳回   | —                      | —                             |
+// | 4       | rejected-nonfreeze         | 5   | PA202406200001 | 已驳回   | —                      | —                             |
+// | 5       | completed                  | 6   | PA202406100001 | 已结束   | —                      | —                             |
+// | 6       | completed-full             | 7   | PA202407020001 | 已结束   | —                      | —                             |
+// | 7       | completed-merged           | 8   | PA202407030001 | 已结束   | —                      | —                             |
+// | 8       | completed-retry            | 9   | PA202407050001 | 已结束   | ①②③④⑥（5个子场景）     | draftLinks 聚合               |
+// | 9       | completed-all-failed       | 10  | PA202407060001 | 已结束   | ①②⑤（3个子场景）       | 当前结果说明 + 主原因          |
+// | 10      | completed-store-change     | 11  | PA202407070001 | 已结束   | —                      | 专卖店变更 + 信息变更           |
+// | 11      | completed-product-change   | 12  | PA202407080001 | 已结束   | —                      | 产品变更 + 信息变更             |
+// | 12      | completed-store-product-change | 13 | PA202407090001 | 已结束 | —                      | 双重变更 + 信息变更             |
 //
 // 子场景索引（CR-20260708-001 6 类完整覆盖）：
 //   ① 自动提交失败 → 原草稿继续编辑重试 → 成功             [sc8 g2]
@@ -780,6 +981,8 @@ export function getMockWorkOrderDetail(scene?: string): ProductWorkOrder {
     case 'completed-retry': return mockWorkOrderCompletedRetry;   // 场景8：已结束-多次重试（最终成功+业务放弃）
     case 'completed-all-failed': return mockWorkOrderCompletedAllFailed; // 场景9：已结束-全部失败业务放弃
     case 'completed-store-change': return mockWorkOrderStoreChange; // 场景10：已结束-专卖店变更（A→B）
+    case 'completed-product-change': return mockWorkOrderProductChange; // 场景11：已结束-产品变更
+    case 'completed-store-product-change': return mockWorkOrderStoreAndProductChange; // 场景12：已结束-专卖店+产品双重变更
     default: return mockWorkOrderDetail;
   }
 }

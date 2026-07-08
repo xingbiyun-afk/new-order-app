@@ -46,12 +46,38 @@ export interface RelatedOrder {
 // CR-20260706-002: 单次订单尝试记录（用于多次失败重试时间线）
 // CR-20260707-002: 状态统一为"已创建/客服已审核/财务已审核/草稿"四种
 // CR-20260708-001: 新增 deleteReason，实现备注承接优先级（删除理由 > 驳回说明 > 失败原因）
+// CR-20260708-002: 新增 draftId，用于按草稿链路聚合订单创建历史
 export interface OrderAttempt {
   attemptAt: string;             // 尝试时间
   orderNo?: string;              // 本次尝试的订单编号（每次重试可能不同）
+  draftId: string;               // CR-20260708-002: 草稿链路ID，同一draftId下的尝试属于同一条草稿链路
   status: '已创建' | '客服已审核' | '财务已审核' | '草稿';
   failReason?: string;           // 失败原因（自动提交失败 / 审核驳回回草稿说明）
   deleteReason?: string;         // CR-20260708-001: 删除理由（草稿已被业务主动删除时，优先级高于 failReason）
+}
+
+// CR-20260708-002: 草稿链路（按 draftId 聚合）
+// 同一 draftId 下的所有尝试归并为一条草稿链路
+export interface DraftLink {
+  draftId: string;               // 草稿链路唯一标识
+  orderType: '产品申请表订单' | '内部申请表订单';  // 该草稿链路的订单类型
+  attempts: OrderAttempt[];      // 该草稿链路下的所有尝试记录
+  isDeleted: boolean;            // 该草稿是否已被删除
+  deleteReason?: string;         // 删除原因（isDeleted=true 时有值）
+}
+
+// CR-20260708-002: 当前结果说明枚举
+export type CurrentResultDescription =
+  | '草稿提交失败'
+  | '审核驳回'
+  | '草稿已删除'
+  | '订单已创建'
+  | '订单已创建（信息变更）';
+
+// CR-20260708-002: 产品变更摘要
+export interface ProductChangeSummary {
+  changedSkuCount: number;       // 存在不一致的SKU种类数
+  totalQuantityDiff: number;     // 数量差绝对值合计
 }
 
 export interface ApprovalNode {
@@ -75,7 +101,19 @@ export interface GroupResult {
   // CR-20260708-001: 外层备注（删除/放弃理由，与 retryHistory 独立）
   outerRemark?: string;
   // CR-20260706-002: 多次失败重试历史（按订单号或 draft 标识聚合）
+  // CR-20260708-002: 历史数据保留兼容，新数据优先使用 draftLinks
   retryHistory?: Record<string, OrderAttempt[]>;
+  // CR-20260708-002: 按 draftId 聚合的草稿链路（新数据结构）
+  draftLinks?: DraftLink[];
+  // CR-20260708-002: 当前结果说明（固定枚举）
+  currentResultDescription?: CurrentResultDescription;
+  // CR-20260708-002: 当前主原因（首屏展示的一条主文本）
+  currentMainReason?: string;
+  // CR-20260708-002: 实际专卖店变更信息
+  actualStoreCode?: string;
+  actualStoreName?: string;
+  // CR-20260708-002: 产品变更摘要
+  productChangeSummary?: ProductChangeSummary;
 }
 export interface Attachment {
   id: string; name: string; url: string; type: string; size: number;

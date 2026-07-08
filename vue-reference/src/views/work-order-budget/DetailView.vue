@@ -28,6 +28,8 @@ const idSceneMap: Record<string, string> = {
   '9': 'completed-retry',      // 场景8：已结束-多次重试 — PA202407050001
   '10': 'completed-all-failed', // 场景9：已结束-全部失败 — PA202407060001
   '11': 'completed-store-change', // 场景10：已结束-专卖店变更 — PA202407070001
+  '12': 'completed-product-change', // 场景11：已结束-产品变更 — PA202407080001
+  '13': 'completed-store-product-change', // 场景12：已结束-专卖店+产品双重变更 — PA202407090001
 }
 const routeId = route.params.id as string
 const scene = (route.query.scene as string | undefined) || idSceneMap[routeId] || undefined
@@ -106,6 +108,194 @@ function getRetryRemark(att: import('../../types').OrderAttempt): string | null 
 function getRetryRemarkClass(att: import('../../types').OrderAttempt): string {
   if (att.deleteReason) return 'result-retry-reason result-retry-delete'
   return 'result-retry-reason'
+}
+
+// ============================================================
+// CR-20260708-002: 订单结果区展示模型重构
+// ============================================================
+
+// 当前结果说明 5 类枚举（§9.1）
+// 根据 GroupResult 状态自动计算当前结果说明
+type ResultDescription = '草稿提交失败' | '审核驳回' | '草稿已删除' | '订单已创建' | '订单已创建（信息变更）';
+
+function getCurrentResultDescription(r: GroupResult): ResultDescription {
+  // 优先使用 mock 中预置的值（用于精确控制场景）
+  if (r.currentResultDescription) return r.currentResultDescription as ResultDescription
+
+  // 自动判断逻辑
+  const latestStatus = getLatestOrderStatus(r)
+  const hasInfoChange = hasStoreChange(r) || hasProductChange(r)
+
+  // 1. 最终已创建且存在信息变更 → 订单已创建（信息变更）
+  if (latestStatus.isSuccess && hasInfoChange) return '订单已创建（信息变更）'
+
+  // 2. 最终已创建且无信息变更 → 订单已创建
+  if (latestStatus.isSuccess) return '订单已创建'
+
+  // 3. 当前最新状态为草稿 + 存在删除理由 → 草稿已删除
+  if (latestStatus.status === '草稿' && r.outerRemark) return '草稿已删除'
+
+  // 4. 当前最新状态为草稿 + 存在审核驳回历史 → 审核驳回
+  if (latestStatus.status === '草稿' && hasRejectHistory(r)) return '审核驳回'
+
+  // 5. 当前最新状态为草稿 + 提交失败 → 草稿提交失败
+  if (latestStatus.status === '草稿') return '草稿提交失败'
+
+  // 兜底
+  return latestStatus.isSuccess ? '订单已创建' : '草稿提交失败'
+}
+
+// 当前主原因（§10）— 每个卡片首屏只展示一条主原因
+function getCurrentMainReason(r: GroupResult): string | null {
+  // 优先使用 mock 中预置的值
+  if (r.currentMainReason) return r.currentMainReason
+
+  const desc = getCurrentResultDescription(r)
+
+  switch (desc) {
+    case '草稿提交失败': {
+      // 取最新失败原因
+      const failReasons = dedupFailReasons(r.failReasons)
+      if (failReasons.length > 0) return failReasons[failReasons.length - 1]
+      // 从 retryHistory 取
+      const latestAttempt = getLatestAttempt(r)
+      if (latestAttempt?.failReason) return latestAttempt.failReason
+      return '订单自动提交失败'
+    }
+    case '审核驳回': {
+      const latestAttempt = getLatestAttempt(r)
+      if (latestAttempt?.failReason) return latestAttempt.failReason
+      return '订单审核被驳回'
+    }
+    case '草稿已删除': {
+      return r.outerRemark || '草稿已被删除'
+    }
+    case '订单已创建（信息变更）': {
+      const parts: string[] = []
+      // 专卖店变更说明优先
+      if (r.actualStoreCode && r.actualStoreName) {
+        parts.push(`实际专卖店已变更为：${r.actualStoreCode} ${r.actualStoreName}`)
+      }
+      // 产品变更摘要
+      if (r.productChangeSummary) {
+        const { changedSkuCount, totalQuantityDiff } = r.productChangeSummary
+        parts.push(`有 ${changedSkuCount} 款产品共 ${totalQuantityDiff} 个数量与申请工单内容不一致`)
+      }
+      return parts.length > 0 ? parts.join('\n') : '订单已创建，但信息与原申请存在差异'
+    }
+    case '订单已创建':
+      // 订单已创建场景不展示主原因
+      return null
+    default:
+      return null
+  }
+}
+
+// 判断是否存在专卖店变更
+function hasStoreChange(r: GroupResult): boolean {
+  if (r.actualStoreCode && r.actualStoreCode !== r.storeCode) return true
+  // 兼容旧数据：从 relatedOrders 中检查
+  return r.relatedOrders.some(o => o.storeCode && o.storeCode !== r.storeCode)
+}
+
+// 判断是否存在产品变更
+function hasProductChange(r: GroupResult): boolean {
+  return !!r.productChangeSummary
+}
+
+// 判断是否存在审核驳回历史
+function hasRejectHistory(r: GroupResult): boolean {
+  // 从 retryHistory 中检查是否有审核驳回的失败原因
+  if (r.retryHistory) {
+    for (const attempts of Object.values(r.retryHistory)) {
+      if (attempts.some(a => a.failReason?.includes('驳回'))) return true
+    }
+  }
+  // 从 failReasons 中检查
+  if (r.failReasons?.some(f => f.includes('驳回'))) return true
+  return false
+}
+
+// 获取最新一次尝试记录
+function getLatestAttempt(r: GroupResult): import('../../types').OrderAttempt | null {
+  // 优先从 draftLinks 取
+  if (r.draftLinks && r.draftLinks.length > 0) {
+    const allAttempts: import('../../types').OrderAttempt[] = []
+    for (const link of r.draftLinks) {
+      allAttempts.push(...link.attempts)
+    }
+    if (allAttempts.length > 0) {
+      allAttempts.sort((a, b) => new Date(b.attemptAt).getTime() - new Date(a.attemptAt).getTime())
+      return allAttempts[0]
+    }
+  }
+  // 兼容旧数据：从 retryHistory 取
+  if (r.retryHistory) {
+    const allAttempts: import('../../types').OrderAttempt[] = []
+    for (const attempts of Object.values(r.retryHistory)) {
+      allAttempts.push(...attempts)
+    }
+    if (allAttempts.length > 0) {
+      allAttempts.sort((a, b) => new Date(b.attemptAt).getTime() - new Date(a.attemptAt).getTime())
+      return allAttempts[0]
+    }
+  }
+  return null
+}
+
+// 计算订单创建历史总次数（用于入口展示"N次"）
+function getTotalAttemptCount(r: GroupResult): number {
+  if (r.draftLinks) {
+    return r.draftLinks.reduce((sum, link) => sum + link.attempts.length, 0)
+  }
+  if (r.retryHistory) {
+    return Object.values(r.retryHistory).reduce((sum, arr) => sum + arr.length, 0)
+  }
+  return 0
+}
+
+// 草稿链路折叠状态（CR-20260708-002：按 draftId 管理）
+// BUG FIX: 使用复合键 ${groupId}_${draftId} 避免不同卡片间 draftId 冲突
+const expandedDrafts = ref<Set<string>>(new Set())
+function makeDraftKey(groupId: string, draftId: string) { return `${groupId}_${draftId}` }
+function isDraftExpanded(groupId: string, draftId: string) { return expandedDrafts.value.has(makeDraftKey(groupId, draftId)) }
+function toggleDraft(groupId: string, draftId: string) {
+  const key = makeDraftKey(groupId, draftId)
+  const s = expandedDrafts.value
+  if (s.has(key)) s.delete(key)
+  else s.add(key)
+}
+
+// 兼容：订单创建历史整体折叠状态（卡片级统一入口）
+const expandedHistoryCards = ref<Set<string>>(new Set())
+function isHistoryCardExpanded(groupId: string) { return expandedHistoryCards.value.has(groupId) }
+function toggleHistoryCard(groupId: string) {
+  const s = expandedHistoryCards.value
+  if (s.has(groupId)) s.delete(groupId)
+  else s.add(groupId)
+}
+
+// CR-20260708-002: 兼容辅助 — 获取 retryHistory 的键列表
+function getRetryHistoryKeys(r: GroupResult): string[] {
+  if (!r.retryHistory) return []
+  return Object.keys(r.retryHistory)
+}
+function getRetryHistoryAttempts(r: GroupResult, key: string): import('../../types').OrderAttempt[] {
+  if (!r.retryHistory) return []
+  return r.retryHistory[key] || []
+}
+
+// CR-20260708-002-fix: 获取最新的订单编号
+// 只取 relatedOrders 中最后一个有 orderNo 的，如果没有则返回 null
+function getLatestOrderNo(r: GroupResult): string | null {
+  if (!r.relatedOrders || r.relatedOrders.length === 0) return null
+  // 从后往前找第一个有 orderNo 的
+  for (let i = r.relatedOrders.length - 1; i >= 0; i--) {
+    if (r.relatedOrders[i].orderNo) {
+      return r.relatedOrders[i].orderNo!
+    }
+  }
+  return null
 }
 
 // ===== 汇总计算 =====
@@ -565,59 +755,89 @@ function getProductLabelText(pi: number): string {
         </div>
       </div>
 
-      <!-- 订单结果 -->
+      <!-- 订单结果 — CR-20260708-002: 按专卖店订单申请结果单元展示 -->
       <div v-if="order.groupResults?.length" class="card">
         <div class="section-title">订单结果</div>
-        <div v-for="r in order.groupResults" :key="r.groupId" class="result-card">
-          <div class="result-header">
-            <span>{{ r.storeCode }} {{ r.storeName }}</span>
-            <span class="result-count">{{ r.relatedOrders.length }} 个关联订单</span>
-          </div>
-          <div v-for="(o, oi) in r.relatedOrders" :key="o.orderNo || 'draft-' + oi" class="result-order-item" :style="{ borderLeftColor: getOrderBorderColor(o.orderStatus) }">
-            <div class="result-order-header">
-              <span class="result-order-type">{{ o.orderType }}</span>
-              <span class="result-order-status" :style="getOrderStatusColor(o.orderStatus)">{{ o.orderStatus }}</span>
+        <div v-for="r in order.groupResults" :key="r.groupId" class="result-unit-card">
+          <!-- 卡片头：专卖店信息 + 当前结果说明 -->
+          <div class="result-unit-header">
+            <div class="result-unit-store">
+              <span class="result-unit-store-code">{{ r.storeCode }}</span>
+              <span class="result-unit-store-name">{{ r.storeName }}</span>
             </div>
-            <div class="result-order-detail">
-              <span v-if="o.orderNo">订单编号：{{ o.orderNo }}</span>
-              <!-- CR-20260706-004: 订单实际所属专卖店（可能与工单明细专卖店不一致） -->
-              <span v-if="o.storeCode && o.storeCode !== r.storeCode" class="result-order-store">
-                {{ o.storeCode }} {{ o.storeName }}
+            <span class="result-unit-description" :class="'desc-' + (getCurrentResultDescription(r).includes('信息变更') ? 'changed' : getCurrentResultDescription(r).includes('草稿') || getCurrentResultDescription(r).includes('驳回') || getCurrentResultDescription(r).includes('删除') ? 'draft' : 'created')">
+              {{ getCurrentResultDescription(r) }}
+            </span>
+          </div>
+
+          <!-- 当前结果摘要区 -->
+          <div class="result-unit-summary">
+            <!-- 订单类型（统一展示一次） -->
+            <div v-if="r.relatedOrders.length > 0" class="result-unit-order-type">
+              {{ r.relatedOrders[0].orderType }}
+            </div>
+            <!-- 最新有效订单号（只显示最新一条） -->
+            <div class="result-unit-order-no">
+              <span v-if="getLatestOrderNo(r)">订单编号：{{ getLatestOrderNo(r) }}</span>
+              <span v-else class="result-unit-draft">草稿</span>
+            </div>
+            <!-- 当前主原因（仅一条） -->
+            <div v-if="getCurrentMainReason(r)" class="result-unit-main-reason" :class="{ 'reason-fail': getCurrentResultDescription(r) === '草稿提交失败' || getCurrentResultDescription(r) === '审核驳回' || getCurrentResultDescription(r) === '草稿已删除', 'reason-change': getCurrentResultDescription(r) === '订单已创建（信息变更）' }">
+              {{ getCurrentMainReason(r) }}
+            </div>
+          </div>
+
+          <!-- 订单创建历史 — 卡片级统一入口（CR-20260708-002 §12） -->
+          <div v-if="(r.draftLinks && r.draftLinks.length > 0) || (r.retryHistory && Object.keys(r.retryHistory).length > 0)" class="result-history-section">
+            <div class="result-history-toggle" @click="toggleHistoryCard(r.groupId)">
+              <span class="result-history-toggle-text">
+                订单创建历史（{{ getTotalAttemptCount(r) }} 次）
               </span>
-              <!-- CR-20260706-004: 订单备注（多次重试说明、更换专卖店说明） -->
-              <span v-if="o.remark" class="result-order-remark">备注：{{ o.remark }}</span>
+              <span class="fold-arrow-mini" :class="{ expanded: isHistoryCardExpanded(r.groupId) }">&#9662;</span>
             </div>
-            <!-- CR-20260707-002: 多次失败重试 - 折叠收起 + 外层只展示最新结果摘要 -->
-            <div v-if="r.retryHistory?.[(o.orderNo || 'draft')]?.length" class="result-retry-section">
-              <div class="result-retry-toggle" @click="toggleRetry(o.orderNo || 'draft')">
-                <span class="result-retry-toggle-text">
-                  订单创建历史（{{ r.retryHistory[o.orderNo || 'draft'].length }} 次）
-                </span>
-                <span class="fold-arrow-mini" :class="{ expanded: isRetryExpanded(o.orderNo || 'draft') }">&#9662;</span>
-              </div>
-              <!-- CR-20260707-002: 重试历史展开区长文本排版优化 -->
-              <div v-show="isRetryExpanded(o.orderNo || 'draft')" class="result-retry-list">
-                <div v-for="(att, ai) in r.retryHistory[o.orderNo || 'draft']" :key="ai" class="result-retry-item" :class="{ 'is-fail': att.status === '草稿', 'is-success': att.status === '已创建' }">
-                  <div class="result-retry-row1">
-                    <span class="result-retry-time">{{ att.attemptAt }}</span>
-                    <span v-if="att.orderNo" class="result-retry-orderno">{{ att.orderNo }}</span>
-                    <span class="result-retry-status" :style="getOrderStatusColor(att.status)">{{ att.status }}</span>
+            <div v-show="isHistoryCardExpanded(r.groupId)" class="result-history-body">
+              <!-- 新结构：按 draftId 聚合展示草稿链路 -->
+              <template v-if="r.draftLinks && r.draftLinks.length > 0">
+                <div v-for="link in r.draftLinks" :key="link.draftId" class="draft-link-block">
+                  <div class="draft-link-header" @click="toggleDraft(r.groupId, link.draftId)">
+                    <span class="draft-link-label">草稿ID：{{ link.draftId }}</span>
+                    <span v-if="link.isDeleted" class="draft-link-deleted">已删除</span>
+                    <span class="fold-arrow-mini" :class="{ expanded: isDraftExpanded(r.groupId, link.draftId) }">&#9662;</span>
                   </div>
-                  <div v-if="getRetryRemark(att)" :class="getRetryRemarkClass(att)">{{ getRetryRemark(att) }}</div>
+                  <div v-show="isDraftExpanded(r.groupId, link.draftId)" class="draft-link-body">
+                    <div v-for="(att, ai) in link.attempts" :key="ai" class="result-retry-item" :class="{ 'is-fail': att.status === '草稿', 'is-success': att.status === '已创建' }">
+                      <div class="result-retry-row1">
+                        <span class="result-retry-time">{{ att.attemptAt }}</span>
+                        <span v-if="att.orderNo" class="result-retry-orderno">{{ att.orderNo }}</span>
+                        <span class="result-retry-status" :style="getOrderStatusColor(att.status)">{{ att.status }}</span>
+                      </div>
+                      <div v-if="getRetryRemark(att)" :class="getRetryRemarkClass(att)">{{ getRetryRemark(att) }}</div>
+                    </div>
+                    <div v-if="link.isDeleted && link.deleteReason" class="draft-link-delete-reason">
+                      删除原因：{{ link.deleteReason }}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
-          <!-- CR-20260708-001-fix: 外层失败备注改为从 retryHistory 读取，与内层重试历史保持一致 -->
-          <div v-if="getLatestOrderStatus(r).status === '草稿' && getOuterFailRemark(r)" class="result-order-remark" style="margin-top: 8px; padding: 8px 12px; background: #f5f5f5; border-radius: 6px;">
-            {{ getOuterFailRemark(r) }}
-          </div>
-          <!-- 一直失败且没有remark时，展示最后一条失败原因（仅一条，不堆叠） -->
-          <div v-else-if="getLatestOrderStatus(r).status === '草稿' && dedupFailReasons(r.failReasons).length > 0" class="tip-banner tip-error tip-inline">
-            <div class="tip-icon">&#9888;</div>
-            <div class="tip-content">
-              <div class="tip-title">订单当前为草稿状态</div>
-              <div class="tip-text">{{ dedupFailReasons(r.failReasons)[dedupFailReasons(r.failReasons).length - 1] }}</div>
+              </template>
+              <!-- 兼容旧结构：按 retryHistory 展示 -->
+              <template v-else-if="getRetryHistoryKeys(r).length > 0">
+                <div v-for="key in getRetryHistoryKeys(r)" :key="key" class="draft-link-block">
+                  <div class="draft-link-header" @click="toggleDraft(r.groupId, key)">
+                    <span class="draft-link-label">{{ key === 'draft' ? '草稿提交' : key }}</span>
+                    <span class="fold-arrow-mini" :class="{ expanded: isDraftExpanded(r.groupId, key) }">&#9662;</span>
+                  </div>
+                  <div v-show="isDraftExpanded(r.groupId, key)" class="draft-link-body">
+                    <div v-for="(att, ai) in getRetryHistoryAttempts(r, key)" :key="ai" class="result-retry-item" :class="{ 'is-fail': att.status === '草稿', 'is-success': att.status === '已创建' }">
+                      <div class="result-retry-row1">
+                        <span class="result-retry-time">{{ att.attemptAt }}</span>
+                        <span v-if="att.orderNo" class="result-retry-orderno">{{ att.orderNo }}</span>
+                        <span class="result-retry-status" :style="getOrderStatusColor(att.status)">{{ att.status }}</span>
+                      </div>
+                      <div v-if="getRetryRemark(att)" :class="getRetryRemarkClass(att)">{{ getRetryRemark(att) }}</div>
+                    </div>
+                  </div>
+                </div>
+              </template>
             </div>
           </div>
         </div>
@@ -626,63 +846,93 @@ function getProductLabelText(pi: number): string {
 
     <!-- 已结束：订单结果 → 审批流程 (§5.3) -->
     <template v-else>
-      <!-- 订单结果（提升层级） -->
+    <!-- 订单结果 — CR-20260708-002: 按专卖店订单申请结果单元展示（已结束场景） -->
       <div v-if="order.groupResults?.length" class="card result-card-elevated">
         <div class="section-title">订单结果</div>
-        <div v-for="r in order.groupResults" :key="r.groupId" class="result-card">
-          <div class="result-header">
-            <span>{{ r.storeCode }} {{ r.storeName }}</span>
-            <span class="result-count">{{ r.relatedOrders.length }} 个关联订单</span>
-          </div>
-          <div v-for="(o, oi) in r.relatedOrders" :key="o.orderNo || 'draft-' + oi" class="result-order-item" :style="{ borderLeftColor: getOrderBorderColor(o.orderStatus) }">
-            <div class="result-order-header">
-              <span class="result-order-type">{{ o.orderType }}</span>
-              <span class="result-order-status" :style="getOrderStatusColor(o.orderStatus)">{{ o.orderStatus }}</span>
+        <div v-for="r in order.groupResults" :key="r.groupId" class="result-unit-card">
+          <!-- 卡片头：专卖店信息 + 当前结果说明 -->
+          <div class="result-unit-header">
+            <div class="result-unit-store">
+              <span class="result-unit-store-code">{{ r.storeCode }}</span>
+              <span class="result-unit-store-name">{{ r.storeName }}</span>
             </div>
-            <div class="result-order-detail">
-              <span v-if="o.orderNo">订单编号：{{ o.orderNo }}</span>
-              <!-- CR-20260706-004: 订单实际所属专卖店（可能与工单明细专卖店不一致） -->
-              <span v-if="o.storeCode && o.storeCode !== r.storeCode" class="result-order-store">
-                {{ o.storeCode }} {{ o.storeName }}
+            <span class="result-unit-description" :class="'desc-' + (getCurrentResultDescription(r).includes('信息变更') ? 'changed' : getCurrentResultDescription(r).includes('草稿') || getCurrentResultDescription(r).includes('驳回') || getCurrentResultDescription(r).includes('删除') ? 'draft' : 'created')">
+              {{ getCurrentResultDescription(r) }}
+            </span>
+          </div>
+
+          <!-- 当前结果摘要区 -->
+          <div class="result-unit-summary">
+            <!-- 订单类型（统一展示一次） -->
+            <div v-if="r.relatedOrders.length > 0" class="result-unit-order-type">
+              {{ r.relatedOrders[0].orderType }}
+            </div>
+            <!-- 最新有效订单号（只显示最新一条） -->
+            <div class="result-unit-order-no">
+              <span v-if="getLatestOrderNo(r)">订单编号：{{ getLatestOrderNo(r) }}</span>
+              <span v-else class="result-unit-draft">草稿</span>
+            </div>
+            <!-- 当前主原因（仅一条） -->
+            <div v-if="getCurrentMainReason(r)" class="result-unit-main-reason" :class="{ 'reason-fail': getCurrentResultDescription(r) === '草稿提交失败' || getCurrentResultDescription(r) === '审核驳回' || getCurrentResultDescription(r) === '草稿已删除', 'reason-change': getCurrentResultDescription(r) === '订单已创建（信息变更）' }">
+              {{ getCurrentMainReason(r) }}
+            </div>
+          </div>
+
+          <!-- 订单创建历史 — 卡片级统一入口（CR-20260708-002 §12） -->
+          <div v-if="(r.draftLinks && r.draftLinks.length > 0) || (r.retryHistory && Object.keys(r.retryHistory).length > 0)" class="result-history-section">
+            <div class="result-history-toggle" @click="toggleHistoryCard(r.groupId)">
+              <span class="result-history-toggle-text">
+                订单创建历史（{{ getTotalAttemptCount(r) }} 次）
               </span>
-              <!-- CR-20260706-004: 订单备注（多次重试说明、更换专卖店说明） -->
-              <span v-if="o.remark" class="result-order-remark">备注：{{ o.remark }}</span>
+              <span class="fold-arrow-mini" :class="{ expanded: isHistoryCardExpanded(r.groupId) }">&#9662;</span>
             </div>
-            <!-- CR-20260707-002: 多次失败重试 - 折叠收起 + 外层只展示最新结果摘要 -->
-            <div v-if="r.retryHistory?.[(o.orderNo || 'draft')]?.length" class="result-retry-section">
-              <div class="result-retry-toggle" @click="toggleRetry(o.orderNo || 'draft')">
-                <span class="result-retry-toggle-text">
-                  订单创建历史（{{ r.retryHistory[o.orderNo || 'draft'].length }} 次）
-                </span>
-                <span class="fold-arrow-mini" :class="{ expanded: isRetryExpanded(o.orderNo || 'draft') }">&#9662;</span>
-              </div>
-              <!-- CR-20260707-002: 重试历史展开区长文本排版优化 -->
-              <div v-show="isRetryExpanded(o.orderNo || 'draft')" class="result-retry-list">
-                <div v-for="(att, ai) in r.retryHistory[o.orderNo || 'draft']" :key="ai" class="result-retry-item" :class="{ 'is-fail': att.status === '草稿', 'is-success': att.status === '已创建' }">
-                  <div class="result-retry-row1">
-                    <span class="result-retry-time">{{ att.attemptAt }}</span>
-                    <span v-if="att.orderNo" class="result-retry-orderno">{{ att.orderNo }}</span>
-                    <span class="result-retry-status" :style="getOrderStatusColor(att.status)">{{ att.status }}</span>
+            <div v-show="isHistoryCardExpanded(r.groupId)" class="result-history-body">
+              <!-- 新结构：按 draftId 聚合展示草稿链路 -->
+              <template v-if="r.draftLinks && r.draftLinks.length > 0">
+                <div v-for="link in r.draftLinks" :key="link.draftId" class="draft-link-block">
+                  <div class="draft-link-header" @click="toggleDraft(r.groupId, link.draftId)">
+                    <span class="draft-link-label">草稿ID：{{ link.draftId }}</span>
+                    <span v-if="link.isDeleted" class="draft-link-deleted">已删除</span>
+                    <span class="fold-arrow-mini" :class="{ expanded: isDraftExpanded(r.groupId, link.draftId) }">&#9662;</span>
                   </div>
-                  <div v-if="getRetryRemark(att)" :class="getRetryRemarkClass(att)">{{ getRetryRemark(att) }}</div>
+                  <div v-show="isDraftExpanded(r.groupId, link.draftId)" class="draft-link-body">
+                    <div v-for="(att, ai) in link.attempts" :key="ai" class="result-retry-item" :class="{ 'is-fail': att.status === '草稿', 'is-success': att.status === '已创建' }">
+                      <div class="result-retry-row1">
+                        <span class="result-retry-time">{{ att.attemptAt }}</span>
+                        <span v-if="att.orderNo" class="result-retry-orderno">{{ att.orderNo }}</span>
+                        <span class="result-retry-status" :style="getOrderStatusColor(att.status)">{{ att.status }}</span>
+                      </div>
+                      <div v-if="getRetryRemark(att)" :class="getRetryRemarkClass(att)">{{ getRetryRemark(att) }}</div>
+                    </div>
+                    <div v-if="link.isDeleted && link.deleteReason" class="draft-link-delete-reason">
+                      删除原因：{{ link.deleteReason }}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
-          <!-- CR-20260708-001-fix: 外层失败备注改为从 retryHistory 读取，与内层重试历史保持一致 -->
-          <div v-if="getLatestOrderStatus(r).status === '草稿' && getOuterFailRemark(r)" class="result-order-remark" style="margin-top: 8px; padding: 8px 12px; background: #f5f5f5; border-radius: 6px;">
-            {{ getOuterFailRemark(r) }}
-          </div>
-          <div v-else-if="getLatestOrderStatus(r).status === '草稿' && dedupFailReasons(r.failReasons).length > 0" class="tip-banner tip-error tip-inline">
-            <div class="tip-icon">&#9888;</div>
-            <div class="tip-content">
-              <div class="tip-title">订单当前为草稿状态</div>
-              <div class="tip-text">{{ dedupFailReasons(r.failReasons)[dedupFailReasons(r.failReasons).length - 1] }}</div>
+              </template>
+              <!-- 兼容旧结构：按 retryHistory 展示 -->
+              <template v-else-if="getRetryHistoryKeys(r).length > 0">
+                <div v-for="key in getRetryHistoryKeys(r)" :key="key" class="draft-link-block">
+                  <div class="draft-link-header" @click="toggleDraft(r.groupId, key)">
+                    <span class="draft-link-label">{{ key === 'draft' ? '草稿提交' : key }}</span>
+                    <span class="fold-arrow-mini" :class="{ expanded: isDraftExpanded(r.groupId, key) }">&#9662;</span>
+                  </div>
+                  <div v-show="isDraftExpanded(r.groupId, key)" class="draft-link-body">
+                    <div v-for="(att, ai) in getRetryHistoryAttempts(r, key)" :key="ai" class="result-retry-item" :class="{ 'is-fail': att.status === '草稿', 'is-success': att.status === '已创建' }">
+                      <div class="result-retry-row1">
+                        <span class="result-retry-time">{{ att.attemptAt }}</span>
+                        <span v-if="att.orderNo" class="result-retry-orderno">{{ att.orderNo }}</span>
+                        <span class="result-retry-status" :style="getOrderStatusColor(att.status)">{{ att.status }}</span>
+                      </div>
+                      <div v-if="getRetryRemark(att)" :class="getRetryRemarkClass(att)">{{ getRetryRemark(att) }}</div>
+                    </div>
+                  </div>
+                </div>
+              </template>
             </div>
           </div>
         </div>
       </div>
-
       <!-- 审批流程（已结束场景层级降低） -->
       <div class="card">
         <div class="section-title">审批流程</div>
@@ -1686,5 +1936,181 @@ function getProductLabelText(pi: number): string {
   font-size: 14px;
   z-index: 1000;
   white-space: nowrap;
+}
+
+/* ========== CR-20260708-002: 订单结果区 — 专卖店订单申请结果单元 ========== */
+
+/* 结果单元卡片 */
+.result-unit-card {
+  margin-bottom: 16px;
+  padding: 14px;
+  background: #FAFAFA;
+  border-radius: 10px;
+  border: 1px solid #f0f0f0;
+}
+.result-unit-card:last-child {
+  margin-bottom: 0;
+}
+
+/* 卡片头：专卖店 + 结果说明 */
+.result-unit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+.result-unit-store {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+.result-unit-store-code {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  flex-shrink: 0;
+}
+.result-unit-store-name {
+  font-size: 13px;
+  color: #666;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 当前结果说明标签 */
+.result-unit-description {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+/* 草稿/驳回/删除 — 红色系 */
+.desc-draft {
+  background: #FFEBEE;
+  color: #D32F2F;
+  border: 1px solid #FFCDD2;
+}
+/* 已创建 — 绿色系 */
+.desc-created {
+  background: #E8F5E9;
+  color: #2E7D32;
+  border: 1px solid #C8E6C9;
+}
+/* 信息变更 — 橙色系 */
+.desc-changed {
+  background: #FFF3E0;
+  color: #E65100;
+  border: 1px solid #FFE0B2;
+}
+
+/* 当前结果摘要区 */
+.result-unit-summary {
+  margin-bottom: 10px;
+}
+.result-unit-order-type {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 4px;
+}
+.result-unit-order-no {
+  font-size: 13px;
+  color: #333;
+  margin-bottom: 4px;
+}
+.result-unit-order-no span {
+  font-family: monospace;
+}
+.result-unit-draft {
+  color: #999;
+  font-style: italic;
+}
+
+/* 当前主原因 */
+.result-unit-main-reason {
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-top: 8px;
+  white-space: pre-line;
+}
+.reason-fail {
+  background: #FFEBEE;
+  color: #D32F2F;
+  border-left: 3px solid #EF5350;
+}
+.reason-change {
+  background: #FFF8E1;
+  color: #E65100;
+  border-left: 3px solid #FFA726;
+}
+
+/* 订单创建历史 — 卡片级统一入口 */
+.result-history-section {
+  margin-top: 10px;
+  border-top: 1px dashed #e0e0e0;
+  padding-top: 10px;
+}
+.result-history-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  cursor: pointer;
+}
+.result-history-toggle-text {
+  font-size: 13px;
+  color: #22BDB8;
+  font-weight: 500;
+}
+
+/* 草稿链路块 */
+.draft-link-block {
+  margin-bottom: 8px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
+  overflow: hidden;
+}
+.draft-link-block:last-child {
+  margin-bottom: 0;
+}
+.draft-link-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+  background: #f9f9f9;
+}
+.draft-link-label {
+  font-size: 12px;
+  color: #666;
+}
+.draft-link-deleted {
+  font-size: 11px;
+  color: #999;
+  background: #EEEEEE;
+  padding: 2px 8px;
+  border-radius: 6px;
+  margin-left: 8px;
+}
+.draft-link-body {
+  padding: 10px 12px;
+}
+.draft-link-delete-reason {
+  font-size: 12px;
+  color: #999;
+  font-style: italic;
+  padding: 8px 0 4px;
+  border-top: 1px dashed #e0e0e0;
+  margin-top: 6px;
 }
 </style>
