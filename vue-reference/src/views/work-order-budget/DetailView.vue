@@ -298,6 +298,53 @@ function getLatestOrderNo(r: GroupResult): string | null {
   return null
 }
 
+// ============================================================
+// CR-20260708-003: 草稿链路摘要层辅助函数
+// ============================================================
+
+// 获取草稿链路的结果标签（用于摘要层展示）
+function getDraftLinkResultLabel(link: import('../../types').DraftLink): string {
+  if (link.isDeleted) return '草稿已删除'
+  // 查找最后一条尝试记录的状态
+  const lastAttempt = link.attempts[link.attempts.length - 1]
+  if (!lastAttempt) return '草稿'
+  if (lastAttempt.status === '已创建') return '订单已创建'
+  if (lastAttempt.status === '草稿') {
+    if (lastAttempt.failReason?.includes('驳回')) return '审核驳回'
+    return '草稿提交失败'
+  }
+  return lastAttempt.status
+}
+
+// 获取草稿链路的最近一次时间
+function getDraftLinkLatestTime(link: import('../../types').DraftLink): string {
+  if (link.attempts.length === 0) return ''
+  const lastAttempt = link.attempts[link.attempts.length - 1]
+  return lastAttempt.attemptAt
+}
+
+// 判断是否为当前承接结果的草稿链路
+// 当前链路 = 非删除状态且最后一条尝试为"已创建"的链路
+function isCurrentDraftLink(link: import('../../types').DraftLink): boolean {
+  if (link.isDeleted) return false
+  const lastAttempt = link.attempts[link.attempts.length - 1]
+  return lastAttempt?.status === '已创建'
+}
+
+// 排序草稿链路：当前链路优先，历史链路后置
+function sortDraftLinks(links: import('../../types').DraftLink[]): import('../../types').DraftLink[] {
+  return [...links].sort((a, b) => {
+    const aIsCurrent = isCurrentDraftLink(a)
+    const bIsCurrent = isCurrentDraftLink(b)
+    if (aIsCurrent && !bIsCurrent) return -1
+    if (!aIsCurrent && bIsCurrent) return 1
+    // 同优先级时，按最近时间倒序
+    const aTime = getDraftLinkLatestTime(a)
+    const bTime = getDraftLinkLatestTime(b)
+    return new Date(bTime).getTime() - new Date(aTime).getTime()
+  })
+}
+
 // ===== 汇总计算 =====
 // 款 = SKU 种类数 (products.length 合计)
 // 件 = 数量合计 (products[].quantity 合计)
@@ -798,12 +845,25 @@ function getProductLabelText(pi: number): string {
             <div v-show="isHistoryCardExpanded(r.groupId)" class="result-history-body">
               <!-- 新结构：按 draftId 聚合展示草稿链路 -->
               <template v-if="r.draftLinks && r.draftLinks.length > 0">
-                <div v-for="link in r.draftLinks" :key="link.draftId" class="draft-link-block">
+                <div v-for="link in sortDraftLinks(r.draftLinks)" :key="link.draftId"
+                     class="draft-link-block"
+                     :class="{ 'draft-link-old': !isCurrentDraftLink(link) }">
+                  <!-- 摘要层：默认展示，点击展开详情 -->
                   <div class="draft-link-header" @click="toggleDraft(r.groupId, link.draftId)">
-                    <span class="draft-link-label">草稿ID：{{ link.draftId }}</span>
-                    <span v-if="link.isDeleted" class="draft-link-deleted">已删除</span>
+                    <div class="draft-link-summary">
+                      <span class="draft-link-label">草稿ID：{{ link.draftId }}</span>
+                      <span class="draft-link-result" :class="'link-result-' + getDraftLinkResultLabel(link).replace(/[（）]/g, '')">
+                        {{ getDraftLinkResultLabel(link) }}
+                      </span>
+                      <span v-if="link.isDeleted" class="draft-link-deleted">已删除</span>
+                    </div>
                     <span class="fold-arrow-mini" :class="{ expanded: isDraftExpanded(r.groupId, link.draftId) }">&#9662;</span>
                   </div>
+                  <!-- CR-20260708-003-fix: 时间放到第二行，避免与标签重叠 -->
+                  <div class="draft-link-sub">
+                    <span class="draft-link-time">{{ getDraftLinkLatestTime(link) }}</span>
+                  </div>
+                  <!-- 详情层：需二次点击展开 -->
                   <div v-show="isDraftExpanded(r.groupId, link.draftId)" class="draft-link-body">
                     <div v-for="(att, ai) in link.attempts" :key="ai" class="result-retry-item" :class="{ 'is-fail': att.status === '草稿', 'is-success': att.status === '已创建' }">
                       <div class="result-retry-row1">
@@ -821,9 +881,12 @@ function getProductLabelText(pi: number): string {
               </template>
               <!-- 兼容旧结构：按 retryHistory 展示 -->
               <template v-else-if="getRetryHistoryKeys(r).length > 0">
-                <div v-for="key in getRetryHistoryKeys(r)" :key="key" class="draft-link-block">
+                <div v-for="key in getRetryHistoryKeys(r)" :key="key"
+                     class="draft-link-block draft-link-old">
                   <div class="draft-link-header" @click="toggleDraft(r.groupId, key)">
-                    <span class="draft-link-label">{{ key === 'draft' ? '草稿提交' : key }}</span>
+                    <div class="draft-link-summary">
+                      <span class="draft-link-label">{{ key === 'draft' ? '草稿提交' : key }}</span>
+                    </div>
                     <span class="fold-arrow-mini" :class="{ expanded: isDraftExpanded(r.groupId, key) }">&#9662;</span>
                   </div>
                   <div v-show="isDraftExpanded(r.groupId, key)" class="draft-link-body">
@@ -889,12 +952,25 @@ function getProductLabelText(pi: number): string {
             <div v-show="isHistoryCardExpanded(r.groupId)" class="result-history-body">
               <!-- 新结构：按 draftId 聚合展示草稿链路 -->
               <template v-if="r.draftLinks && r.draftLinks.length > 0">
-                <div v-for="link in r.draftLinks" :key="link.draftId" class="draft-link-block">
+                <div v-for="link in sortDraftLinks(r.draftLinks)" :key="link.draftId"
+                     class="draft-link-block"
+                     :class="{ 'draft-link-old': !isCurrentDraftLink(link) }">
+                  <!-- 摘要层：默认展示，点击展开详情 -->
                   <div class="draft-link-header" @click="toggleDraft(r.groupId, link.draftId)">
-                    <span class="draft-link-label">草稿ID：{{ link.draftId }}</span>
-                    <span v-if="link.isDeleted" class="draft-link-deleted">已删除</span>
+                    <div class="draft-link-summary">
+                      <span class="draft-link-label">草稿ID：{{ link.draftId }}</span>
+                      <span class="draft-link-result" :class="'link-result-' + getDraftLinkResultLabel(link).replace(/[（）]/g, '')">
+                        {{ getDraftLinkResultLabel(link) }}
+                      </span>
+                      <span v-if="link.isDeleted" class="draft-link-deleted">已删除</span>
+                    </div>
                     <span class="fold-arrow-mini" :class="{ expanded: isDraftExpanded(r.groupId, link.draftId) }">&#9662;</span>
                   </div>
+                  <!-- CR-20260708-003-fix: 时间放到第二行，避免与标签重叠 -->
+                  <div class="draft-link-sub">
+                    <span class="draft-link-time">{{ getDraftLinkLatestTime(link) }}</span>
+                  </div>
+                  <!-- 详情层：需二次点击展开 -->
                   <div v-show="isDraftExpanded(r.groupId, link.draftId)" class="draft-link-body">
                     <div v-for="(att, ai) in link.attempts" :key="ai" class="result-retry-item" :class="{ 'is-fail': att.status === '草稿', 'is-success': att.status === '已创建' }">
                       <div class="result-retry-row1">
@@ -912,9 +988,12 @@ function getProductLabelText(pi: number): string {
               </template>
               <!-- 兼容旧结构：按 retryHistory 展示 -->
               <template v-else-if="getRetryHistoryKeys(r).length > 0">
-                <div v-for="key in getRetryHistoryKeys(r)" :key="key" class="draft-link-block">
+                <div v-for="key in getRetryHistoryKeys(r)" :key="key"
+                     class="draft-link-block draft-link-old">
                   <div class="draft-link-header" @click="toggleDraft(r.groupId, key)">
-                    <span class="draft-link-label">{{ key === 'draft' ? '草稿提交' : key }}</span>
+                    <div class="draft-link-summary">
+                      <span class="draft-link-label">{{ key === 'draft' ? '草稿提交' : key }}</span>
+                    </div>
                     <span class="fold-arrow-mini" :class="{ expanded: isDraftExpanded(r.groupId, key) }">&#9662;</span>
                   </div>
                   <div v-show="isDraftExpanded(r.groupId, key)" class="draft-link-body">
@@ -2071,6 +2150,8 @@ function getProductLabelText(pi: number): string {
   font-weight: 500;
 }
 
+/* ========== CR-20260708-003: 草稿链路块（摘要层 + 详情层） ========== */
+
 /* 草稿链路块 */
 .draft-link-block {
   margin-bottom: 8px;
@@ -2082,29 +2163,112 @@ function getProductLabelText(pi: number): string {
 .draft-link-block:last-child {
   margin-bottom: 0;
 }
+
+/* 旧链路弱化样式（§12.4） */
+.draft-link-old {
+  border-color: #f5f5f5;
+  background: #fafafa;
+}
+.draft-link-old .draft-link-header {
+  background: #f5f5f5;
+}
+.draft-link-old .draft-link-label {
+  color: #aaa;
+}
+.draft-link-old .draft-link-result {
+  opacity: 0.6;
+}
+
+/* 摘要层头部 */
 .draft-link-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
+  gap: 16px;                    /* fix: 摘要区和元数据区之间加间距 */
+  padding: 10px 12px;
   cursor: pointer;
   background: #f9f9f9;
+}
+
+/* 摘要区左部（ID + 结果标签） */
+.draft-link-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 1 auto;               /* fix: 不强制占据所有空间，避免与meta重叠 */
+  min-width: 0;
 }
 .draft-link-label {
   font-size: 12px;
   color: #666;
+  flex-shrink: 0;
 }
+
+/* 链路结果标签 */
+.draft-link-result {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 500;
+  flex-shrink: 0;
+  margin-right: 4px;            /* fix: 标签和时间之间加间距 */
+}
+/* 订单已创建 - 绿色 */
+.link-result-订单已创建 {
+  background: #E8F5E9;
+  color: #2E7D32;
+}
+/* 草稿提交失败 - 浅红（历史区弱化） */
+.link-result-草稿提交失败 {
+  background: #FFEBEE;
+  color: #D32F2F;
+  opacity: 0.7;
+}
+/* 审核驳回 - 浅红（历史区弱化） */
+.link-result-审核驳回 {
+  background: #FFEBEE;
+  color: #D32F2F;
+  opacity: 0.7;
+}
+/* 草稿已删除 - 灰色（中性说明） */
+.link-result-草稿已删除 {
+  background: #EEEEEE;
+  color: #999;
+}
+
+/* 第二行：时间（CR-20260708-003-fix: 从同行移到独立行） */
+.draft-link-sub {
+  display: flex;
+  align-items: center;
+  padding: 4px 12px 6px;
+  background: #f9f9f9;
+  border-top: 1px solid #f0f0f0;
+}
+.draft-link-old .draft-link-sub {
+  background: #f5f5f5;
+  border-top-color: #eee;
+}
+.draft-link-time {
+  font-size: 11px;
+  color: #bbb;
+  font-family: 'SF Mono', 'Monaco', monospace;
+}
+
 .draft-link-deleted {
   font-size: 11px;
   color: #999;
   background: #EEEEEE;
   padding: 2px 8px;
   border-radius: 6px;
-  margin-left: 8px;
+  flex-shrink: 0;
 }
+
+/* 详情层 */
 .draft-link-body {
   padding: 10px 12px;
 }
+
+/* 删除原因 - 中性说明样式（§12.3） */
 .draft-link-delete-reason {
   font-size: 12px;
   color: #999;
@@ -2112,5 +2276,25 @@ function getProductLabelText(pi: number): string {
   padding: 8px 0 4px;
   border-top: 1px dashed #e0e0e0;
   margin-top: 6px;
+}
+
+/* ========== CR-20260708-003: 历史区视觉减负 ========== */
+
+/* 历史区中的失败项：弱化错误样式（§12.2）
+   从强红底 #FFEBEE 改为浅灰底 + 红字 */
+.result-retry-item.is-fail {
+  background: #f8f8f8;
+  border-left: 2px solid #EF9A9A;
+}
+
+/* 历史区中的删除理由：中性说明样式（§12.3）
+   不再是强红块 */
+.result-retry-delete {
+  color: #999;
+  background: transparent;
+  padding: 4px 0;
+  border-radius: 0;
+  border-top: 1px dashed #e0e0e0;
+  font-style: italic;
 }
 </style>
