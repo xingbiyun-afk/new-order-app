@@ -1749,16 +1749,6 @@ function getProductLabelText(pi: number): string {
   padding-top: 2px;
   border-top: 1px dashed rgba(0,0,0,0.06);
 }
-/* CR-20260708-001: 删除理由优先展示，使用不同底色与标签式排版 */
-.result-retry-delete {
-  color: #D32F2F;
-  background: #FFEBEE;
-  padding: 6px 8px;
-  border-radius: 4px;
-  border-top: none;
-  font-weight: 500;
-}
-
 /* ========== 订单结果 ========== */
 .result-card {
   padding: 14px;
