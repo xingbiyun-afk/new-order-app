@@ -277,4 +277,10 @@ npm run build:react-legacy  # 构建历史 React 项目
   - 详情页规则文档 v0.4→v0.5；mocks/index.ts 注释同步更新
   - 构建验证通过：TypeScript 类型检查通过，主包 ~202 kB
   - 开发总结：`docs/development-summary/2026-07-08/CR-20260708-001-开发总结.md`
+- **已完成（2026-07-09）：CR-20260709-001 发起链路场景验收样本补强、回填边界收口与文档治理完善**
+  - 产品申请工单创建页面规则明细文档 v0.1→v0.2：新增场景验收样本总表（53场景/8大类）、返回/回填/store持久化边界（30项）、错误示例（15验证+5未实现）、导入链路规则承接（5组样本）、Mock/route/页面进入说明
+  - CreateView.vue 轻量修正：驳回重提场景 session 隔离（不读取旧 session）、附件数量上限硬拦截（≥10阻断）
+  - 变更清单：`docs/change-logs/2026-07-09/CR-20260709-001 变更清单.md`
+  - 开发总结：`docs/development-summary/2026-07-09/CR-20260709-001-开发总结.md`
+  - 分支：`feature/CR-20260709-001-initiation-link-scenario-acceptance`（已合并 PR #45）
 - 后续：正式开发进入 Vue / Vue2 工程，不在当前仓库直接推进生产实现

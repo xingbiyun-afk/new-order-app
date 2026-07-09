@@ -21,7 +21,7 @@
 - **框架**：Vue 3.5 + Composition API
 - **路由**：Vue Router 5.1
 - **状态管理**：Pinia 3.0
-- **构建工具**：Vite 5.4 + @vitejs/plugin-vue（参考实现阶段因沙盒环境限制从 Vite 8 降级，生产环境可恢复）
+- **构建工具**：Vite 8.1 + @vitejs/plugin-vue（`@tailwindcss/vite` 插件已移除）
 - **样式**：基础 CSS（`@tailwindcss/vite` 已在 CR-20260703-003 中移除，项目组件未使用 Tailwind utility class）
 - **构建产物**：已有 `dist/` 目录
 - **页面**：8 个完整页面（列表、创建、预算选择、专卖店选择、产品选择、详情等）
