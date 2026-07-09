@@ -84,32 +84,31 @@ onMounted(() => {
   isFromSelectionPage.value = (!!fromPath && ['budget-select', 'store-select', 'product-select'].includes(fromPath)) || hasStoreCode || hasProductCode
 
   if (!isFromSelectionPage.value && !rejectedFrom.value && !budgetId.value) {
-    // 从非选择页进入且非重提场景：重置为空白态
+    // 普通新建 → 重置为空白态
     store.selectedBudget = null
     store.storeGroups = [createDefaultGroup()]
     store.clearCollapsed()
     attachments.value = []
+  } else if (rejectedFrom.value) {
+    // CR-20260709-001: 驳回重提不读取旧 session，使用默认空分组
+    store.storeGroups = [createDefaultGroup()]
+    store.clearCollapsed()
+    attachments.value = []
+    // CR-20260703-001 §2: 驳回后重提 → 查原工单号 → 冻结期带入原预算；非冻结期按方案 B
+    const originalBudget = findBudgetByWorkOrderNo(rejectedFrom.value)
+    if (originalBudget) {
+      const isFreezing = TODAY >= new Date(originalBudget.freezeStartDate) && TODAY < new Date(originalBudget.budgetExpiryDate)
+      const isExpired = TODAY >= new Date(originalBudget.budgetExpiryDate)
+      if (isFreezing || isExpired) {
+        store.selectBudget(originalBudget.id)
+      }
+      // 非冻结期且未到期：方案 B — 不带入原预算，按普通新建（selectedBudget 保持 null）
+    }
   } else {
-    // 保留场景（选择页返回 / 驳回重提 / budgetId 回填）：只恢复状态，不做任何反向清空
+    // 选择页返回 / budgetId 回填 → 恢复 session
     store.initStoreGroups()
     if (budgetId.value) {
       store.selectBudget(budgetId.value)
-    }
-    // CR-20260703-001 §2: 驳回后重提 → 查原工单号 → 冻结期带入原预算；非冻结期按方案 B（按普通新建，不带入）
-    if (rejectedFrom.value) {
-      const originalBudget = findBudgetByWorkOrderNo(rejectedFrom.value)
-      if (originalBudget) {
-        const isFreezing = TODAY >= new Date(originalBudget.freezeStartDate) && TODAY < new Date(originalBudget.budgetExpiryDate)
-        const isExpired = TODAY >= new Date(originalBudget.budgetExpiryDate)
-        if (isFreezing) {
-          // 冻结期：带入原预算且不允许切换预算号
-          store.selectBudget(originalBudget.id)
-        } else if (isExpired) {
-          // 已到期：带入原预算让用户看到"已到期"提示，但不允许提交
-          store.selectBudget(originalBudget.id)
-        }
-        // 非冻结期：方案 B — 不带入原预算，按普通新建（selectedBudget 保持 null）
-      }
     }
   }
 
@@ -158,7 +157,10 @@ function qtyChange(gid: string, pid: string, v: number) {
   if (p) { p.quantity = q; p.amount = calculateAmount(p) }
 }
 function delAtt(id: string) { attachments.value = attachments.value.filter(a => a.id !== id) }
-function addAtt() { attachments.value.push({ id: `att_${Date.now()}`, name: `附件_${attachments.value.length + 1}.pdf` }); showToast('附件已添加（模拟）') }
+function addAtt() {
+  if (attachments.value.length >= 10) { showToast('附件最多上传10个'); return }
+  attachments.value.push({ id: `att_${Date.now()}`, name: `附件_${attachments.value.length + 1}.pdf` }); showToast('附件已添加（模拟）')
+}
 function submit() {
   if (!store.selectedBudget) { showToast('请选择预算'); return }
   // 预算可用金额校验（CR-20260630-002 3.5）
