@@ -472,9 +472,6 @@ function getOrderStatusColor(status: string) {
     case '客服已审核': return { bg: '#E3F2FD', color: '#2196F3' }
     case '财务已审核': return { bg: '#E8F5E9', color: '#2E7D32' }
     case '草稿': return { bg: '#FFEBEE', color: '#F44336' }
-    // 兼容旧数据
-    case '已生成': return { bg: '#E8F5E9', color: '#4CAF50' }
-    case '生成失败': return { bg: '#FFEBEE', color: '#F44336' }
     default: return { bg: '#FFF3E0', color: '#FF9800' }
   }
 }
@@ -485,9 +482,6 @@ function getOrderBorderColor(status: string) {
     case '客服已审核': return '#2196F3'
     case '财务已审核': return '#2E7D32'
     case '草稿': return '#F44336'
-    // 兼容旧数据
-    case '已生成': return '#4CAF50'
-    case '生成失败': return '#F44336'
     default: return '#FF9800'
   }
 }
