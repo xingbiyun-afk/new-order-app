@@ -410,5 +410,7 @@
 1. `docs/product/work-order-budget/产品申请工单和产品申请预算核销PRD.md`
 2. `docs/product/work-order-budget/产品申请工单详情页面规则明细.md`
 3. `docs/product/work-order-budget/产品申请工单审批承接与异常处理说明.md`（CR-20260709-003 新建）
-5. `docs/change-logs/2026-07-09/CR-20260709-003 变更清单.md`
+4. `docs/change-logs/2026-07-09/CR-20260709-003 变更清单.md`
+
+> 审批流程管理、审批异常监控的后台正式能力归属与 App 侧承接边界，统一以《产品申请工单审批承接与异常处理说明.md》为本仓执行依据。
 
