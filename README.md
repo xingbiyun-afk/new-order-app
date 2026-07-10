@@ -5,6 +5,8 @@
 > 当前默认运行命令 `npm run dev` 指向 Vue。  
 > 详细说明见 [`CURRENT_TECH_STACK.md`](./CURRENT_TECH_STACK.md)。
 
+> 📋 **交付与接手请先阅读**：[`交付说明与承接清单.md`](./交付说明与承接清单.md) — 当前仓库的唯一主交接入口文档，涵盖正式定位、承接范围、固定业务口径、文档阅读优先级与接手开发建议顺序。
+
 工单 App 移动端样式与产品申请预算核销需求参考仓
 
 ## 项目定位
@@ -78,6 +80,7 @@
 │       ├── vite.config.ts
 │       └── package.json
 ├── README.md
+├── 交付说明与承接清单.md       # 唯一主交接入口文档
 ├── CLAUDE.md
 ├── CURRENT_TECH_STACK.md
 ├── WORKFLOW_GUIDE.md
