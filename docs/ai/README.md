@@ -58,6 +58,7 @@
 | `docs/product/work-order-budget/README.md` | 产品申请工单 / 预算核销产品文档入口 |
 | `docs/product/work-order-budget/产品申请工单选择预算页面规则明细.md` | 预算选择页字段/标签/可选性/排序/冻结期规则（页面级正式规则文档）|
 | `docs/product/work-order-budget/产品申请工单创建页面规则明细.md` | 发起页初始化/预算区/申请信息区/明细/产品选择/批量导入/附件/提交按钮规则（页面级正式规则文档）|
-| `docs/product/work-order-budget/产品申请工单详情页面规则明细.md` | 详情页三态展示/审批流/订单结果区/重试历史/专卖店变更/失败原因/备注规则（页面级正式规则文档，v0.3 · CR-20260707-002）|
+| `docs/product/work-order-budget/产品申请工单详情页面规则明细.md` | 详情页三态展示/审批流/订单结果区/重试历史/专卖店变更/失败原因/备注规则（页面级正式规则文档，v0.9 · CR-20260709-003）|
+| `docs/product/work-order-budget/产品申请工单文档总览.md` | 产品文档分层阅读入口，推荐阅读顺序与角色导航 |
 
 如 README、CLAUDE、历史文档与《项目协作基线》冲突，以《项目协作基线》为准。
