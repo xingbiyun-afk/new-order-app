@@ -544,7 +544,7 @@ function hasImportWarnings() {
           <span style="font-size: 24px; color: #22BDB8;">+</span><span style="font-size: 11px; color: #22BDB8;">上传附件</span>
         </button>
       </div>
-      <div style="font-size: 11px; color: #bbb; margin-top: 10px;">支持 JPG、PNG、PDF、Excel 等格式，单个文件不超过 20MB，最多 10 个</div>
+      <div style="font-size: 11px; color: #bbb; margin-top: 10px;">支持 JPG、PNG、GIF、Word、PDF、PPT、Excel 等格式，单个文件不超过 20MB，最多 10 个</div>
     </div>
     <!-- Submit (CR-20260702-002: 前置禁用态) -->
     <div style="position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; padding: 12px 16px; background-color: #fff; box-shadow: 0 -2px 8px rgba(0,0,0,0.06); z-index: 100;">
