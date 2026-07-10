@@ -115,7 +115,6 @@ docs/
 │       ├── 产品申请工单审批承接与异常处理说明.md  # CR-20260709-003 新建
 │       ├── 产品申请工单流程与状态规则.md
 │       ├── 产品申请工单预算核销规则.md
-│       ├── budget-management-integration.md  # 已并入PRD，不再主维护
 │       └── 待确认问题清单（历史归档）.md
 └── technical/                     # 技术文档
     ├── mobile-ui-baseline.md      # 移动端 UI 基线
