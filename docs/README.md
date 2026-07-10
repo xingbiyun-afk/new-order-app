@@ -105,17 +105,18 @@ docs/
 │       ├── README.md
 │       ├── 产品申请工单AI开发任务说明.md
 │       ├── 产品申请工单和产品申请预算核销PRD.md
-│       ├── 产品申请工单字段清单初稿.md
+│       ├── 产品申请工单文档总览.md
+│       ├── 产品申请工单字段清单.md
 │       ├── 产品申请工单页面结构草图说明.md
-│       ├── 产品申请工单“我的”页规则明细说明.md
+│       ├── 产品申请工单我的页面规则明细.md
 │       ├── 产品申请工单选择预算页面规则明细.md
 │       ├── 产品申请工单创建页面规则明细.md
 │       ├── 产品申请工单详情页面规则明细.md
 │       ├── 产品申请工单审批承接与异常处理说明.md  # CR-20260709-003 新建
-│       ├── budget-management-integration.md
-│       ├── open-questions.md
-│       ├── process-and-status-rules.md
-│       └── product-application-budget-writeoff-rules.md
+│       ├── 产品申请工单流程与状态规则.md
+│       ├── 产品申请工单预算核销规则.md
+│       ├── budget-management-integration.md  # 已并入PRD，不再主维护
+│       └── 待确认问题清单（历史归档）.md
 └── technical/                     # 技术文档
     ├── mobile-ui-baseline.md      # 移动端 UI 基线
     ├── cross-end-work-order-ui-strategy.md  # 跨端复用策略
