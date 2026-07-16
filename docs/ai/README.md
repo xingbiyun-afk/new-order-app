@@ -15,6 +15,13 @@
 
 本仓库早期以 React + TypeScript + Vite 初始化，用于沉淀工单移动端样式、交互结构和产品申请预算核销需求参考。正式 App 开发按 Vue 框架体系推进，当前 React/Vite 内容不作为生产实现基线。
 
+## GitNexus / MCP 使用建议
+
+1. 涉及页面、路由、类型、Pinia、Mock、规则落点或影响范围时，默认先查 GitNexus。
+2. 本仓默认优先查询 `vue-reference/`，不要先从 `legacy/react-reference/` 开始。
+3. 涉及 Web 承接一致性时，建议同步对照 `new-order-system`。
+4. GitNexus 主要回答结构问题；术语、状态、冻结口径仍以 `CLAUDE.md` 和《项目协作基线》为准。
+
 ## AI 协作约定
 
 ### 当前 React 原型参考约定
@@ -62,3 +69,9 @@
 | `docs/product/work-order-budget/产品申请工单文档总览.md` | 产品文档分层阅读入口，推荐阅读顺序与角色导航 |
 
 如 README、CLAUDE、历史文档与《项目协作基线》冲突，以《项目协作基线》为准。
+
+## 更新记录
+
+| 日期 | 变更单 | 变更类型 | 变更摘要 |
+|------|--------|----------|----------|
+| 2026-07-16 | AI-20260716-001 | 补充 | 增加 GitNexus MCP 使用建议，统一多 AI 工具优先查询 `vue-reference/` 的默认动作 |
