@@ -8,6 +8,12 @@
 - 当前主实现目录：`vue-reference/`
 - 历史 React 归档目录：`legacy/react-reference/`
 
+## 工作区协同关系
+
+- 兄弟仓库：`../new-order-system`
+- `../new-order-system` 是正式 Web 承接仓
+- 涉及 App 到 Web 的承接一致性时，不要只看本仓；默认要把 `vue-reference/` 和 `../new-order-system` 一起核对
+
 ## GitNexus MCP 默认规则
 
 处理本仓任务时，以下动作默认先走 GitNexus：
@@ -37,8 +43,18 @@
 - `legacy/react-reference/`
 - 仅保留历史背景作用的旧 React 代码与说明
 
+## 多工具统一要求
+
+- **Codex**：优先读取本文件，再结合 `CURRENT_TECH_STACK.md`、`CLAUDE.md` 与 `docs/ai/项目协作基线.md`
+- **Kimi / Trae / Workbuddy / Qoder**：优先读取 `CLAUDE.md` 与 `docs/ai/项目协作基线.md`，并把本文件中的跨仓约束一并纳入
+- 所有工具在输出方案、改代码、改文档前，都应先把 GitNexus 结论与现行文档口径交叉核对
+- 如果任务涉及承接一致性、影响范围、共享规则落点，默认要同时检查：
+  - `new-order-app/vue-reference/`
+  - `new-order-system`
+
 ## 更新记录
 
 | 日期 | 变更单 | 变更类型 | 变更摘要 |
 |------|--------|----------|----------|
 | 2026-07-16 | AI-20260716-001 | 新增 | 为 `new-order-app` 增加 GitNexus MCP 协作入口，明确 `vue-reference/` 为默认查询目标，历史 React 归档默认降权 |
+| 2026-07-16 | AI-20260716-002 | 补充 | 同步工作区级 AGENTS 里的双仓协同关系与多工具统一要求，避免只打开本仓时丢失跨仓承接上下文 |
